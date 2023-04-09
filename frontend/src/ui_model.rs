@@ -2,6 +2,7 @@
 pub struct MyApp {
     pub search_text: String,
     chat_groups: Vec<ChatGroup>,
+    #[allow(dead_code)]
     selected_group_idx: Option<u16>,
 }
 

@@ -4,9 +4,10 @@ mod ui_model;
 mod widgets;
 
 use eframe::egui;
-use egui::{Grid, Response, ScrollArea, Sense, TextEdit, Ui, Widget, widgets::Button};
-use crate::ui_model::{ChatGroup, MyApp};
-use crate::widgets::{ChatGroupCell, UiExtension};
+use egui::{Grid, ScrollArea, Widget};
+use crate::ui_model::MyApp;
+use crate::widgets::ChatGroupCell;
+use crate::widgets::ui_extensions::UiExtension;
 
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {

@@ -1,3 +1,4 @@
 
 1. Make proper resize
-2.
+2. Add send button
+3. Apply Skins

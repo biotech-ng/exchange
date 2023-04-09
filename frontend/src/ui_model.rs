@@ -16,6 +16,7 @@ pub struct ChatGroup {
     last_message: String,
     #[allow(dead_code)]
     messages: Vec<ChatMessage>,
+    #[allow(dead_code)]
     scroll_position: Option<f32>,
 }
 

@@ -1,5 +1,6 @@
+use eframe::epaint::text::LayoutJob;
 use crate::ui_model::{ChatMessage, PortalState};
-use egui::{Align, Grid, Layout, Response, ScrollArea, Sense, TextEdit, Ui, Widget};
+use egui::{Align, Color32, FontId, Grid, Layout, Response, ScrollArea, Sense, TextEdit, TextStyle, Ui, Widget};
 
 pub struct ChatCell<'a> {
     data: &'a ChatMessage,
@@ -37,13 +38,26 @@ impl<'a> ChatTable<'a> {
 impl<'a> Widget for ChatTable<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         let available_width = ui.available_width();
-        ui.with_layout(Layout::bottom_up(Align::TOP), |ui| {
-            TextEdit::multiline(&mut self.data.message_to_send)
-                .hint_text("Enter your message...")
-                .desired_width(f32::INFINITY)
-                .desired_rows(4)
-                .vertical_align(Align::Min)
-                .ui(ui);
+        ui.with_layout(Layout::bottom_up(Align::Max), |ui| {
+            ui.scope(|ui| {
+                let max_rows = 6;
+
+                ui.set_max_height(90.0);
+
+                ui.with_layout(Layout::top_down_justified(Align::Max), |ui| {
+                    ScrollArea::vertical()
+                        .id_source("chat table 1")
+                        .stick_to_bottom(true)
+                        .show(ui, |ui| {
+                            TextEdit::multiline(&mut self.data.message_to_send)
+                                .hint_text("Enter your message...")
+                                .desired_width(f32::INFINITY)
+                                .lock_focus(true)
+                                .desired_rows(max_rows)
+                                .ui(ui)
+                        });
+                });
+            });
 
             ui.with_layout(Layout::top_down_justified(Align::Max), |ui| {
                 ScrollArea::vertical()

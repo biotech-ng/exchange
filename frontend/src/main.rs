@@ -32,7 +32,7 @@ impl eframe::App for PortalState {
 
                 ui.separator();
 
-                // ui.chat_table(self)
+                ui.chat_table(self)
             })
         });
     }

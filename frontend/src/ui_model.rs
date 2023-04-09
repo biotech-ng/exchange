@@ -51,7 +51,7 @@ impl ChatMessage {
 fn build_test_messages(group: &str) -> Vec<ChatMessage> {
     (1..100)
         .map(|i| ChatMessage {
-            from: format!("group {} name {}", group, i),
+            from: format!("{} - name {}", group, i),
             message: format!("message {}", i),
         })
         .collect()

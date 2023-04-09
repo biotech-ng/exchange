@@ -1,6 +1,6 @@
-use egui::{Button, Response, Sense, TextEdit, Ui, Widget};
 use crate::ui_model::PortalState;
 use crate::widgets::chat_group_table::ChatGroupTable;
+use egui::{Button, Response, Sense, TextEdit, Ui, Widget};
 
 pub trait UiExtension {
     fn menu(&mut self, available_height: f32) -> Response;

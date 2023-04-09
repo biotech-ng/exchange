@@ -1,7 +1,7 @@
 use egui::{Color32, Response, Stroke, Ui, Widget};
 
 pub struct SelectableWidget<W: Widget> {
-    widget: W
+    widget: W,
 }
 
 impl<W: Widget> SelectableWidget<W> {
@@ -29,7 +29,7 @@ impl<W: Widget> SelectableWidget<W> {
                 Stroke {
                     color,
                     ..visuals.bg_stroke
-                }
+                },
             );
         }
 

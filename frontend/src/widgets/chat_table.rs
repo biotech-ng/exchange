@@ -1,6 +1,5 @@
-use eframe::epaint::text::LayoutJob;
 use crate::ui_model::{ChatMessage, PortalState};
-use egui::{Align, Color32, FontId, Grid, Layout, Response, ScrollArea, Sense, TextEdit, TextStyle, Ui, Widget};
+use egui::{Align, Grid, Layout, Response, ScrollArea, Sense, TextEdit, Ui, Widget};
 
 pub struct ChatCell<'a> {
     data: &'a ChatMessage,

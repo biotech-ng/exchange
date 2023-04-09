@@ -1,12 +1,22 @@
 use egui::{Button, Response, Sense, TextEdit, Ui, Widget};
 
 pub trait UiExtension {
+    fn menu(&mut self) -> Response;
+
     fn square_button(&mut self, label: &str) -> Response;
 
     fn search_bar<'a>(&'a mut self, text: &'a mut String) -> Response;
 }
 
 impl UiExtension for Ui {
+    fn menu(&mut self) -> Response {
+        self.vertical(|ui| {
+            _ = ui.square_button("Menu 1");
+            _ = ui.square_button("Menu 2");
+            _ = ui.square_button("Menu 3");
+        }).response
+    }
+
     fn square_button(&mut self, label: &str) -> Response {
         let button_size = [50.0; 2]; // adjust the size to your liking
 

@@ -26,11 +26,7 @@ impl eframe::App for MyApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
                 // Menu
-                ui.vertical(|ui| {
-                    _ = ui.square_button("Menu 1");
-                    _ = ui.square_button("Menu 2");
-                    _ = ui.square_button("Menu 3");
-                });
+                ui.menu();
 
                 // Chats
                 ui.vertical(|ui| {

@@ -1,8 +1,10 @@
 pub mod ui_extensions;
+mod selectable_widget;
 
 use crate::ui_model::{ChatGroup, PortalState};
 use crate::widgets::ui_extensions::UiExtension;
 use egui::{Grid, Response, ScrollArea, Sense, Ui, Widget};
+use crate::widgets::selectable_widget::SelectableWidget;
 
 pub struct ChatGroupCell<'a> {
     data: &'a ChatGroup,
@@ -16,11 +18,11 @@ impl<'a> ChatGroupCell<'a> {
 
 impl<'a> Widget for ChatGroupCell<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
-        // ui.
         ui.scope(|ui| {
             ui.separator();
             ui.label(self.data.name());
-            ui.label(self.data.last_message())
+            ui.label(self.data.last_message());
+            ui.separator()
         })
         .response
         .interact(Sense::click())
@@ -44,7 +46,6 @@ impl<'a> Widget for ChatGroupTable<'a> {
 
             ScrollArea::vertical()
                 .stick_to_bottom(true)
-                // .auto_shrink([true, false])
                 .show(ui, |ui| {
                     Grid::new("chat_table")
                         .striped(true)
@@ -54,7 +55,8 @@ impl<'a> Widget for ChatGroupTable<'a> {
                                 // Add table rows for each message
                                 let mut selected_group_idx: Option<u16> = None;
                                 for (i, message) in self.data.chat_groups().iter().enumerate() {
-                                    let response = ChatGroupCell::new(&message).ui(ui);
+                                    let cell = ChatGroupCell::new(&message);
+                                    let response = SelectableWidget::new(cell).ui(ui);
                                     if response.clicked() {
                                         selected_group_idx = Some(i as u16)
                                     }

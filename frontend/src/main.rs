@@ -30,7 +30,9 @@ impl eframe::App for PortalState {
 
                 ui.chat_group_table(self);
 
-                ui.separator()
+                ui.separator();
+
+                // ui.chat_table(self)
             })
         });
     }

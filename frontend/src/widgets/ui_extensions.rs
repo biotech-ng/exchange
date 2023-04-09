@@ -1,6 +1,7 @@
 use crate::ui_model::PortalState;
 use crate::widgets::chat_group_table::ChatGroupTable;
 use egui::{Button, Response, Sense, TextEdit, Ui, Widget};
+use crate::widgets::chat_table::ChatTable;
 
 pub trait UiExtension {
     fn menu(&mut self, available_height: f32) -> Response;
@@ -10,6 +11,8 @@ pub trait UiExtension {
     fn search_bar<'a>(&'a mut self, text: &'a mut String) -> Response;
 
     fn chat_group_table(&mut self, state: &mut PortalState) -> Response;
+
+    fn chat_table(&mut self, state: &mut PortalState) -> Response;
 }
 
 impl UiExtension for Ui {
@@ -51,5 +54,9 @@ impl UiExtension for Ui {
 
     fn chat_group_table(&mut self, state: &mut PortalState) -> Response {
         ChatGroupTable::new(state).ui(self)
+    }
+
+    fn chat_table(&mut self, state: &mut PortalState) -> Response {
+        ChatTable::new(state).ui(self)
     }
 }

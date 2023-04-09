@@ -17,13 +17,6 @@ pub struct ChatGroup {
     messages: Vec<ChatMessage>,
 }
 
-pub struct ChatMessage {
-    #[allow(dead_code)]
-    from: String,
-    #[allow(dead_code)]
-    message: String,
-}
-
 impl ChatGroup {
     pub fn name(&self) -> &String {
         &self.name
@@ -31,6 +24,27 @@ impl ChatGroup {
 
     pub fn last_message(&self) -> &String {
         &self.last_message
+    }
+
+    pub fn messages(&self) -> &Vec<ChatMessage> {
+        &self.messages
+    }
+}
+
+pub struct ChatMessage {
+    #[allow(dead_code)]
+    from: String,
+    #[allow(dead_code)]
+    message: String,
+}
+
+impl ChatMessage {
+    pub fn from(&self) -> &String {
+        &self.from
+    }
+
+    pub fn message(&self) -> &String {
+        &self.message
     }
 }
 

@@ -3,8 +3,8 @@
 mod ui_model;
 
 use eframe::egui;
-use egui::{Color32, Direction, Grid, Label, Response, ScrollArea, Sense, TextEdit, Ui, Widget, widgets::Button};
-use crate::ui_model::MyApp;
+use egui::{Grid, Response, ScrollArea, Sense, TextEdit, Ui, Widget, widgets::Button};
+use crate::ui_model::{ChatGroup, MyApp};
 
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
@@ -28,14 +28,6 @@ fn square_button(ui: &mut Ui, label: &str) -> Response {
         .ui(ui)
 }
 
-fn search_bar(text: &mut String) -> TextEdit {
-    let hint_text = "Search...";
-
-    TextEdit::singleline(text)
-        .hint_text(hint_text)
-        .desired_width(120.0)
-}
-
 trait UiExtension {
     fn search_bar<'a>(&'a mut self, text: &'a mut String) -> Response;
 }
@@ -55,6 +47,20 @@ impl UiExtension for Ui {
         }
 
         result
+    }
+}
+
+struct ChatGroupCell<'a> {
+    data: &'a ChatGroup
+}
+
+impl<'a> Widget for ChatGroupCell<'a> {
+    fn ui(self, ui: &mut Ui) -> Response {
+        ui.scope(|ui| {
+            ui.separator();
+            ui.label(self.data.name());
+            ui.label(self.data.last_message())
+        }).response.interact(Sense::click())
     }
 }
 
@@ -83,10 +89,11 @@ impl eframe::App for MyApp {
                             .show(ui, |ui| {
                                 ui.vertical(|ui| {
                                     // Add table rows for each message
-                                    for message in self.chat_groups() {
-                                        ui.separator();
-                                        ui.label(message.name());
-                                        ui.label(message.last_message());
+                                    for (i, message) in self.chat_groups().iter().enumerate() {
+                                        let response = ChatGroupCell { data: &message }.ui(ui);
+                                        if response.clicked() {
+                                            println!("clicked2: {}", i + 1)
+                                        }
                                     }
                                 })
                             })

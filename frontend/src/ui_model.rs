@@ -1,7 +1,8 @@
 
 pub struct MyApp {
     pub search_text: String,
-    chat_groups: Vec<ChatGroup>
+    chat_groups: Vec<ChatGroup>,
+    selected_group_idx: Option<u16>,
 }
 
 impl MyApp {
@@ -29,14 +30,15 @@ impl Default for MyApp {
     fn default() -> Self {
         let chat_groups: Vec<_> = (1..100).map(|i| {
             ChatGroup {
-                name: format!("name {}", i),
+                name: format!("group {}", i),
                 last_message: format!("message {}", i), // "message 1".to_string(),
             }
         }).collect();
 
         Self {
             search_text: String::new(),
-            chat_groups
+            chat_groups,
+            selected_group_idx: None
         }
     }
 }

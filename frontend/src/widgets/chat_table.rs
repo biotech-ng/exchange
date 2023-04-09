@@ -1,7 +1,5 @@
 use crate::ui_model::{ChatMessage, PortalState};
-use crate::widgets::selectable_widget::SelectableWidget;
-use crate::widgets::ui_extensions::UiExtension;
-use egui::{Grid, Response, ScrollArea, Sense, Ui, Widget};
+use egui::{Align, Grid, Layout, Response, ScrollArea, Sense, Ui, Widget};
 
 pub struct ChatCell<'a> {
     data: &'a ChatMessage,
@@ -28,37 +26,35 @@ impl<'a> Widget for ChatCell<'a> {
 
 pub struct ChatTable<'a> {
     data: &'a mut PortalState,
-    min_col_width: f32,
 }
 
 impl<'a> ChatTable<'a> {
     pub fn new(data: &'a mut PortalState) -> Self {
-        ChatTable {
-            data,
-            min_col_width: 120.0,
-        }
+        ChatTable { data }
     }
 }
 
 impl<'a> Widget for ChatTable<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
-        ui.vertical(|ui| {
+        let available_width = ui.available_width();
+        ui.with_layout(Layout::top_down_justified(Align::Max), |ui| {
             ScrollArea::vertical()
-                .id_source("sadfdsfsdfds")
+                .id_source("chat table")
+                .stick_to_bottom(true)
                 .show(ui, |ui| {
-                Grid::new("chat_table")
-                    .min_col_width(self.min_col_width)
-                    .show(ui, |ui| {
-                        ui.vertical(|ui| {
-                            // Add table rows for each message
-                            // TODO do not unwrap, pass from client code an index
-                            let idx = self.data.selected_group_idx.unwrap_or(0);
-                            for message in self.data.chat_groups()[idx].messages().iter() {
-                                ChatCell::new(&message).ui(ui);
-                            }
+                    Grid::new("chat_table")
+                        .min_col_width(available_width)
+                        .show(ui, |ui| {
+                            ui.vertical(|ui| {
+                                // Add table rows for each message
+                                // TODO do not unwrap, pass from client code an index
+                                let idx = self.data.selected_group_idx.unwrap_or(0);
+                                for message in self.data.chat_groups()[idx].messages().iter() {
+                                    ChatCell::new(message).ui(ui);
+                                }
+                            })
                         })
-                    })
-            });
+                });
 
             // TODO add input
         })

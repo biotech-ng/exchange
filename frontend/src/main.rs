@@ -15,7 +15,7 @@ fn main() -> Result<(), eframe::Error> {
     eframe::run_native(
         "Biotech exchange",
         options,
-        Box::new(|_cc| Box::new(PortalState::default())),
+        Box::new(|_cc| Box::<PortalState>::default()),
     )
 }
 

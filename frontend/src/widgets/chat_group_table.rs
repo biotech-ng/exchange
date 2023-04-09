@@ -53,7 +53,7 @@ impl<'a> Widget for ChatGroupTable<'a> {
                             // Add table rows for each message
                             let mut selected_group_idx: Option<_> = None;
                             for (i, message) in self.data.chat_groups().iter().enumerate() {
-                                let cell = ChatGroupCell::new(&message);
+                                let cell = ChatGroupCell::new(message);
                                 let response = SelectableWidget::new(cell).ui(ui);
                                 if response.clicked() {
                                     selected_group_idx = Some(i)

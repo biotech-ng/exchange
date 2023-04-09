@@ -37,33 +37,33 @@ impl<'a> ChatTable<'a> {
 impl<'a> Widget for ChatTable<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         let available_width = ui.available_width();
-        ui.with_layout(Layout::top_down_justified(Align::TOP), |ui| {
-            ScrollArea::vertical()
-                .max_height(320.0)
-                .id_source("chat table")
-                // .stick_to_bottom(true)
-                .show(ui, |ui| {
-                    Grid::new("chat_table")
-                        .min_col_width(available_width)
-                        .show(ui, |ui| {
-                            ui.vertical(|ui| {
-                                // Add table rows for each message
-                                // TODO do not unwrap, pass from client code an index
-                                let idx = self.data.selected_group_idx.unwrap_or(0);
-                                for message in self.data.chat_groups()[idx].messages().iter() {
-                                    ChatCell::new(message).ui(ui);
-                                }
-                            })
-                        })
-                });
-
-            // TextEdit::multiline(&mut self.data.message_to_send).ui(ui);
-            let hint_text = "Search...";
-
+        ui.with_layout(Layout::bottom_up(Align::TOP), |ui| {
             TextEdit::multiline(&mut self.data.message_to_send)
-                .hint_text(hint_text)
-                .desired_width(120.0)
+                .hint_text("Enter your message...")
+                .desired_width(f32::INFINITY)
+                .desired_rows(4)
+                .vertical_align(Align::Min)
                 .ui(ui);
+
+            ui.with_layout(Layout::top_down_justified(Align::Max), |ui| {
+                ScrollArea::vertical()
+                    .id_source("chat table")
+                    .stick_to_bottom(true)
+                    .show(ui, |ui| {
+                        Grid::new("chat_table")
+                            .min_col_width(available_width)
+                            .show(ui, |ui| {
+                                ui.vertical(|ui| {
+                                    // Add table rows for each message
+                                    // TODO do not unwrap, pass from client code an index
+                                    let idx = self.data.selected_group_idx.unwrap_or(0);
+                                    for message in self.data.chat_groups()[idx].messages().iter() {
+                                        ChatCell::new(message).ui(ui);
+                                    }
+                                })
+                            })
+                    });
+            })
         })
         .response
     }

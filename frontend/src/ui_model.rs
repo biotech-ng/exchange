@@ -1,7 +1,7 @@
 pub struct PortalState {
     pub search_text: String,
     chat_groups: Vec<ChatGroup>,
-    pub selected_group_idx: Option<u16>,
+    pub selected_group_idx: Option<usize>,
 }
 
 impl PortalState {

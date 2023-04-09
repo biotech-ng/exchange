@@ -1,12 +1,10 @@
-
-pub struct MyApp {
+pub struct PortalState {
     pub search_text: String,
     chat_groups: Vec<ChatGroup>,
-    #[allow(dead_code)]
-    selected_group_idx: Option<u16>,
+    pub selected_group_idx: Option<u16>,
 }
 
-impl MyApp {
+impl PortalState {
     pub fn chat_groups(&self) -> &Vec<ChatGroup> {
         &self.chat_groups
     }
@@ -27,19 +25,21 @@ impl ChatGroup {
     }
 }
 
-impl Default for MyApp {
+impl Default for PortalState {
     fn default() -> Self {
-        let chat_groups: Vec<_> = (1..100).map(|i| {
-            ChatGroup {
-                name: format!("group {}", i),
-                last_message: format!("message {}", i), // "message 1".to_string(),
-            }
-        }).collect();
+        let chat_groups: Vec<_> = (1..100)
+            .map(|i| {
+                ChatGroup {
+                    name: format!("group {}", i),
+                    last_message: format!("message {}", i), // "message 1".to_string(),
+                }
+            })
+            .collect();
 
         Self {
             search_text: String::new(),
             chat_groups,
-            selected_group_idx: None
+            selected_group_idx: None,
         }
     }
 }

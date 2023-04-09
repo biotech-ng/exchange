@@ -1,5 +1,5 @@
 use crate::ui_model::{ChatMessage, PortalState};
-use egui::{Align, Grid, Layout, Response, ScrollArea, Sense, Ui, Widget};
+use egui::{Align, Grid, Layout, Response, ScrollArea, Sense, TextEdit, Ui, Widget};
 
 pub struct ChatCell<'a> {
     data: &'a ChatMessage,
@@ -37,10 +37,11 @@ impl<'a> ChatTable<'a> {
 impl<'a> Widget for ChatTable<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         let available_width = ui.available_width();
-        ui.with_layout(Layout::top_down_justified(Align::Max), |ui| {
+        ui.with_layout(Layout::top_down_justified(Align::TOP), |ui| {
             ScrollArea::vertical()
+                .max_height(320.0)
                 .id_source("chat table")
-                .stick_to_bottom(true)
+                // .stick_to_bottom(true)
                 .show(ui, |ui| {
                     Grid::new("chat_table")
                         .min_col_width(available_width)
@@ -56,7 +57,13 @@ impl<'a> Widget for ChatTable<'a> {
                         })
                 });
 
-            // TODO add input
+            // TextEdit::multiline(&mut self.data.message_to_send).ui(ui);
+            let hint_text = "Search...";
+
+            TextEdit::multiline(&mut self.data.message_to_send)
+                .hint_text(hint_text)
+                .desired_width(120.0)
+                .ui(ui);
         })
         .response
     }

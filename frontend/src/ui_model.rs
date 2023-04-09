@@ -1,5 +1,6 @@
 pub struct PortalState {
     pub search_text: String,
+    pub message_to_send: String,
     chat_groups: Vec<ChatGroup>,
     pub selected_group_idx: Option<usize>,
 }
@@ -15,6 +16,7 @@ pub struct ChatGroup {
     last_message: String,
     #[allow(dead_code)]
     messages: Vec<ChatMessage>,
+    scroll_position: Option<f32>,
 }
 
 impl ChatGroup {
@@ -70,12 +72,14 @@ impl Default for PortalState {
                     name: group,
                     last_message: format!("last message {}", i),
                     messages: test_messages,
+                    scroll_position: None,
                 }
             })
             .collect();
 
         Self {
             search_text: String::new(),
+            message_to_send: String::new(),
             chat_groups,
             selected_group_idx: None,
         }

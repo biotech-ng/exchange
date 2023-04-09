@@ -13,6 +13,15 @@ impl PortalState {
 pub struct ChatGroup {
     name: String,
     last_message: String,
+    #[allow(dead_code)]
+    messages: Vec<ChatMessage>,
+}
+
+pub struct ChatMessage {
+    #[allow(dead_code)]
+    from: String,
+    #[allow(dead_code)]
+    message: String
 }
 
 impl ChatGroup {
@@ -25,13 +34,25 @@ impl ChatGroup {
     }
 }
 
+fn build_test_messages() -> Vec<ChatMessage> {
+    (1..100)
+        .map(|i| {
+            ChatMessage {
+                from: format!("name {}", i),
+                message: format!("message {}", i),
+            }
+        })
+        .collect()
+}
+
 impl Default for PortalState {
     fn default() -> Self {
         let chat_groups: Vec<_> = (1..100)
             .map(|i| {
                 ChatGroup {
                     name: format!("group {}", i),
-                    last_message: format!("message {}", i), // "message 1".to_string(),
+                    last_message: format!("last message {}", i),
+                    messages: build_test_messages()
                 }
             })
             .collect();

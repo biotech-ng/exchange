@@ -1,4 +1,4 @@
 
-1. Make proper resize
-2. Add send button
-3. Apply Skins
+1. Make proper resize of send message element, make it like in telegram
+2. Apply Skins
+3. Save scroll position

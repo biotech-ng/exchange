@@ -41,10 +41,10 @@ impl<'a> Widget for ChatTable<'a> {
         let available_width = ui.available_width();
         ui.with_layout(Layout::bottom_up(Align::Max), |ui| {
             ui.scope(|ui| {
-                let max_rows = 4;
+                let max_rows = 6;
 
                 let row_height = ui.row_height_for_text_style(self.text_style.clone());
-                ui.set_max_height(row_height * 6.0);
+                ui.set_max_height(row_height * max_rows as f32 + row_height / 2.0);
 
                 ui.with_layout(Layout::top_down(Align::Min), |ui| {
                     ScrollArea::vertical()

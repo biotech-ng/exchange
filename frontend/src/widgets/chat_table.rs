@@ -1,5 +1,6 @@
 use crate::ui_model::{ChatMessage, PortalState};
-use egui::{Align, Grid, Layout, Response, ScrollArea, Sense, TextEdit, Ui, Widget};
+use egui::{Align, Grid, Layout, Response, ScrollArea, Sense, TextEdit, TextStyle, Ui, Widget};
+use crate::widgets::ui_extensions::UiExtension;
 
 pub struct ChatCell<'a> {
     data: &'a ChatMessage,
@@ -26,11 +27,12 @@ impl<'a> Widget for ChatCell<'a> {
 
 pub struct ChatTable<'a> {
     data: &'a mut PortalState,
+    text_style: TextStyle,
 }
 
 impl<'a> ChatTable<'a> {
     pub fn new(data: &'a mut PortalState) -> Self {
-        ChatTable { data }
+        ChatTable { data, text_style: egui::TextStyle::Monospace }
     }
 }
 
@@ -39,16 +41,18 @@ impl<'a> Widget for ChatTable<'a> {
         let available_width = ui.available_width();
         ui.with_layout(Layout::bottom_up(Align::Max), |ui| {
             ui.scope(|ui| {
-                let max_rows = 6;
+                let max_rows = 4;
 
-                ui.set_max_height(90.0);
+                let row_height = ui.row_height_for_text_style(self.text_style.clone());
+                ui.set_max_height(row_height * 6.0);
 
-                ui.with_layout(Layout::top_down_justified(Align::Max), |ui| {
+                ui.with_layout(Layout::top_down(Align::Min), |ui| {
                     ScrollArea::vertical()
                         .id_source("chat table 1")
                         .stick_to_bottom(true)
                         .show(ui, |ui| {
                             TextEdit::multiline(&mut self.data.message_to_send)
+                                .font(self.text_style)
                                 .hint_text("Enter your message...")
                                 .desired_width(f32::INFINITY)
                                 .lock_focus(true)

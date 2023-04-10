@@ -1,7 +1,7 @@
 use crate::ui_model::PortalState;
 use crate::widgets::chat_group_table::ChatGroupTable;
 use crate::widgets::chat_table::ChatTable;
-use egui::{Button, Response, Sense, TextEdit, Ui, Widget};
+use egui::{Button, FontSelection, Response, Sense, TextEdit, TextStyle, Ui, Widget};
 
 pub trait UiExtension {
     fn menu(&mut self, available_height: f32) -> Response;
@@ -13,6 +13,8 @@ pub trait UiExtension {
     fn chat_group_table(&mut self, state: &mut PortalState) -> Response;
 
     fn chat_table(&mut self, state: &mut PortalState) -> Response;
+
+    fn row_height_for_text_style(&self, text_style: TextStyle) -> f32;
 }
 
 impl UiExtension for Ui {
@@ -58,5 +60,11 @@ impl UiExtension for Ui {
 
     fn chat_table(&mut self, state: &mut PortalState) -> Response {
         ChatTable::new(state).ui(self)
+    }
+
+    fn row_height_for_text_style(&self, text_style: TextStyle) -> f32 {
+        let font_selection: FontSelection = text_style.into();
+        let font_id = font_selection.resolve(self.style());
+        self.fonts(|f| f.row_height(&font_id))
     }
 }

@@ -1,7 +1,7 @@
 pub struct PortalState {
     pub search_text: String,
     pub message_to_send: String,
-    chat_groups: Vec<ChatGroup>,
+    pub chat_groups: Vec<ChatGroup>,
     pub selected_group_idx: Option<usize>,
 }
 
@@ -14,8 +14,7 @@ impl PortalState {
 pub struct ChatGroup {
     name: String,
     last_message: String,
-    #[allow(dead_code)]
-    messages: Vec<ChatMessage>,
+    pub messages: Vec<ChatMessage>,
     #[allow(dead_code)]
     scroll_position: Option<f32>,
 }
@@ -35,10 +34,8 @@ impl ChatGroup {
 }
 
 pub struct ChatMessage {
-    #[allow(dead_code)]
-    from: String,
-    #[allow(dead_code)]
-    message: String,
+    pub from: String,
+    pub message: String,
 }
 
 impl ChatMessage {

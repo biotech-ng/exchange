@@ -1,5 +1,6 @@
+use std::mem::swap;
 use crate::ui_model::{ChatMessage, PortalState};
-use egui::{Align, Grid, Layout, Response, ScrollArea, Sense, TextEdit, TextStyle, Ui, Widget};
+use egui::{Align, Button, Grid, Layout, Response, ScrollArea, Sense, TextEdit, TextStyle, Ui, Widget};
 use crate::widgets::ui_extensions::UiExtension;
 
 pub struct ChatCell<'a> {
@@ -38,6 +39,7 @@ impl<'a> ChatTable<'a> {
 
 impl<'a> Widget for ChatTable<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
+        let idx = self.data.selected_group_idx.unwrap_or(0);
         let available_width = ui.available_width();
         ui.with_layout(Layout::bottom_up(Align::Max), |ui| {
             ui.scope(|ui| {
@@ -47,19 +49,30 @@ impl<'a> Widget for ChatTable<'a> {
                 let max_height = row_height * max_rows as f32 + row_height / 2.0;
                 ui.set_max_height(max_height);
 
-                ui.with_layout(Layout::top_down_justified(Align::Min), |ui| {
-                    ScrollArea::vertical()
-                        .id_source("chat table 1")
-                        .stick_to_bottom(true)
-                        .show(ui, |ui| {
-                            TextEdit::multiline(&mut self.data.message_to_send)
-                                .font(self.text_style)
-                                .hint_text("Enter your message...")
-                                .desired_width(f32::INFINITY)
-                                .lock_focus(true)
-                                .desired_rows(max_rows)
-                                .ui(ui)
+                ui.with_layout(Layout::right_to_left(Align::Max), |ui| {
+                    if Button::new("Send").ui(ui).clicked() {
+                        let mut message_to_send = String::new();
+                        swap(&mut message_to_send, &mut self.data.message_to_send);
+                        self.data.chat_groups[idx].messages.push(ChatMessage {
+                            from: "me".to_string(),
+                            message: message_to_send
                         });
+                    }
+
+                    ui.with_layout(Layout::top_down_justified(Align::Min), |ui| {
+                        ScrollArea::vertical()
+                            .id_source("chat table 1")
+                            .stick_to_bottom(true)
+                            .show(ui, |ui| {
+                                TextEdit::multiline(&mut self.data.message_to_send)
+                                    .font(self.text_style)
+                                    .hint_text("Enter your message...")
+                                    .desired_width(f32::INFINITY)
+                                    .lock_focus(true)
+                                    .desired_rows(max_rows)
+                                    .ui(ui)
+                            });
+                    });
                 });
             });
 
@@ -74,7 +87,6 @@ impl<'a> Widget for ChatTable<'a> {
                                 ui.vertical(|ui| {
                                     // Add table rows for each message
                                     // TODO do not unwrap, pass from client code an index
-                                    let idx = self.data.selected_group_idx.unwrap_or(0);
                                     for message in self.data.chat_groups()[idx].messages().iter() {
                                         ChatCell::new(message).ui(ui);
                                     }

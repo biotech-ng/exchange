@@ -1,14 +1,24 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+use std::time::Duration;
+use dotenv::dotenv;
+use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
+
+async fn pg_pool() -> Result<PgPool, sqlx::Error> {
+    dotenv().expect("failed to load .env");
+
+    PgPoolOptions::new()
+        .max_connections(5)
+        .acquire_timeout(Duration::from_secs(1))
+        .connect(&std::env::var("DATABASE_URL").expect("DATABASE_URL must be in environment"))
+        .await
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    #[tokio::test]
+    async fn test_can_create_a_pg_pool() {
+        assert!(pg_pool().await.is_ok());
     }
 }

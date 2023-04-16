@@ -6,7 +6,7 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use std::time::Duration;
 
-async fn pg_pool() -> Result<PgPool, sqlx::Error> {
+pub async fn pg_pool() -> Result<PgPool, sqlx::Error> {
     dotenv().expect("failed to load .env");
 
     PgPoolOptions::new()

@@ -52,7 +52,7 @@ CREATE UNIQUE INDEX chat_messages_id_and_chat_id_index ON chat_messages (id, cha
 
 -- Chat Participants
 
-CREATE TYPE ChatParticipantRole AS ENUM ('admin', 'reader', 'writer', 'banned');
+CREATE TYPE ChatParticipantRole AS ENUM ('creator', 'admin', 'member', 'left', 'banned');
 
 CREATE TABLE chat_participant
 (

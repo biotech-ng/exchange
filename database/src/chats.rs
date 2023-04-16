@@ -62,9 +62,10 @@ pub async fn get_chat(pool: &PgPool, id: Uuid) -> Result<Chat, sqlx::Error> {
 #[derive(Debug, Clone, PartialEq, Eq, Copy, sqlx::Type)]
 #[sqlx(rename_all = "snake_case")]
 pub enum ChatParticipantRole {
+    Creator,
     Admin,
-    Reader,
-    Writer,
+    Member,
+    Left,
     Banned,
 }
 

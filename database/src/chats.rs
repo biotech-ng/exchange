@@ -27,17 +27,16 @@ pub async fn insert<T1: AsRef<str>, T2: AsRef<str>>(
     title: T1,
     description: T2,
 ) -> Result<Uuid, sqlx::Error> {
-    //  as "type: _" type, title, description,
     sqlx::query!(
             r#"
-                INSERT INTO users ( id, created_at, updated_at )
-                SELECT $1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                INSERT INTO chats ( id, type, title, description, created_at, updated_at )
+                SELECT $1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
                 RETURNING id
             "#,
             Uuid::new_v4(),
-            // r#type as ChatType,
-            // title.as_ref(),
-            // description.as_ref(),
+            r#type as ChatType,
+            title.as_ref(),
+            description.as_ref(),
         )
         .fetch_one(pool)
         .await
@@ -45,56 +44,44 @@ pub async fn insert<T1: AsRef<str>, T2: AsRef<str>>(
 }
 
 
-// pub async fn get(pool: &PgPool, id: Uuid) -> Result<Chat, sqlx::Error> {
-//     sqlx::query_as!(
-//             User,
-//             r#"
-//                 SELECT id, type, title, description, created_at, updated_at FROM chats
-//                 WHERE id = $1
-//             "#,
-//             id
-//         )
-//         .fetch_one(pool)
-//         .await
-//         .map_err(Into::into)
-// }
+pub async fn get(pool: &PgPool, id: Uuid) -> Result<Chat, sqlx::Error> {
+    sqlx::query_as!(
+            Chat,
+            r#"
+                SELECT id, type as "type: _", title, description, created_at, updated_at FROM chats
+                WHERE id = $1
+            "#,
+            id
+        )
+        .fetch_one(pool)
+        .await
+        .map_err(Into::into)
+}
 
 #[cfg(test)]
 mod tests {
     use crate::pg_pool;
     use super::*;
 
-    // #[tokio::test]
-    // async fn test_create_user() {
-    //     let alias = format!("vova:{}", Uuid::new_v4());
-    //     let first_name = "volodymyr";
-    //     let last_name = "gorbenko";
-    //     let phone_number = format!("pn:{}", Uuid::new_v4());
-    //     let language_code = "ru-ru";
-    //     let avatar = "https://some_image.png";
-    //     let country_code = "SW";
-    //
-    //     let pool = pg_pool().await.expect("pool is expected");
-    //
-    //     let id = insert(
-    //         &pool,
-    //         &alias,
-    //         &first_name,
-    //         &last_name,
-    //         &phone_number,
-    //         &language_code,
-    //         &avatar,
-    //         &country_code,
-    //     ).await.expect("user is created");
-    //
-    //     let user = get(&pool, id).await.expect("user for given id is expected");
-    //
-    //     assert_eq!(alias, user.alias);
-    //     assert_eq!(first_name, user.first_name.expect("first name"));
-    //     assert_eq!(last_name, user.last_name.expect("last name"));
-    //     assert_eq!(phone_number, user.phone_number);
-    //     assert_eq!(language_code, user.language_code);
-    //     assert_eq!(avatar, user.avatar.expect("avatar"));
-    //     assert_eq!(country_code, user.country_code.expect("country code"));
-    // }
+    #[tokio::test]
+    async fn test_create_user() {
+        let r#type = ChatType::Channel;
+        let title = "chat title";
+        let description = "chat description";
+
+        let pool = pg_pool().await.expect("pool is expected");
+
+        let id = insert(
+            &pool,
+            r#type,
+            &title,
+            &description,
+        ).await.expect("chat is created");
+
+        let chat = get(&pool, id).await.expect("user for given id is expected");
+
+        assert_eq!(r#type, chat.r#type);
+        assert_eq!(title, chat.title);
+        assert_eq!(description, chat.description.expect("last name"));
+    }
 }

@@ -84,3 +84,28 @@ CREATE TABLE addresses
     updated_at timestamp(0) without time zone NOT NULL
 );
 CREATE UNIQUE INDEX addresses_id_index ON addresses (id uuid_ops);
+
+-- Company
+
+CREATE TABLE companies
+(
+    id         uuid PRIMARY KEY,
+    name       character varying(255) NOT NULL,
+    address_id uuid REFERENCES addresses(id) NOT NULL,
+    created_at timestamp(0) without time zone NOT NULL,
+    updated_at timestamp(0) without time zone NOT NULL
+);
+CREATE UNIQUE INDEX companies_id_index ON companies (id uuid_ops);
+
+-- Company Member
+
+CREATE TABLE company_members
+(
+    id         uuid PRIMARY KEY,
+    user_id    uuid REFERENCES users(id) NOT NULL,
+    company_id uuid REFERENCES companies(id) NOT NULL,
+    created_at timestamp(0) without time zone NOT NULL,
+    updated_at timestamp(0) without time zone NOT NULL
+);
+CREATE UNIQUE INDEX company_members_id_index ON company_members (id uuid_ops);
+CREATE UNIQUE INDEX company_members_user_id_and_company_id_index ON company_members (user_id, company_id);

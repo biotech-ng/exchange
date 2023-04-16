@@ -1,3 +1,16 @@
+-- Company Member
+
+DROP INDEX company_members_user_id_and_company_id_index;
+DROP INDEX company_members_id_index;
+
+DROP TABLE company_members;
+
+-- Company
+
+DROP INDEX companies_id_index;
+
+DROP TABLE companies;
+
 -- Chats
 
 DROP INDEX addresses_id_index;

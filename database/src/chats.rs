@@ -282,5 +282,25 @@ mod tests {
         assert_eq!(parent_message.chat_id, chat.id);
         assert_eq!(parent_message.parent_id, None);
         assert_eq!(parent_message.deleted_at, None);
+
+        let sender = "nikita";
+        let message_text = "test message 2";
+
+        let chat_message_id = insert_chat_message(
+            &pool,
+            chat.id,
+            sender,
+            message_text,
+            Some(parent_message.id),
+        ).await.expect("parent message is created");
+
+        let message = get_chat_message(&pool, chat_message_id).await.expect("parent message");
+
+        assert_eq!(message.id, chat_message_id);
+        assert_eq!(message.message, message_text);
+        assert_eq!(message.sender, sender);
+        assert_eq!(message.chat_id, chat.id);
+        assert_eq!(message.parent_id, Some(chat_parent_message_id));
+        assert_eq!(message.deleted_at, None);
     }
 }

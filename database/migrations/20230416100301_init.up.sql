@@ -3,11 +3,12 @@
 CREATE TABLE users
 (
     id            uuid PRIMARY KEY,
-    alias         character varying(255),
+    alias         character varying(255) NOT NULL,
     first_name    character varying(255),
     last_name     character varying(255),
-    phone_number  character varying(255),
-    language_code character varying(5), -- ISO 639-1 standard language codes
+    phone_number  character varying(255) NOT NULL,
+    language_code character varying(5) NOT NULL, -- ISO 639-1 standard language codes
+    avatar        text, -- ISO 639-1 standard language codes
     created_at    timestamp(0) without time zone NOT NULL,
     updated_at    timestamp(0) without time zone NOT NULL,
     accessed_at   timestamp(0) without time zone NOT NULL

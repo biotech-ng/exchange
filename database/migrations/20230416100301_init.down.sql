@@ -1,7 +1,16 @@
 -- Messages
 
+DROP INDEX chat_messages_id_and_chat_id_index;
 DROP INDEX chat_messages_id_index;
 DROP TABLE chat_messages;
+
+-- Chat Participants
+
+DROP INDEX chat_participant_chat_id_and_participant_index;
+DROP INDEX chat_participant_id_index;
+DROP TABLE chat_participant;
+
+DROP TYPE ChatParticipantRole;
 
 -- Chats
 

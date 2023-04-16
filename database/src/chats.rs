@@ -60,19 +60,6 @@ pub async fn get_chat(pool: &PgPool, id: Uuid) -> Result<Chat, sqlx::Error> {
         .map_err(Into::into)
 }
 
-// CREATE TABLE chat_messages
-// (
-// id         uuid PRIMARY KEY,
-// chat_id    uuid REFERENCES chats(id),
-// sender     character varying(255) NOT NULL, -- User alias
-// message    text NOT NULL,
-// parent_id  uuid REFERENCES chat_messages(id),
-
-// created_at timestamp(0) without time zone NOT NULL,
-// updated_at timestamp(0) without time zone NOT NULL,
-// deleted_at timestamp(0) without time zone
-// );
-
 #[derive(sqlx::FromRow)]
 pub struct ChatMessage {
     pub id: Uuid,
@@ -84,6 +71,8 @@ pub struct ChatMessage {
     pub updated_at: PrimitiveDateTime,
     pub deleted_at: Option<PrimitiveDateTime>,
 }
+
+// TODO test
 pub async fn insert_chat_message<T1: AsRef<str>, T2: AsRef<str>>(
     pool: &PgPool,
     chat_id: Uuid,
@@ -108,7 +97,7 @@ pub async fn insert_chat_message<T1: AsRef<str>, T2: AsRef<str>>(
         .map(|x| x.id)
 }
 
-
+// TODO test
 pub async fn get_chat_message(pool: &PgPool, id: Uuid) -> Result<ChatMessage, sqlx::Error> {
     sqlx::query_as!(
             ChatMessage,
@@ -129,7 +118,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_create_user() {
+    async fn test_create_chat() {
         let r#type = ChatType::Channel;
         let title = "chat title";
         let description = "chat description";

@@ -34,6 +34,22 @@ CREATE TABLE chats
 );
 CREATE UNIQUE INDEX chats_id_index ON chats (id uuid_ops);
 
+-- Chat Participants
+
+CREATE TYPE ChatParticipantRole AS ENUM ('admin', 'reader', 'writer', 'banned');
+
+CREATE TABLE chat_participant
+(
+    id          uuid PRIMARY KEY,
+    chat_id     uuid REFERENCES chats(id) NOT NULL,
+    participant character varying(255) NOT NULL, -- User alias
+    role        ChatParticipantRole NOT NULL,
+    created_at  timestamp(0) without time zone NOT NULL,
+    updated_at  timestamp(0) without time zone NOT NULL
+);
+CREATE UNIQUE INDEX chat_participant_id_index ON chat_participant (id uuid_ops);
+CREATE UNIQUE INDEX chat_participant_chat_id_and_participant_index ON chat_participant (chat_id, participant);
+
 -- Messages
 
 CREATE TABLE chat_messages
@@ -48,3 +64,4 @@ CREATE TABLE chat_messages
     deleted_at timestamp(0) without time zone
 );
 CREATE UNIQUE INDEX chat_messages_id_index ON chat_messages (id uuid_ops);
+CREATE UNIQUE INDEX chat_messages_id_and_chat_id_index ON chat_messages (id, chat_id);

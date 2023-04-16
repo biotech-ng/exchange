@@ -50,19 +50,19 @@ CREATE TABLE chat_messages
 CREATE UNIQUE INDEX chat_messages_id_index ON chat_messages (id uuid_ops);
 CREATE UNIQUE INDEX chat_messages_id_and_chat_id_index ON chat_messages (id, chat_id);
 
--- Chat Participants
+-- Chat Member
 
-CREATE TYPE ChatParticipantRole AS ENUM ('creator', 'admin', 'member', 'left', 'banned');
+CREATE TYPE ChatMemberRole AS ENUM ('creator', 'admin', 'member', 'left', 'banned');
 
-CREATE TABLE chat_participant
+CREATE TABLE chat_member
 (
     id                   uuid PRIMARY KEY,
     chat_id              uuid REFERENCES chats(id) NOT NULL,
-    participant          character varying(255) NOT NULL, -- User alias
-    role                 ChatParticipantRole NOT NULL,
+    member               character varying(255) NOT NULL, -- User alias
+    role                 ChatMemberRole NOT NULL,
     last_read_message_id uuid REFERENCES chat_messages(id),
     created_at           timestamp(0) without time zone NOT NULL,
     updated_at           timestamp(0) without time zone NOT NULL
 );
-CREATE UNIQUE INDEX chat_participant_id_index ON chat_participant (id uuid_ops);
-CREATE UNIQUE INDEX chat_participant_chat_id_and_participant_index ON chat_participant (chat_id, participant);
+CREATE UNIQUE INDEX chat_member_id_index ON chat_member (id uuid_ops);
+CREATE UNIQUE INDEX chat_member_chat_id_and_participant_index ON chat_member (chat_id, member);

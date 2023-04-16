@@ -61,7 +61,7 @@ pub async fn get_chat(pool: &PgPool, id: Uuid) -> Result<Chat, sqlx::Error> {
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy, sqlx::Type)]
 #[sqlx(rename_all = "snake_case")]
-pub enum ChatParticipantRole {
+pub enum ChatMemberRole {
     Creator,
     Admin,
     Member,
@@ -70,43 +70,43 @@ pub enum ChatParticipantRole {
 }
 
 #[derive(sqlx::FromRow)]
-pub struct ChatParticipant {
+pub struct ChatMember {
     pub id: Uuid,
     pub chat_id: Uuid,
-    pub participant: String,
-    pub role: ChatParticipantRole,
+    pub member: String,
+    pub role: ChatMemberRole,
     pub last_read_message_id: Option<Uuid>,
     pub created_at: PrimitiveDateTime,
     pub updated_at: PrimitiveDateTime,
 }
 
-pub async fn insert_chat_participant<T: AsRef<str>>(
+pub async fn insert_chat_member<T: AsRef<str>>(
     pool: &PgPool,
     chat_id: Uuid,
-    participant: T,
-    role: ChatParticipantRole,
+    member: T,
+    role: ChatMemberRole,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
             r#"
-                INSERT INTO chat_participant ( id, chat_id, participant, role, created_at, updated_at )
+                INSERT INTO chat_member ( id, chat_id, member, role, created_at, updated_at )
                 SELECT $1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
                 RETURNING id
             "#,
             Uuid::new_v4(),
             chat_id,
-            participant.as_ref(),
-            role as ChatParticipantRole,
+            member.as_ref(),
+            role as ChatMemberRole,
         )
         .fetch_one(pool)
         .await
         .map(|x| x.id)
 }
 
-pub async fn get_chat_participant(pool: &PgPool, id: Uuid) -> Result<ChatParticipant, sqlx::Error> {
+pub async fn get_chat_member(pool: &PgPool, id: Uuid) -> Result<ChatMember, sqlx::Error> {
     sqlx::query_as!(
-            ChatParticipant,
+            ChatMember,
             r#"
-                SELECT id, chat_id, participant, role as "role: _", last_read_message_id, created_at, updated_at FROM chat_participant
+                SELECT id, chat_id, member, role as "role: _", last_read_message_id, created_at, updated_at FROM chat_member
                 WHERE id = $1
             "#,
             id
@@ -244,15 +244,15 @@ mod tests {
         let user = create_user(&pool).await;
         let chat = create_chat(&pool).await;
 
-        let role = ChatParticipantRole::Writer;
+        let role = ChatMemberRole::Member;
 
-        let chat_participant_id = insert_chat_participant(&pool, chat.id, user.alias, role)
+        let chat_participant_id = insert_chat_member(&pool, chat.id, user.alias, role)
             .await
-            .expect("chat participant created");
+            .expect("chat member created");
 
-        let chat_participant = get_chat_participant(&pool, chat_participant_id)
+        let chat_participant = get_chat_member(&pool, chat_participant_id)
             .await
-            .expect("chat participant");
+            .expect("chat member");
 
         assert_eq!(chat_participant.role, role);
     }

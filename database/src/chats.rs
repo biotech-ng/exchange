@@ -87,19 +87,19 @@ pub async fn insert_chat_member<T: AsRef<str>>(
     role: ChatMemberRole,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
-            r#"
+        r#"
                 INSERT INTO chat_member ( id, chat_id, member, role, created_at, updated_at )
                 SELECT $1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
                 RETURNING id
             "#,
-            Uuid::new_v4(),
-            chat_id,
-            member.as_ref(),
-            role as ChatMemberRole,
-        )
-        .fetch_one(pool)
-        .await
-        .map(|x| x.id)
+        Uuid::new_v4(),
+        chat_id,
+        member.as_ref(),
+        role as ChatMemberRole,
+    )
+    .fetch_one(pool)
+    .await
+    .map(|x| x.id)
 }
 
 pub async fn get_chat_member(pool: &PgPool, id: Uuid) -> Result<ChatMember, sqlx::Error> {
@@ -229,8 +229,8 @@ mod tests {
             &avatar,
             &country_code,
         )
-            .await
-            .expect("user is created");
+        .await
+        .expect("user is created");
 
         get_user(&pool, id)
             .await
@@ -266,15 +266,14 @@ mod tests {
         let parent_sender = "vova";
         let parent_message_text = "test message";
 
-        let chat_parent_message_id = insert_chat_message(
-            &pool,
-            chat.id,
-            parent_sender,
-            parent_message_text,
-            None,
-        ).await.expect("parent message is created");
+        let chat_parent_message_id =
+            insert_chat_message(&pool, chat.id, parent_sender, parent_message_text, None)
+                .await
+                .expect("parent message is created");
 
-        let parent_message = get_chat_message(&pool, chat_parent_message_id).await.expect("parent message");
+        let parent_message = get_chat_message(&pool, chat_parent_message_id)
+            .await
+            .expect("parent message");
 
         assert_eq!(parent_message.id, chat_parent_message_id);
         assert_eq!(parent_message.message, parent_message_text);
@@ -292,9 +291,13 @@ mod tests {
             sender,
             message_text,
             Some(parent_message.id),
-        ).await.expect("parent message is created");
+        )
+        .await
+        .expect("parent message is created");
 
-        let message = get_chat_message(&pool, chat_message_id).await.expect("parent message");
+        let message = get_chat_message(&pool, chat_message_id)
+            .await
+            .expect("parent message");
 
         assert_eq!(message.id, chat_message_id);
         assert_eq!(message.message, message_text);

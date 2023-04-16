@@ -73,7 +73,7 @@ CREATE TABLE addresses
 (
     id         uuid PRIMARY KEY,
     zip_code   integer NOT NULL,
-    country    character varying(255) NOT NULL,
+    country    character varying(2) NOT NULL, -- ISO 3166, Alpha-2
     region     character varying(255) NOT NULL,
     city       character varying(255) NOT NULL,
     district   character varying(255),

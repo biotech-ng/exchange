@@ -1,3 +1,4 @@
+pub mod addresses;
 pub mod chats;
 pub mod users;
 

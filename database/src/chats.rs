@@ -78,7 +78,6 @@ pub struct ChatParticipant {
     pub updated_at: PrimitiveDateTime,
 }
 
-// TODO test
 pub async fn insert_chat_participant<T: AsRef<str>>(
     pool: &PgPool,
     chat_id: Uuid,
@@ -101,7 +100,6 @@ pub async fn insert_chat_participant<T: AsRef<str>>(
         .map(|x| x.id)
 }
 
-// TODO test
 pub async fn get_chat_participant(pool: &PgPool, id: Uuid) -> Result<ChatParticipant, sqlx::Error> {
     sqlx::query_as!(
             ChatParticipant,
@@ -231,8 +229,8 @@ mod tests {
             &avatar,
             &country_code,
         )
-        .await
-        .expect("user is created");
+            .await
+            .expect("user is created");
 
         get_user(&pool, id)
             .await
@@ -257,5 +255,32 @@ mod tests {
             .expect("chat participant");
 
         assert_eq!(chat_participant.role, role);
+    }
+
+    #[tokio::test]
+    async fn test_create_chat_message() {
+        let pool = pg_pool().await.expect("pool is expected");
+
+        let chat = create_chat(&pool).await;
+
+        let parent_sender = "vova";
+        let parent_message_text = "test message";
+
+        let chat_parent_message_id = insert_chat_message(
+            &pool,
+            chat.id,
+            parent_sender,
+            parent_message_text,
+            None,
+        ).await.expect("parent message is created");
+
+        let parent_message = get_chat_message(&pool, chat_parent_message_id).await.expect("parent message");
+
+        assert_eq!(parent_message.id, chat_parent_message_id);
+        assert_eq!(parent_message.message, parent_message_text);
+        assert_eq!(parent_message.sender, parent_sender);
+        assert_eq!(parent_message.chat_id, chat.id);
+        assert_eq!(parent_message.parent_id, None);
+        assert_eq!(parent_message.deleted_at, None);
     }
 }

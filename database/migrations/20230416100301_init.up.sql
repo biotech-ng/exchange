@@ -122,3 +122,16 @@ CREATE TABLE projects
     updated_at  timestamp(0) without time zone NOT NULL
 );
 CREATE UNIQUE INDEX projects_id_index ON companies (id uuid_ops);
+
+-- Company projects
+
+CREATE TABLE company_projects
+(
+    id         uuid PRIMARY KEY,
+    project_id uuid REFERENCES projects(id) NOT NULL,
+    company_id uuid REFERENCES companies(id) NOT NULL,
+    created_at timestamp(0) without time zone NOT NULL,
+    updated_at timestamp(0) without time zone NOT NULL
+);
+CREATE UNIQUE INDEX company_projects_id_index ON company_projects (id uuid_ops);
+CREATE UNIQUE INDEX company_projects_project_id_and_company_id_index ON company_projects (project_id, company_id);

@@ -1,3 +1,10 @@
+-- Company projects
+
+DROP INDEX company_projects_project_id_and_company_id_index;
+DROP INDEX company_projects_id_index;
+
+DROP TABLE company_projects;
+
 -- Projects
 
 DROP INDEX projects_id_index;

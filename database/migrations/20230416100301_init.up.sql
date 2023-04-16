@@ -24,6 +24,7 @@ CREATE TABLE chats
     type        ChatType NOT NULL,
     title       character varying(255) NOT NULL,
     description text,
+    avatar      text,
     created_at  timestamp(0) without time zone NOT NULL,
     updated_at  timestamp(0) without time zone NOT NULL
 );

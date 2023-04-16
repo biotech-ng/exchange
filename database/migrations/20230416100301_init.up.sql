@@ -1,3 +1,5 @@
+-- Users
+
 CREATE TABLE users
 (
     id            uuid PRIMARY KEY,
@@ -16,6 +18,8 @@ CREATE UNIQUE INDEX users_id_index ON users (id uuid_ops);
 CREATE UNIQUE INDEX users_alias_index ON users (alias text_ops);
 CREATE UNIQUE INDEX users_phone_number_index ON users (phone_number text_ops);
 
+-- Chats
+
 CREATE TYPE ChatType AS ENUM ('private', 'group', 'channel');
 
 CREATE TABLE chats
@@ -30,10 +34,13 @@ CREATE TABLE chats
 );
 CREATE UNIQUE INDEX chats_id_index ON chats (id uuid_ops);
 
+-- Messages
+
 CREATE TABLE chat_messages
 (
     id         uuid PRIMARY KEY,
-    message    text,
+    sender     character varying(255) NOT NULL, -- User alias
+    message    text NOT NULL,
     parent_id  uuid REFERENCES chat_messages(id),
     created_at timestamp(0) without time zone NOT NULL,
     updated_at timestamp(0) without time zone NOT NULL

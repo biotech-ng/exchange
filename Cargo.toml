@@ -1,6 +1,8 @@
 [workspace]
 
 members = [
+    "database",
+    "database_bin",
     "frontend",
     "frontend_lib",
 ]

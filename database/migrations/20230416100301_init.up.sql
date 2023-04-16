@@ -110,3 +110,15 @@ CREATE TABLE company_members
 );
 CREATE UNIQUE INDEX company_members_id_index ON company_members (id uuid_ops);
 CREATE UNIQUE INDEX company_members_user_id_and_company_id_index ON company_members (user_id, company_id);
+
+-- Project
+
+CREATE TABLE projects
+(
+    id          uuid PRIMARY KEY,
+    name        character varying(255) NOT NULL,
+    description text NOT NULL,
+    created_at  timestamp(0) without time zone NOT NULL,
+    updated_at  timestamp(0) without time zone NOT NULL
+);
+CREATE UNIQUE INDEX projects_id_index ON companies (id uuid_ops);

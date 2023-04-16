@@ -1,3 +1,9 @@
+-- Projects
+
+DROP INDEX projects_id_index;
+
+DROP TABLE projects;
+
 -- Company Member
 
 DROP INDEX company_members_user_id_and_company_id_index;

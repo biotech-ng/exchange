@@ -23,9 +23,4 @@ mod tests {
     async fn test_can_create_a_pg_pool() {
         assert!(pg_pool().await.is_ok());
     }
-
-    #[tokio::test]
-    async fn test_create_user() {
-        assert!(pg_pool().await.is_ok());
-    }
 }

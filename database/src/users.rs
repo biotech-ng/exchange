@@ -61,3 +61,37 @@ pub async fn get(pool: &PgPool,id: Uuid) -> Result<User, sqlx::Error> {
         .await
         .map_err(Into::into)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::pg_pool;
+    use super::*;
+
+    #[tokio::test]
+    async fn test_create_user() {
+        let alias = format!("vova:{}", Uuid::new_v4());
+        let first_name = "volodymyr";
+        let last_name = "gorbenko";
+        let phone_number = format!("pn:{}", Uuid::new_v4());
+        let language_code = "ru-ru";
+        let avatar = "https://some_image.png";
+        let country_code = "SW";
+
+        let pool = pg_pool().await.expect("pool is expected");
+
+        let id = insert(
+            &pool,
+            alias.as_str(),
+            first_name,
+            last_name,
+            phone_number.as_str(),
+            language_code,
+            avatar,
+            country_code,
+        ).await.expect("user is created");
+
+        let user = get(&pool, id).await.expect("user for given id is expected");
+
+        assert_eq!(alias, user.alias);
+    }
+}

@@ -1,3 +1,4 @@
+pub mod chats;
 pub mod users;
 
 use dotenv::dotenv;

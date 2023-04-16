@@ -28,4 +28,14 @@ CREATE TABLE chats
     created_at  timestamp(0) without time zone NOT NULL,
     updated_at  timestamp(0) without time zone NOT NULL
 );
-CREATE UNIQUE INDEX chats_id_index ON users (id uuid_ops);
+CREATE UNIQUE INDEX chats_id_index ON chats (id uuid_ops);
+
+CREATE TABLE chat_messages
+(
+    id         uuid PRIMARY KEY,
+    message    text,
+    parent_id  uuid REFERENCES chat_messages(id),
+    created_at timestamp(0) without time zone NOT NULL,
+    updated_at timestamp(0) without time zone NOT NULL
+);
+CREATE UNIQUE INDEX chat_messages_id_index ON chat_messages (id uuid_ops);

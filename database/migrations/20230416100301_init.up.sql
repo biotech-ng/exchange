@@ -20,6 +20,11 @@ CREATE TYPE ChatType AS ENUM ('private', 'group', 'channel');
 
 CREATE TABLE chats
 (
-    id uuid PRIMARY KEY
+    id          uuid PRIMARY KEY,
+    type        ChatType NOT NULL,
+    title       character varying(255) NOT NULL,
+    description text,
+    created_at  timestamp(0) without time zone NOT NULL,
+    updated_at  timestamp(0) without time zone NOT NULL
 );
 CREATE UNIQUE INDEX chats_id_index ON users (id uuid_ops);

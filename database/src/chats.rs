@@ -74,6 +74,7 @@ pub struct ChatParticipant {
     pub chat_id: Uuid,
     pub participant: String,
     pub role: ChatParticipantRole,
+    pub last_read_message_id: Option<Uuid>,
     pub created_at: PrimitiveDateTime,
     pub updated_at: PrimitiveDateTime,
 }
@@ -104,7 +105,7 @@ pub async fn get_chat_participant(pool: &PgPool, id: Uuid) -> Result<ChatPartici
     sqlx::query_as!(
             ChatParticipant,
             r#"
-                SELECT id, chat_id, participant, role as "role: _", created_at, updated_at FROM chat_participant
+                SELECT id, chat_id, participant, role as "role: _", last_read_message_id, created_at, updated_at FROM chat_participant
                 WHERE id = $1
             "#,
             id

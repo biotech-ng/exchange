@@ -40,12 +40,13 @@ CREATE TYPE ChatParticipantRole AS ENUM ('admin', 'reader', 'writer', 'banned');
 
 CREATE TABLE chat_participant
 (
-    id          uuid PRIMARY KEY,
-    chat_id     uuid REFERENCES chats(id) NOT NULL,
-    participant character varying(255) NOT NULL, -- User alias
-    role        ChatParticipantRole NOT NULL,
-    created_at  timestamp(0) without time zone NOT NULL,
-    updated_at  timestamp(0) without time zone NOT NULL
+    id                   uuid PRIMARY KEY,
+    chat_id              uuid REFERENCES chats(id) NOT NULL,
+    participant          character varying(255) NOT NULL, -- User alias
+    role                 ChatParticipantRole NOT NULL,
+    last_read_message_id uuid REFERENCES chats(id),
+    created_at           timestamp(0) without time zone NOT NULL,
+    updated_at           timestamp(0) without time zone NOT NULL
 );
 CREATE UNIQUE INDEX chat_participant_id_index ON chat_participant (id uuid_ops);
 CREATE UNIQUE INDEX chat_participant_chat_id_and_participant_index ON chat_participant (chat_id, participant);

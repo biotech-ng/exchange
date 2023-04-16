@@ -1,3 +1,8 @@
+-- Chats
+
+DROP INDEX addresses_id_index;
+DROP TABLE addresses;
+
 -- Chat Participants
 
 DROP INDEX chat_member_chat_id_and_participant_index;

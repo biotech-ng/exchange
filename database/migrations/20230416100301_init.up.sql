@@ -66,3 +66,21 @@ CREATE TABLE chat_member
 );
 CREATE UNIQUE INDEX chat_member_id_index ON chat_member (id uuid_ops);
 CREATE UNIQUE INDEX chat_member_chat_id_and_participant_index ON chat_member (chat_id, member);
+
+-- Address
+
+CREATE TABLE addresses
+(
+    id         uuid PRIMARY KEY,
+    zip_code   integer NOT NULL,
+    country    character varying(255) NOT NULL,
+    region     character varying(255) NOT NULL,
+    city       character varying(255) NOT NULL,
+    district   character varying(255),
+    street     character varying(255) NOT NULL,
+    building   character varying(255) NOT NULL,
+    apartment  character varying(255) NOT NULL,
+    created_at timestamp(0) without time zone NOT NULL,
+    updated_at timestamp(0) without time zone NOT NULL
+);
+CREATE UNIQUE INDEX addresses_id_index ON addresses (id uuid_ops);

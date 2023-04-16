@@ -15,3 +15,11 @@ CREATE TABLE users
 CREATE UNIQUE INDEX users_id_index ON users (id uuid_ops);
 CREATE UNIQUE INDEX users_alias_index ON users (alias text_ops);
 CREATE UNIQUE INDEX users_phone_number_index ON users (phone_number text_ops);
+
+CREATE TYPE ChatType AS ENUM ('private', 'group', 'channel');
+
+CREATE TABLE chats
+(
+    id uuid PRIMARY KEY
+);
+CREATE UNIQUE INDEX chats_id_index ON users (id uuid_ops);

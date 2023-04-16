@@ -93,6 +93,7 @@ mod tests {
     use crate::addresses::{Address, get_addresses, insert_addresses};
     use super::*;
     use crate::pg_pool;
+    use crate::users::{get_user, insert_user, User};
 
     async fn create_addresses(pool: &PgPool) -> Address {
         let zip_code = 76236;
@@ -115,13 +116,29 @@ mod tests {
             .expect("user for given id is expected")
     }
 
+    async fn create_company(pool: &PgPool) -> Company {
+        let address = create_addresses(&pool).await;
+
+        let name = "company";
+
+        let id = insert_company(
+            &pool, name, address.id,
+        )
+            .await
+            .expect("company is created");
+
+        get_company(&pool, id)
+            .await
+            .expect("company for given id is expected")
+    }
+
     #[tokio::test]
     async fn test_create_company() {
         let pool = pg_pool().await.expect("pool is expected");
 
         let address = create_addresses(&pool).await;
 
-        let name = "sw";
+        let name = "company";
 
         let id = insert_company(
             &pool, name, address.id,
@@ -137,37 +154,49 @@ mod tests {
         assert_eq!(address.id, company.address_id);
     }
 
-    //
-    // #[tokio::test]
-    // async fn test_create_company_member() {
-    //     let zip_code = 76236;
-    //     let country = "sw";
-    //     let region = "region";
-    //     let city = "city";
-    //     let district = Some("district");
-    //     let street = "street";
-    //     let building = "building";
-    //     let apartment = "apartment";
-    //
-    //     let pool = pg_pool().await.expect("pool is expected");
-    //
-    //     let id = insert_addresses(
-    //         &pool, zip_code, country, region, city, district, street, building, apartment,
-    //     )
-    //         .await
-    //         .expect("user is created");
-    //
-    //     let address = get_addresses(&pool, id)
-    //         .await
-    //         .expect("user for given id is expected");
-    //
-    //     assert_eq!(zip_code, address.zip_code);
-    //     assert_eq!(country, address.country);
-    //     assert_eq!(region, address.region);
-    //     assert_eq!(city, address.city);
-    //     assert_eq!(district, address.district.as_ref().map(|x| x.as_ref()));
-    //     assert_eq!(street, address.street);
-    //     assert_eq!(building, address.building);
-    //     assert_eq!(apartment, address.apartment);
-    // }
+    async fn create_user(pool: &PgPool) -> User {
+        let alias = format!("vova:{}", Uuid::new_v4());
+        let first_name = "volodymyr";
+        let last_name = "gorbenko";
+        let phone_number = format!("pn:{}", Uuid::new_v4());
+        let language_code = "ru-ru";
+        let avatar = "https://some_image.png";
+        let country_code = "SW";
+
+        let id = insert_user(
+            &pool,
+            &alias,
+            &first_name,
+            &last_name,
+            &phone_number,
+            &language_code,
+            &avatar,
+            &country_code,
+        )
+            .await
+            .expect("user is created");
+
+        get_user(&pool, id)
+            .await
+            .expect("user for given id is expected")
+    }
+
+    #[tokio::test]
+    async fn test_create_company_member() {
+        let pool = pg_pool().await.expect("pool is expected");
+
+        let company = create_company(&pool).await;
+        let user = create_user(&pool).await;
+
+        let company_member_id = insert_company_member(
+            &pool, user.id, company.id
+        ).await.expect("company member");
+
+        let company_member = get_company_member(
+            &pool, company_member_id
+        ).await.expect("company member");
+
+        assert_eq!(company_member.company_id, company.id);
+        assert_eq!(company_member.user_id, user.id);
+    }
 }

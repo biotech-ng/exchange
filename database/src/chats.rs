@@ -1,10 +1,9 @@
-use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use sqlx::types::time::PrimitiveDateTime;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, PartialEq, Eq, Copy, Serialize, Deserialize, sqlx::Type)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq, Eq, Copy, sqlx::Type)]
+#[sqlx(rename_all = "snake_case")]
 pub enum ChatType {
     Private,
     Group,

@@ -1,5 +1,5 @@
-use sqlx::PgPool;
 use sqlx::types::time::PrimitiveDateTime;
+use sqlx::PgPool;
 use uuid::Uuid;
 
 #[derive(sqlx::FromRow)]
@@ -17,7 +17,15 @@ pub struct User {
     pub accessed_at: PrimitiveDateTime,
 }
 
-pub async fn insert<T1: AsRef<str>, T2: AsRef<str>, T3: AsRef<str>, T4: AsRef<str>, T5: AsRef<str>, T6: AsRef<str>, T7: AsRef<str>>(
+pub async fn insert_user<
+    T1: AsRef<str>,
+    T2: AsRef<str>,
+    T3: AsRef<str>,
+    T4: AsRef<str>,
+    T5: AsRef<str>,
+    T6: AsRef<str>,
+    T7: AsRef<str>,
+>(
     pool: &PgPool,
     alias: T1,
     first_name: T2,
@@ -47,8 +55,7 @@ pub async fn insert<T1: AsRef<str>, T2: AsRef<str>, T3: AsRef<str>, T4: AsRef<st
         .map(|x| x.id)
 }
 
-
-pub async fn get(pool: &PgPool, id: Uuid) -> Result<User, sqlx::Error> {
+pub async fn get_user(pool: &PgPool, id: Uuid) -> Result<User, sqlx::Error> {
     sqlx::query_as!(
             User,
             r#"
@@ -64,8 +71,8 @@ pub async fn get(pool: &PgPool, id: Uuid) -> Result<User, sqlx::Error> {
 
 #[cfg(test)]
 mod tests {
-    use crate::pg_pool;
     use super::*;
+    use crate::pg_pool;
 
     #[tokio::test]
     async fn test_create_user() {
@@ -79,7 +86,7 @@ mod tests {
 
         let pool = pg_pool().await.expect("pool is expected");
 
-        let id = insert(
+        let id = insert_user(
             &pool,
             &alias,
             &first_name,
@@ -88,9 +95,13 @@ mod tests {
             &language_code,
             &avatar,
             &country_code,
-        ).await.expect("user is created");
+        )
+        .await
+        .expect("user is created");
 
-        let user = get(&pool, id).await.expect("user for given id is expected");
+        let user = get_user(&pool, id)
+            .await
+            .expect("user for given id is expected");
 
         assert_eq!(alias, user.alias);
         assert_eq!(first_name, user.first_name.expect("first name"));

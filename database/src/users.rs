@@ -17,15 +17,15 @@ pub struct User {
     pub accessed_at: PrimitiveDateTime,
 }
 
-pub async fn insert(
+pub async fn insert<T1: AsRef<str>, T2: AsRef<str>, T3: AsRef<str>, T4: AsRef<str>, T5: AsRef<str>, T6: AsRef<str>, T7: AsRef<str>>(
     pool: &PgPool,
-    alias: &str,
-    first_name: &str,
-    last_name: &str,
-    phone_number: &str,
-    language_code: &str,
-    avatar: &str,
-    country_code: &str,
+    alias: T1,
+    first_name: T2,
+    last_name: T3,
+    phone_number: T4,
+    language_code: T5,
+    avatar: T6,
+    country_code: T7,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
             r#"
@@ -34,13 +34,13 @@ pub async fn insert(
                 RETURNING id
             "#,
             Uuid::new_v4(),
-            alias,
-            first_name,
-            last_name,
-            phone_number,
-            language_code,
-            avatar,
-            country_code
+            alias.as_ref(),
+            first_name.as_ref(),
+            last_name.as_ref(),
+            phone_number.as_ref(),
+            language_code.as_ref(),
+            avatar.as_ref(),
+            country_code.as_ref()
         )
         .fetch_one(pool)
         .await
@@ -48,7 +48,7 @@ pub async fn insert(
 }
 
 
-pub async fn get(pool: &PgPool,id: Uuid) -> Result<User, sqlx::Error> {
+pub async fn get(pool: &PgPool, id: Uuid) -> Result<User, sqlx::Error> {
     sqlx::query_as!(
             User,
             r#"
@@ -81,17 +81,23 @@ mod tests {
 
         let id = insert(
             &pool,
-            alias.as_str(),
-            first_name,
-            last_name,
-            phone_number.as_str(),
-            language_code,
-            avatar,
-            country_code,
+            &alias,
+            &first_name,
+            &last_name,
+            &phone_number,
+            &language_code,
+            &avatar,
+            &country_code,
         ).await.expect("user is created");
 
         let user = get(&pool, id).await.expect("user for given id is expected");
 
         assert_eq!(alias, user.alias);
+        assert_eq!(first_name, user.first_name.expect("first name"));
+        assert_eq!(last_name, user.last_name.expect("last name"));
+        assert_eq!(phone_number, user.phone_number);
+        assert_eq!(language_code, user.language_code);
+        assert_eq!(avatar, user.avatar.expect("avatar"));
+        assert_eq!(country_code, user.country_code.expect("country code"));
     }
 }

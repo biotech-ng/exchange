@@ -126,7 +126,6 @@ pub struct ChatMessage {
     pub deleted_at: Option<PrimitiveDateTime>,
 }
 
-// TODO test
 pub async fn insert_chat_message<T1: AsRef<str>, T2: AsRef<str>>(
     pool: &PgPool,
     chat_id: Uuid,
@@ -151,7 +150,6 @@ pub async fn insert_chat_message<T1: AsRef<str>, T2: AsRef<str>>(
         .map(|x| x.id)
 }
 
-// TODO test
 pub async fn get_chat_message(pool: &PgPool, id: Uuid) -> Result<ChatMessage, sqlx::Error> {
     sqlx::query_as!(
             ChatMessage,

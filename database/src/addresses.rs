@@ -3,7 +3,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 #[derive(sqlx::FromRow)]
-pub struct Addresses {
+pub struct Address {
     pub id: Uuid,
     pub zip_code: i32,
     pub country: String,
@@ -57,9 +57,9 @@ pub async fn insert_addresses<
         .map(|x| x.id)
 }
 
-pub async fn get_addresses(pool: &PgPool, id: Uuid) -> Result<Addresses, sqlx::Error> {
+pub async fn get_addresses(pool: &PgPool, id: Uuid) -> Result<Address, sqlx::Error> {
     sqlx::query_as!(
-            Addresses,
+            Address,
             r#"
                 SELECT id, zip_code, country, region, city, district, street, building, apartment, created_at, updated_at FROM addresses
                 WHERE id = $1

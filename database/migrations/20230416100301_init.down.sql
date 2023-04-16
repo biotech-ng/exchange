@@ -7,6 +7,7 @@ DROP TABLE company_members;
 
 -- Company
 
+DROP INDEX companies_name_and_address_id_index;
 DROP INDEX companies_id_index;
 
 DROP TABLE companies;

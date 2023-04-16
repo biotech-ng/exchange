@@ -96,6 +96,7 @@ CREATE TABLE companies
     updated_at timestamp(0) without time zone NOT NULL
 );
 CREATE UNIQUE INDEX companies_id_index ON companies (id uuid_ops);
+CREATE UNIQUE INDEX companies_name_and_address_id_index ON companies (name, address_id);
 
 -- Company Member
 

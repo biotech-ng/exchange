@@ -60,6 +60,63 @@ pub async fn get_chat(pool: &PgPool, id: Uuid) -> Result<Chat, sqlx::Error> {
         .map_err(Into::into)
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Copy, sqlx::Type)]
+#[sqlx(rename_all = "snake_case")]
+pub enum ChatParticipantRole {
+    Admin,
+    Reader,
+    Writer,
+    Banned,
+}
+
+#[derive(sqlx::FromRow)]
+pub struct ChatParticipant {
+    pub id: Uuid,
+    pub chat_id: Uuid,
+    pub participant: String,
+    pub role: ChatParticipantRole,
+    pub created_at: PrimitiveDateTime,
+    pub updated_at: PrimitiveDateTime,
+}
+
+// TODO test
+pub async fn insert_chat_participant<T: AsRef<str>>(
+    pool: &PgPool,
+    chat_id: Uuid,
+    participant: T,
+    role: ChatParticipantRole,
+) -> Result<Uuid, sqlx::Error> {
+    sqlx::query!(
+            r#"
+                INSERT INTO chat_participant ( id, chat_id, participant, role, created_at, updated_at )
+                SELECT $1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                RETURNING id
+            "#,
+            Uuid::new_v4(),
+            chat_id,
+            participant.as_ref(),
+            role as ChatParticipantRole,
+        )
+        .fetch_one(pool)
+        .await
+        .map(|x| x.id)
+}
+
+// TODO test
+pub async fn get_chat_participant(pool: &PgPool, id: Uuid) -> Result<ChatParticipant, sqlx::Error> {
+    sqlx::query_as!(
+            ChatParticipant,
+            r#"
+                SELECT id, chat_id, participant, role as "role: _", created_at, updated_at FROM chat_participant
+                WHERE id = $1
+            "#,
+            id
+        )
+        .fetch_one(pool)
+        .await
+        .map_err(Into::into)
+}
+
 #[derive(sqlx::FromRow)]
 pub struct ChatMessage {
     pub id: Uuid,

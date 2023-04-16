@@ -1,3 +1,5 @@
+pub mod users;
+
 use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
@@ -19,6 +21,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_can_create_a_pg_pool() {
+        assert!(pg_pool().await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_create_user() {
         assert!(pg_pool().await.is_ok());
     }
 }

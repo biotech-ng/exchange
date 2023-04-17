@@ -27,7 +27,7 @@ impl PortalApp {
             .on_press(UiMessage::DoNothing);
         let search = TextInput::new("What needs to be done?", self.search_input.as_ref())
             .on_input(UiMessage::InputChanged)
-            .padding(5)
+            // .padding(5)
             .size(20);
 
         // let search_state = search.
@@ -44,6 +44,7 @@ impl PortalApp {
             .width(iced::Length::Shrink)
             .height(iced::Length::Shrink)
             .style(theme::Container::Box)
+            .padding(5)
             .into()
     }
 
@@ -58,6 +59,7 @@ impl PortalApp {
             .push(incr)
             .push(label)
             .push(decr)
+            .padding(5)
             .align_items(Alignment::Start);
 
         Container::new(col)
@@ -77,7 +79,6 @@ impl Application for PortalApp {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<UiMessage>) {
-    //fn new() -> Self {
         (
             PortalApp { count: 0, search_input: String::new() },
             Command::none()

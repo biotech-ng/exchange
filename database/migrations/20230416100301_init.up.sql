@@ -125,7 +125,6 @@ CREATE UNIQUE INDEX projects_id_index ON companies (id uuid_ops);
 
 -- Company projects
 
--- TODO add code and test
 CREATE TABLE company_projects
 (
     id         uuid PRIMARY KEY,
@@ -139,14 +138,13 @@ CREATE UNIQUE INDEX company_projects_company_id_and_project_id_index ON company_
 
 -- Project Member
 
--- TODO add code and test
 CREATE TABLE project_members
 (
     id         uuid PRIMARY KEY,
-    user_id    uuid REFERENCES users(id) NOT NULL,
     project_id uuid REFERENCES projects(id) NOT NULL,
+    user_id    uuid REFERENCES users(id) NOT NULL,
     created_at timestamp(0) without time zone NOT NULL,
     updated_at timestamp(0) without time zone NOT NULL
 );
 CREATE UNIQUE INDEX project_members_id_index ON project_members (id uuid_ops);
-CREATE UNIQUE INDEX project_members_user_id_and_company_id_index ON project_members (user_id, project_id);
+CREATE UNIQUE INDEX project_members_company_id_and_user_id_index ON project_members (project_id, user_id);

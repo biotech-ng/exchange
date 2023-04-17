@@ -4,6 +4,7 @@
 3. Сделать компании https://docs.google.com/document/d/13heNpREVAWuK3kHkhIzAUwdBbDx9E5A-IFf_5GmxQfE/edit
 4. Скопировать структуру компании с - https://navigator.sk.ru/orn/1125292
 5. Добавить сущность проект и участники проекта
+6. Use member id instead of alias where possible
 
 Later:
 1. Написать скрипт наполения базы

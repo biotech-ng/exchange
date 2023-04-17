@@ -1,8 +1,8 @@
 pub mod addresses;
 pub mod chats;
-pub mod users;
 pub mod companies;
-mod projects;
+pub mod projects;
+pub mod users;
 
 use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;

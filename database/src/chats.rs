@@ -170,7 +170,7 @@ pub async fn get_chat_message(pool: &PgPool, id: Uuid) -> Result<ChatMessage, sq
 pub mod tests {
     use super::*;
     use crate::pg_pool;
-    use crate::users::{get_user, insert_user, User};
+    use crate::users::{get_user, insert_user, User, UserInput};
 
     #[tokio::test]
     async fn test_create_chat() {
@@ -219,18 +219,19 @@ pub mod tests {
         let avatar = "https://some_image.png";
         let country_code = "SW";
 
-        let id = insert_user(
-            &pool,
-            &alias,
-            &first_name,
-            &last_name,
-            &phone_number,
-            &language_code,
-            &avatar,
-            &country_code,
-        )
-        .await
-        .expect("user is created");
+        let user_input = UserInput {
+            alias,
+            first_name,
+            last_name,
+            phone_number,
+            language_code,
+            avatar,
+            country_code,
+        };
+
+        let id = insert_user(&pool, user_input)
+            .await
+            .expect("user is created");
 
         get_user(&pool, id)
             .await

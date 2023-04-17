@@ -17,6 +17,25 @@ pub struct Address {
     pub updated_at: PrimitiveDateTime,
 }
 
+pub struct AddressInput<
+    T1: AsRef<str>,
+    T2: AsRef<str>,
+    T3: AsRef<str>,
+    T4: AsRef<str>,
+    T5: AsRef<str>,
+    T6: AsRef<str>,
+    T7: AsRef<str>,
+> {
+    pub zip_code: i32,
+    pub country: T1,
+    pub region: T2,
+    pub city: T3,
+    pub district: Option<T4>,
+    pub street: T5,
+    pub building: T6,
+    pub apartment: T7,
+}
+
 pub async fn insert_addresses<
     T1: AsRef<str>,
     T2: AsRef<str>,
@@ -27,14 +46,7 @@ pub async fn insert_addresses<
     T7: AsRef<str>,
 >(
     pool: &PgPool,
-    zip_code: i32,
-    country: T1,
-    region: T2,
-    city: T3,
-    district: Option<T4>,
-    street: T5,
-    building: T6,
-    apartment: T7,
+    address_input: AddressInput<T1, T2, T3, T4, T5, T6, T7>,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
             r#"
@@ -43,14 +55,14 @@ pub async fn insert_addresses<
                 RETURNING id
             "#,
             Uuid::new_v4(),
-            zip_code,
-            country.as_ref(),
-            region.as_ref(),
-            city.as_ref(),
-            district.as_ref().map(|x| x.as_ref()),
-            street.as_ref(),
-            building.as_ref(),
-            apartment.as_ref(),
+            address_input.zip_code,
+            address_input.country.as_ref(),
+            address_input.region.as_ref(),
+            address_input.city.as_ref(),
+            address_input.district.as_ref().map(|x| x.as_ref()),
+            address_input.street.as_ref(),
+            address_input.building.as_ref(),
+            address_input.apartment.as_ref(),
         )
         .fetch_one(pool)
         .await
@@ -89,11 +101,20 @@ mod tests {
 
         let pool = pg_pool().await.expect("pool is expected");
 
-        let id = insert_addresses(
-            &pool, zip_code, country, region, city, district, street, building, apartment,
-        )
-        .await
-        .expect("user is created");
+        let address_input = AddressInput {
+            zip_code,
+            country,
+            region,
+            city,
+            district,
+            street,
+            building,
+            apartment,
+        };
+
+        let id = insert_addresses(&pool, address_input)
+            .await
+            .expect("user is created");
 
         let address = get_addresses(&pool, id)
             .await

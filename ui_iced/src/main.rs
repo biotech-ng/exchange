@@ -4,7 +4,7 @@ use iced::widget::{Button, Column, Container, Row, Text, text_input};
 use iced::widget::text_input::TextInput;
 use iced::widget::focus_next;
 use iced_native::{Command, event, Subscription, subscription, Widget, window};
-// use iced_na
+use iced_native::widget::operation;
 
 struct PortalApp {
     count: i32,
@@ -27,10 +27,7 @@ impl PortalApp {
             .on_press(UiMessage::DoNothing);
         let search = TextInput::new("What needs to be done?", self.search_input.as_ref())
             .on_input(UiMessage::InputChanged)
-            // .padding(5)
             .size(20);
-
-        // let search_state = search.
 
         let col = Row::new()
             .push(menu_btn)
@@ -70,6 +67,25 @@ impl PortalApp {
             .style(theme::Container::Box)
             .into()
     }
+
+    // Column with search and table
+    fn main_chat(&self) -> Element<UiMessage> {
+        let label = Text::new(format!("R-Count: {}", self.count));
+        let incr = Button::new("R-Increment").on_press(UiMessage::Increment);
+        let decr = Button::new("R-Decrement").on_press(UiMessage::Decrement);
+        let col = Row::new()
+            .push(incr)
+            .push(label)
+            .push(decr)
+            .align_items(Alignment::Start);
+
+        Container::new(col)
+            .align_x(alignment::Horizontal::Left)
+            .align_y(alignment::Vertical::Top)
+            .width(iced::Length::Fill)
+            .height(iced::Length::Fill)
+            .into()
+    }
 }
 
 impl Application for PortalApp {
@@ -101,15 +117,11 @@ impl Application for PortalApp {
     }
 
     fn view(&self) -> Element<Self::Message> {
-        let label = Text::new(format!("R-Count: {}", self.count));
-        let incr = Button::new("R-Increment").on_press(UiMessage::Increment);
-        let decr = Button::new("R-Decrement").on_press(UiMessage::Decrement);
         let col = Row::new()
             .push(self.chats_column())
-            .push(incr)
-            .push(label)
-            .push(decr)
+            .push(self.main_chat())
             .align_items(Alignment::Start);
+
         Container::new(col)
             .align_x(alignment::Horizontal::Left)
             .align_y(alignment::Vertical::Top)

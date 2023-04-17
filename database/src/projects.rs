@@ -90,47 +90,9 @@ pub async fn get_company_project(pool: &PgPool, id: Uuid) -> Result<CompanyProje
 
 #[cfg(test)]
 mod tests {
-    use crate::addresses::{Address, get_addresses, insert_addresses};
-    use crate::companies::{Company, get_company, insert_company};
+    use crate::companies::tests::create_company;
     use super::*;
     use crate::pg_pool;
-
-    async fn create_addresses(pool: &PgPool) -> Address {
-        let zip_code = 76236;
-        let country = "sw";
-        let region = "region";
-        let city = "city";
-        let district = Some("district");
-        let street = "street";
-        let building = "building";
-        let apartment = "apartment";
-
-        let id = insert_addresses(
-            pool, zip_code, country, region, city, district, street, building, apartment,
-        )
-            .await
-            .expect("user is created");
-
-        get_addresses(&pool, id)
-            .await
-            .expect("user for given id is expected")
-    }
-
-    async fn create_company(pool: &PgPool) -> Company {
-        let address = create_addresses(&pool).await;
-
-        let name = "company";
-
-        let id = insert_company(
-            &pool, name, address.id,
-        )
-            .await
-            .expect("company is created");
-
-        get_company(&pool, id)
-            .await
-            .expect("company for given id is expected")
-    }
 
     async fn create_project(pool: &PgPool) -> Project {
         let name = "project name";

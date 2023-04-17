@@ -89,13 +89,13 @@ pub async fn get_company_member(pool: &PgPool, id: Uuid) -> Result<CompanyMember
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use crate::addresses::{Address, get_addresses, insert_addresses};
+    use crate::chats::tests::create_user;
     use super::*;
     use crate::pg_pool;
-    use crate::users::{get_user, insert_user, User};
 
-    async fn create_addresses(pool: &PgPool) -> Address {
+    pub async fn create_addresses(pool: &PgPool) -> Address {
         let zip_code = 76236;
         let country = "sw";
         let region = "region";
@@ -116,7 +116,7 @@ mod tests {
             .expect("user for given id is expected")
     }
 
-    async fn create_company(pool: &PgPool) -> Company {
+    pub async fn create_company(pool: &PgPool) -> Company {
         let address = create_addresses(&pool).await;
 
         let name = "company";
@@ -152,33 +152,6 @@ mod tests {
 
         assert_eq!(name, company.name);
         assert_eq!(address.id, company.address_id);
-    }
-
-    async fn create_user(pool: &PgPool) -> User {
-        let alias = format!("vova:{}", Uuid::new_v4());
-        let first_name = "volodymyr";
-        let last_name = "gorbenko";
-        let phone_number = format!("pn:{}", Uuid::new_v4());
-        let language_code = "ru-ru";
-        let avatar = "https://some_image.png";
-        let country_code = "SW";
-
-        let id = insert_user(
-            &pool,
-            &alias,
-            &first_name,
-            &last_name,
-            &phone_number,
-            &language_code,
-            &avatar,
-            &country_code,
-        )
-            .await
-            .expect("user is created");
-
-        get_user(&pool, id)
-            .await
-            .expect("user for given id is expected")
     }
 
     #[tokio::test]

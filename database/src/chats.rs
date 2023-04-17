@@ -167,7 +167,7 @@ pub async fn get_chat_message(pool: &PgPool, id: Uuid) -> Result<ChatMessage, sq
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use crate::pg_pool;
     use crate::users::{get_user, insert_user, User};
@@ -210,7 +210,7 @@ mod tests {
             .expect("user for given id is expected")
     }
 
-    async fn create_user(pool: &PgPool) -> User {
+    pub async fn create_user(pool: &PgPool) -> User {
         let alias = format!("vova:{}", Uuid::new_v4());
         let first_name = "volodymyr";
         let last_name = "gorbenko";

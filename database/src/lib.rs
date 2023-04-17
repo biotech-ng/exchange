@@ -1,4 +1,7 @@
+pub mod addresses;
 pub mod chats;
+pub mod companies;
+pub mod projects;
 pub mod users;
 
 use dotenv::dotenv;
@@ -6,7 +9,7 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use std::time::Duration;
 
-async fn pg_pool() -> Result<PgPool, sqlx::Error> {
+pub async fn pg_pool() -> Result<PgPool, sqlx::Error> {
     dotenv().expect("failed to load .env");
 
     PgPoolOptions::new()

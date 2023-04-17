@@ -17,6 +17,24 @@ pub struct User {
     pub accessed_at: PrimitiveDateTime,
 }
 
+pub struct UserInput<
+    T1: AsRef<str>,
+    T2: AsRef<str>,
+    T3: AsRef<str>,
+    T4: AsRef<str>,
+    T5: AsRef<str>,
+    T6: AsRef<str>,
+    T7: AsRef<str>,
+> {
+    pub alias: T1,
+    pub first_name: T2,
+    pub last_name: T3,
+    pub phone_number: T4,
+    pub language_code: T5,
+    pub avatar: T6,
+    pub country_code: T7,
+}
+
 pub async fn insert_user<
     T1: AsRef<str>,
     T2: AsRef<str>,
@@ -27,13 +45,7 @@ pub async fn insert_user<
     T7: AsRef<str>,
 >(
     pool: &PgPool,
-    alias: T1,
-    first_name: T2,
-    last_name: T3,
-    phone_number: T4,
-    language_code: T5,
-    avatar: T6,
-    country_code: T7,
+    user_input: UserInput<T1, T2, T3, T4, T5, T6, T7>,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
             r#"
@@ -42,13 +54,13 @@ pub async fn insert_user<
                 RETURNING id
             "#,
             Uuid::new_v4(),
-            alias.as_ref(),
-            first_name.as_ref(),
-            last_name.as_ref(),
-            phone_number.as_ref(),
-            language_code.as_ref(),
-            avatar.as_ref(),
-            country_code.as_ref()
+            user_input.alias.as_ref(),
+            user_input.first_name.as_ref(),
+            user_input.last_name.as_ref(),
+            user_input.phone_number.as_ref(),
+            user_input.language_code.as_ref(),
+            user_input.avatar.as_ref(),
+            user_input.country_code.as_ref()
         )
         .fetch_one(pool)
         .await
@@ -86,18 +98,19 @@ mod tests {
 
         let pool = pg_pool().await.expect("pool is expected");
 
-        let id = insert_user(
-            &pool,
-            &alias,
-            &first_name,
-            &last_name,
-            &phone_number,
-            &language_code,
-            &avatar,
-            &country_code,
-        )
-        .await
-        .expect("user is created");
+        let user_input = UserInput {
+            alias: &alias,
+            first_name,
+            last_name,
+            phone_number: &phone_number,
+            language_code,
+            avatar,
+            country_code,
+        };
+
+        let id = insert_user(&pool, user_input)
+            .await
+            .expect("user is created");
 
         let user = get_user(&pool, id)
             .await

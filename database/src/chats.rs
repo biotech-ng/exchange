@@ -61,50 +61,52 @@ pub async fn get_chat(pool: &PgPool, id: Uuid) -> Result<Chat, sqlx::Error> {
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy, sqlx::Type)]
 #[sqlx(rename_all = "snake_case")]
-pub enum ChatParticipantRole {
+pub enum ChatMemberRole {
+    Creator,
     Admin,
-    Reader,
-    Writer,
+    Member,
+    Left,
     Banned,
 }
 
 #[derive(sqlx::FromRow)]
-pub struct ChatParticipant {
+pub struct ChatMember {
     pub id: Uuid,
     pub chat_id: Uuid,
-    pub participant: String,
-    pub role: ChatParticipantRole,
+    pub member: String,
+    pub role: ChatMemberRole,
+    pub last_read_message_id: Option<Uuid>,
     pub created_at: PrimitiveDateTime,
     pub updated_at: PrimitiveDateTime,
 }
 
-pub async fn insert_chat_participant<T: AsRef<str>>(
+pub async fn insert_chat_member<T: AsRef<str>>(
     pool: &PgPool,
     chat_id: Uuid,
-    participant: T,
-    role: ChatParticipantRole,
+    member: T,
+    role: ChatMemberRole,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
-            r#"
-                INSERT INTO chat_participant ( id, chat_id, participant, role, created_at, updated_at )
+        r#"
+                INSERT INTO chat_member ( id, chat_id, member, role, created_at, updated_at )
                 SELECT $1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
                 RETURNING id
             "#,
-            Uuid::new_v4(),
-            chat_id,
-            participant.as_ref(),
-            role as ChatParticipantRole,
-        )
-        .fetch_one(pool)
-        .await
-        .map(|x| x.id)
+        Uuid::new_v4(),
+        chat_id,
+        member.as_ref(),
+        role as ChatMemberRole,
+    )
+    .fetch_one(pool)
+    .await
+    .map(|x| x.id)
 }
 
-pub async fn get_chat_participant(pool: &PgPool, id: Uuid) -> Result<ChatParticipant, sqlx::Error> {
+pub async fn get_chat_member(pool: &PgPool, id: Uuid) -> Result<ChatMember, sqlx::Error> {
     sqlx::query_as!(
-            ChatParticipant,
+            ChatMember,
             r#"
-                SELECT id, chat_id, participant, role as "role: _", created_at, updated_at FROM chat_participant
+                SELECT id, chat_id, member, role as "role: _", last_read_message_id, created_at, updated_at FROM chat_member
                 WHERE id = $1
             "#,
             id
@@ -165,10 +167,10 @@ pub async fn get_chat_message(pool: &PgPool, id: Uuid) -> Result<ChatMessage, sq
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use crate::pg_pool;
-    use crate::users::{get_user, insert_user, User};
+    use crate::users::{get_user, insert_user, User, UserInput};
 
     #[tokio::test]
     async fn test_create_chat() {
@@ -208,7 +210,7 @@ mod tests {
             .expect("user for given id is expected")
     }
 
-    async fn create_user(pool: &PgPool) -> User {
+    pub async fn create_user(pool: &PgPool) -> User {
         let alias = format!("vova:{}", Uuid::new_v4());
         let first_name = "volodymyr";
         let last_name = "gorbenko";
@@ -217,16 +219,17 @@ mod tests {
         let avatar = "https://some_image.png";
         let country_code = "SW";
 
-        let id = insert_user(
-            &pool,
-            &alias,
-            &first_name,
-            &last_name,
-            &phone_number,
-            &language_code,
-            &avatar,
-            &country_code,
-        )
+        let user_input = UserInput {
+            alias,
+            first_name,
+            last_name,
+            phone_number,
+            language_code,
+            avatar,
+            country_code,
+        };
+
+        let id = insert_user(&pool, user_input)
             .await
             .expect("user is created");
 
@@ -242,15 +245,15 @@ mod tests {
         let user = create_user(&pool).await;
         let chat = create_chat(&pool).await;
 
-        let role = ChatParticipantRole::Writer;
+        let role = ChatMemberRole::Member;
 
-        let chat_participant_id = insert_chat_participant(&pool, chat.id, user.alias, role)
+        let chat_participant_id = insert_chat_member(&pool, chat.id, user.alias, role)
             .await
-            .expect("chat participant created");
+            .expect("chat member created");
 
-        let chat_participant = get_chat_participant(&pool, chat_participant_id)
+        let chat_participant = get_chat_member(&pool, chat_participant_id)
             .await
-            .expect("chat participant");
+            .expect("chat member");
 
         assert_eq!(chat_participant.role, role);
     }
@@ -264,15 +267,14 @@ mod tests {
         let parent_sender = "vova";
         let parent_message_text = "test message";
 
-        let chat_parent_message_id = insert_chat_message(
-            &pool,
-            chat.id,
-            parent_sender,
-            parent_message_text,
-            None,
-        ).await.expect("parent message is created");
+        let chat_parent_message_id =
+            insert_chat_message(&pool, chat.id, parent_sender, parent_message_text, None)
+                .await
+                .expect("parent message is created");
 
-        let parent_message = get_chat_message(&pool, chat_parent_message_id).await.expect("parent message");
+        let parent_message = get_chat_message(&pool, chat_parent_message_id)
+            .await
+            .expect("parent message");
 
         assert_eq!(parent_message.id, chat_parent_message_id);
         assert_eq!(parent_message.message, parent_message_text);
@@ -290,9 +292,13 @@ mod tests {
             sender,
             message_text,
             Some(parent_message.id),
-        ).await.expect("parent message is created");
+        )
+        .await
+        .expect("parent message is created");
 
-        let message = get_chat_message(&pool, chat_message_id).await.expect("parent message");
+        let message = get_chat_message(&pool, chat_message_id)
+            .await
+            .expect("parent message");
 
         assert_eq!(message.id, chat_message_id);
         assert_eq!(message.message, message_text);

@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 iced = { version = "0.9.0", default-features = false, features = ["glow"] }
+iced_native = "0.10.1"
 # servo-fontconfig-sys = "5.0.2"

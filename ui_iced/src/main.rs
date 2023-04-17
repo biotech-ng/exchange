@@ -1,5 +1,7 @@
 use iced::{alignment, Alignment, Element, Sandbox, Settings, Theme, theme};
 use iced::widget::{Button, Column, Container, Row, Text, text_input};
+use iced::widget::text_input::TextInput;
+use iced::widget::focus_next;
 
 struct PortalApp {
     count: i32,
@@ -18,10 +20,10 @@ enum UiMessage {
 impl PortalApp {
     // Row with menu button and search input
     fn search_elements(&self) -> Element<UiMessage> {
-        let menu_btn = Button::new("Menu").on_press(UiMessage::DoNothing);
+        let menu_btn = Button::new("Menu")
+            .on_press(UiMessage::DoNothing);
         let search = text_input("What needs to be done?", self.search_input.as_ref())
             .on_input(UiMessage::InputChanged)
-            //.on_submit(UiMessage::CreateTask)
             .padding(5)
             .size(20);
 

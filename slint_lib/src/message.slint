@@ -1,0 +1,113 @@
+import { StandardButton, Button , ListView, LineEdit  } from "std-widgets.slint";
+
+export component Example inherits Dialog {
+    Text {
+      text: "This is a dialog box";
+    }
+    StandardButton { kind: close; }
+    StandardButton { kind: cancel; }
+    Button {
+      text: "More Info";
+      dialog-button-role: action;
+    }
+}
+
+
+component Button inherits Rectangle {
+    in-out property text <=> txt.text;
+    callback clicked <=> touch.clicked;
+    border-radius: root.height / 2;
+    border-width: 1px;
+    border-color: root.background.darker(25%);
+    background: touch.pressed ? #6b8282 : touch.has-hover ? #6c616c :  #456;
+    height: txt.preferred-height * 1.33;
+    min-width: txt.preferred-width + 20px;
+
+    txt := Text {
+        x: (parent.width - self.width)/2 + (touch.pressed ? 2px : 0);
+        y: (parent.height - self.height)/2 + (touch.pressed ? 1px : 0);
+        color: touch.pressed ? #fff : #eee;
+    }
+
+    touch := TouchArea { }
+}
+
+component ImageButton inherits Rectangle {
+    in property <image> image-url <=> img.source;
+    callback clicked <=> touch.clicked;
+    border-radius: root.height / 2;
+    border-width: 1px;
+    border-color: root.background.darker(25%);
+    background: touch.pressed ? #6b8282 : touch.has-hover ? #6c616c :  #ff000000;
+    height: 40px;
+    width: 40px;
+    padding: 10px;
+
+    img := Image {
+        height: 20px;
+        width: 20px;
+    }
+
+    touch := TouchArea { }
+}
+
+component InputSearch inherits Rectangle {
+    callback edit <=> input.edited;
+    out property <bool> focused;
+    border-radius: 5px;
+    border-width: 1px;
+    
+    background: input.has-focus ? #ffffff : #d9d9d9;
+    height: 40px;
+    preferred-width: 100%;
+    padding: 10px;
+
+    input := LineEdit  {
+        font-size: 30px;
+        preferred-width: 100%;
+        placeholder-text: "Search";
+    }
+}
+
+
+export component MyApp inherits Window {
+    preferred-width: 100%;
+    preferred-height: 100%;
+    min-width: 900px;
+    min-height: 600px;
+
+    HorizontalLayout {
+        VerticalLayout {
+            width: 30%;
+            HorizontalLayout {
+                padding: 10px;
+                spacing: 10px;
+
+                ImageButton {
+                    image-url: @image-url("../assets/settings.png");
+                }
+
+                /* Button {
+                    width: 50px;   
+                    height: 50px; 
+                    padding: 0px;                
+                    icon: @image-url("../assets/icon-webxdc.png");
+                    clicked => {}
+                } */
+
+                InputSearch {
+
+                }
+               
+                       
+            }
+
+            ListView { 
+                height: 100%;
+             }
+        }
+        VerticalLayout {
+
+        }
+    }
+}

@@ -3,4 +3,5 @@
 members = [
     "frontend",
     "frontend_lib",
+    "slint_lib",
 ]

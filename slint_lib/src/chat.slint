@@ -1,0 +1,68 @@
+import { RoundImage } from "common.slint";
+import { StandardButton, Button , ListView, LineEdit  } from "std-widgets.slint";
+
+export component ChatRow inherits Rectangle {
+    in property <int> index;
+    background: touch.has-hover ? #e7e7e7 :  #ff000000;    
+   
+    HorizontalLayout {
+        padding: 10px;
+        spacing: 10px;
+        alignment: center;
+
+        RoundImage{
+            image-url: @image-url("assets/face.png");
+            size: 40px;
+        }
+
+        VerticalLayout {
+            
+            Text {                
+                text: index + " Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat";
+                font-weight: 700;
+                color: #000;
+                font-size: 14px;
+                overflow: elide;
+            } 
+
+            Text {
+                text: "Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat";
+                font-weight: 300;
+                color: #9f9f9f;
+                font-size: 14px;
+                overflow: elide;
+            } 
+        }
+
+        VerticalLayout {
+            alignment: start;
+            spacing: 5px;
+
+            Text {
+                horizontal-alignment: right;
+                text: "00:0" + index;
+            } 
+
+            HorizontalLayout {
+                alignment: end;
+                Rectangle {
+                    height: text.preferred-height + 5px;
+                    width: text.preferred-width + 15px;
+                    background: #a0a0a0;
+                    border-radius: self.height / 2;
+    
+                    text := Text {
+                        text: "99+";
+                        font-size: 14px;
+                        color: #fff;
+                    } 
+                }   
+            }
+                     
+        }
+    }
+
+    touch := TouchArea { 
+        mouse-cursor: pointer;
+    }
+}

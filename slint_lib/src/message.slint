@@ -1,0 +1,109 @@
+import { RoundImage } from "common.slint";
+
+export component IncomingMessage inherits Rectangle {
+
+    Rectangle {
+        background: #7196a8;
+
+        HorizontalLayout {
+            padding-right: 300px;  
+            padding: 10px;
+            spacing: 10px;      
+
+            RoundImage{
+                image-url: @image-url("assets/face.png");
+                size: 30px;
+            }
+
+            Rectangle {
+                background: #ffffff;
+                border-radius: 10px;
+
+                HorizontalLayout {
+                    width: 100%;
+                    min-height: 10px;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    padding-bottom: 5px;
+                    padding-top: 5px;
+                    spacing: 10px;
+                    alignment: space-between;
+
+                    Text {
+                        wrap: word-wrap; 
+                        font-size: 14px;                      
+                        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+                    }
+
+                    Text {
+                        y: parent.height - self.height;
+                        text: "00:05";
+                    }
+
+                    Image {                        
+                        width: 20px;
+                        height: 15px;
+                        source: @image-url("assets/readed.png");
+                        image-fit: contain;
+                        y: parent.height - self.height;
+                    }
+                }               
+
+                
+            }
+        }
+    }
+}
+
+export component OutcomingMessage inherits Rectangle {
+
+    Rectangle {
+        background: #7196a8;
+
+        HorizontalLayout {
+            padding-left: 300px;  
+            padding: 10px;
+            spacing: 10px;             
+
+            Rectangle {
+                background: #ffffff;
+                border-radius: 10px;
+
+                HorizontalLayout {
+                    width: 100%;
+                    min-height: 10px;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    padding-bottom: 5px;
+                    padding-top: 5px;
+                    spacing: 10px;
+                    alignment: space-between;
+
+                    Text {
+                        wrap: word-wrap; 
+                        font-size: 14px;                      
+                        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+                    }
+
+                    Text {
+                        y: parent.height - self.height;
+                        text: "00:05";
+                    }
+
+                    Image {                        
+                        width: 20px;
+                        height: 15px;
+                        source: @image-url("assets/readed.png");
+                        image-fit: contain;
+                        y: parent.height - self.height;
+                    }
+                }
+            }
+
+            RoundImage{
+                image-url: @image-url("assets/face.png");
+                size: 30px;
+            }
+        }
+    }
+}

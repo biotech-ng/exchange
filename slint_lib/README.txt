@@ -1,6 +1,6 @@
 
 1. Build for web-asm:
-wasm-pack build --release --target web --verbose
+wasm-pack build --release --target web
 
 2. Run
 python3 -m http.server

@@ -4,3 +4,8 @@
 3. Examples - https://github.com/slint-ui/slint/tree/master/examples
 4. App state example - https://github.com/slint-ui/slint/blob/master/examples/slide_puzzle/main.rs
 5. Plot example - https://github.com/slint-ui/slint/blob/master/examples/plotter/main.rs
+6. Other examples - https://codeberg.org/flovansl/co_sl
+7. Multi-thread example (upgrade_in_event_loop) - https://github.com/slint-ui/cargo-ui/blob/master/src/rustup.rs
+8. API for interactive plugin:
+https://slint-ui.com/releases/1.0.0/docs/rust/slint_interpreter/
+https://docs.rs/slint-interpreter/latest/slint_interpreter/struct.ComponentInstance.html#method.set_callback

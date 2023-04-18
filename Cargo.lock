@@ -3573,8 +3573,10 @@ dependencies = [
 name = "slint_lib"
 version = "0.1.0"
 dependencies = [
+ "console_error_panic_hook",
  "slint 1.0.0",
  "slint-build",
+ "wasm-bindgen",
 ]
 
 [[package]]

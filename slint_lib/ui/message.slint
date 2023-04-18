@@ -57,13 +57,16 @@ export component IncomingMessage inherits Rectangle {
 
 export component OutcomingMessage inherits Rectangle {
 
+    in property <bool> show_plagin;
+
     Rectangle {
         background: #7196a8;
 
         HorizontalLayout {
             padding-left: 300px;  
             padding: 10px;
-            spacing: 10px;             
+            spacing: 10px; 
+            alignment: end;            
 
             Rectangle {
                 background: #ffffff;
@@ -96,6 +99,47 @@ export component OutcomingMessage inherits Rectangle {
                         source: @image-url("assets/readed.png");
                         image-fit: contain;
                         y: parent.height - self.height;
+                    }
+                }
+            }
+
+            RoundImage{
+                image-url: @image-url("assets/face.png");
+                size: 30px;
+            }
+        }
+    }
+}
+
+export component PluginMessage inherits Rectangle {
+
+    in property <bool> show_plagin;
+
+    Rectangle {
+        background: #7196a8;
+
+        HorizontalLayout {
+            padding-left: 300px;  
+            padding: 10px;
+            spacing: 10px; 
+            alignment: end;            
+
+            Rectangle {
+                width: 0%;
+                background: #ffffff;
+                border-radius: 10px;
+
+                HorizontalLayout {
+                    width: 100%;
+                    min-height: 10px;
+                    spacing: 10px;
+                    alignment: end;
+
+                    Image {                        
+                        width: 500px;
+                        height: 500px;
+                        source: @image-url("assets/plugin.png");
+                        image-fit: contain;
                     }
                 }
             }

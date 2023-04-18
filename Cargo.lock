@@ -1560,8 +1560,6 @@ dependencies = [
  "eframe",
  "frontend_lib",
  "slint 1.0.0",
- "slint-build",
- "slint_lib",
 ]
 
 [[package]]
@@ -3528,7 +3526,6 @@ dependencies = [
 name = "slint"
 version = "0.1.0"
 dependencies = [
- "slint 1.0.0",
  "slint_lib",
 ]
 

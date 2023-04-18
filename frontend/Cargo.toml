@@ -9,7 +9,3 @@ edition = "2021"
 eframe="0.21.3"
 slint = "1.0.0"
 frontend_lib = { path = "../frontend_lib" }
-slint_lib = { path = "../slint_lib" }
-
-[build-dependencies]
-slint-build = "1.0.0"

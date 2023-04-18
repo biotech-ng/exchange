@@ -1,4 +1,5 @@
+use slint_lib::*;
 
 fn main() {
-    println!("Hello, world!");
+    PortalApp::new().unwrap().run().unwrap();
 }

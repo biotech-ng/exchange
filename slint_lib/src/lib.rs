@@ -1,4 +1,4 @@
-// slint::include_modules!();
+slint::include_modules!();
 
 #[cfg(test)]
 mod tests {

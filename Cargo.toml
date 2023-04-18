@@ -1,7 +1,11 @@
 [workspace]
+resolver = "2"
 
 members = [
+    "database",
+    "database_bin",
     "frontend",
     "frontend_lib",
+    "slint",
     "slint_lib",
 ]

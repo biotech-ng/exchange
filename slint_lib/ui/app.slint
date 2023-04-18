@@ -4,7 +4,7 @@ import { ChatRow } from "chat.slint";
 import { IncomingMessage, OutcomingMessage, PluginMessage } from "message.slint";
 
 component InputSearch inherits Rectangle {
-    callback edit <=> input.edited;
+    //callback edit <=> input.edited;
     out property <bool> focused;
 
     input := LineEdit  {
@@ -65,7 +65,7 @@ export component InputText inherits Rectangle {
      
 }
 
-export component MyApp inherits Window {
+export component PortalApp inherits Window {
     preferred-width: 100%;
     preferred-height: 100%;
     min-width: 900px;

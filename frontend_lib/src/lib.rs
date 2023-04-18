@@ -4,11 +4,11 @@
 pub mod ui_model;
 mod widgets;
 
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::prelude::wasm_bindgen;
 use crate::ui_model::PortalState;
 use crate::widgets::ui_extensions::UiExtension;
 use eframe::egui;
+use wasm_bindgen::prelude::wasm_bindgen;
+use wasm_bindgen::prelude::*;
 
 #[cfg(target_arch = "wasm32")]
 use eframe::web::AppRunnerRef;
@@ -69,8 +69,8 @@ pub async fn start_separate(canvas_id: &str) -> Result<WebHandle, wasm_bindgen::
         web_options,
         Box::new(|_| Box::new(PortalState::default())),
     )
-        .await
-        .map(|handle| WebHandle { handle })
+    .await
+    .map(|handle| WebHandle { handle })
 }
 
 /// This is the entry-point for all the web-assembly.

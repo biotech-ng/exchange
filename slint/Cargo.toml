@@ -1,11 +1,9 @@
 [package]
-name = "frontend"
+name = "slint"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-eframe="0.21.3"
-slint = "1.0.0"
-frontend_lib = { path = "../frontend_lib" }
+slint_lib = { path = "../slint_lib" }

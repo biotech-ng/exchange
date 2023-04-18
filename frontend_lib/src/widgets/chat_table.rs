@@ -1,7 +1,9 @@
-use std::mem::swap;
 use crate::ui_model::{ChatMessage, PortalState};
-use egui::{Align, Button, Grid, Layout, Response, ScrollArea, Sense, TextEdit, TextStyle, Ui, Widget};
 use crate::widgets::ui_extensions::UiExtension;
+use egui::{
+    Align, Button, Grid, Layout, Response, ScrollArea, Sense, TextEdit, TextStyle, Ui, Widget,
+};
+use std::mem::swap;
 
 pub struct ChatCell<'a> {
     data: &'a ChatMessage,
@@ -33,7 +35,10 @@ pub struct ChatTable<'a> {
 
 impl<'a> ChatTable<'a> {
     pub fn new(data: &'a mut PortalState) -> Self {
-        ChatTable { data, text_style: egui::TextStyle::Monospace }
+        ChatTable {
+            data,
+            text_style: egui::TextStyle::Monospace,
+        }
     }
 }
 
@@ -55,7 +60,7 @@ impl<'a> Widget for ChatTable<'a> {
                         swap(&mut message_to_send, &mut self.data.message_to_send);
                         self.data.chat_groups[idx].messages.push(ChatMessage {
                             from: "me".to_string(),
-                            message: message_to_send
+                            message: message_to_send,
                         });
                     }
 

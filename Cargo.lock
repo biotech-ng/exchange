@@ -3527,6 +3527,7 @@ name = "slint"
 version = "0.1.0"
 dependencies = [
  "slint_lib",
+ "wasm-bindgen",
 ]
 
 [[package]]

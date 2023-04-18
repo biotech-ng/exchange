@@ -11,4 +11,4 @@ crate-type = ["cdylib", "rlib"]
 slint = "1.0.0"
 
 [build-dependencies]
-slint-build = "1.0.0"
+slint-build = { version = "1.0.0" }

@@ -1,7 +1,13 @@
 [workspace]
 
 members = [
+    "database",
+    "database_bin",
     "frontend",
     "frontend_lib",
     "slint_lib",
+    "ui_iced",
+    "ui_iced_lib",
+#    "ui_slint",
+#    "ui_slint_lib",
 ]

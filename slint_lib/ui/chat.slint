@@ -5,12 +5,14 @@ export struct ChatRowData {
     chat_name: string,
     last_message_time_or_date: string,
     last_message: string,
+    unread_messages: int,
 }
 
 export component ChatRow inherits Rectangle {
     in property <string> chat_name;
     in property <string> last_message_time_or_date;
     in property <string> last_message;
+    in property <int> unread_messages;
 
     background: touch.has-hover ? #e7e7e7 :  #ff000000;
    
@@ -61,7 +63,7 @@ export component ChatRow inherits Rectangle {
                     border-radius: self.height / 2;
     
                     text := Text {
-                        text: "99+";
+                        text: unread_messages >= 100 ? "99+" : unread_messages;
                         font-size: 14px;
                         color: #fff;
                     } 

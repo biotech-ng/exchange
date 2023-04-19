@@ -77,7 +77,7 @@ export component PortalApp inherits Window {
 
         VerticalLayout {
             width: 30%;
-            
+
             HorizontalLayout {
                 padding: 10px;
                 spacing: 10px;
@@ -89,7 +89,6 @@ export component PortalApp inherits Window {
                 InputSearch {
 
                 }              
-                       
             }
 
             ListView {
@@ -98,6 +97,7 @@ export component PortalApp inherits Window {
                     chat_name: chat.chat_name;
                     last_message_time_or_date: chat.last_message_time_or_date;
                     last_message: chat.last_message;
+                    unread_messages: chat.unread_messages;
                 }
             }
         }

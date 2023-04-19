@@ -1,7 +1,6 @@
 import { RoundImage } from "common.slint";
 
 export component IncomingMessage inherits Rectangle {
-
     Rectangle {
         background: #7196a8;
 
@@ -48,16 +47,12 @@ export component IncomingMessage inherits Rectangle {
                         y: parent.height - self.height;
                     }
                 }               
-
-                
             }
         }
     }
 }
 
 export component OutcomingMessage inherits Rectangle {
-    in property <bool> show_plugin;
-
     Rectangle {
         background: #7196a8;
 
@@ -111,9 +106,6 @@ export component OutcomingMessage inherits Rectangle {
 }
 
 export component PluginMessage inherits Rectangle {
-
-    in property <bool> show_plugin;
-
     Rectangle {
         background: #7196a8;
 
@@ -143,7 +135,7 @@ export component PluginMessage inherits Rectangle {
                 }
             }
 
-            RoundImage{
+            RoundImage {
                 image-url: @image-url("assets/face.png");
                 size: 30px;
             }

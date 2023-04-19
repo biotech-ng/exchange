@@ -1,6 +1,6 @@
 import { StandardButton, Button , ListView, LineEdit, TextEdit , GroupBox} from "std-widgets.slint";
 import { ImageButton } from "common.slint";
-import { ChatRow } from "chat.slint";
+import { ChatRow, ChatRowData } from "chat.slint";
 import { IncomingMessage, OutcomingMessage, PluginMessage } from "message.slint";
 
 component InputSearch inherits Rectangle {
@@ -66,6 +66,8 @@ export component InputText inherits Rectangle {
 }
 
 export component PortalApp inherits Window {
+     in property <[ChatRowData]> memory_chats: [];
+
     preferred-width: 100%;
     preferred-height: 100%;
     min-width: 900px;
@@ -90,10 +92,11 @@ export component PortalApp inherits Window {
                        
             }
 
-            ListView { 
-                height: 100%;  
-                for i in 20 : ChatRow {
-                    index: i;
+            ListView {
+                height: 100%;
+                for chat[i] in memory_chats : ChatRow {
+                    chat_name: chat.chat_name;
+                    last_message_time_or_date: chat.last_message_time_or_date;
                 }
             }
         }

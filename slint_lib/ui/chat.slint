@@ -1,9 +1,16 @@
 import { RoundImage } from "common.slint";
 import { StandardButton, Button , ListView, LineEdit  } from "std-widgets.slint";
 
+export struct ChatRowData {
+    chat_name: string,
+    last_message_time_or_date: string,
+}
+
 export component ChatRow inherits Rectangle {
-    in property <int> index;
-    background: touch.has-hover ? #e7e7e7 :  #ff000000;    
+    in property <string> chat_name;
+    in property <string> last_message_time_or_date;
+
+    background: touch.has-hover ? #e7e7e7 :  #ff000000;
    
     HorizontalLayout {
         padding: 10px;
@@ -18,7 +25,7 @@ export component ChatRow inherits Rectangle {
         VerticalLayout {
             
             Text {                
-                text: index + " Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat";
+                text: chat_name;
                 font-weight: 700;
                 color: #000;
                 font-size: 14px;
@@ -40,7 +47,7 @@ export component ChatRow inherits Rectangle {
 
             Text {
                 horizontal-alignment: right;
-                text: "00:0" + index;
+                text: last_message_time_or_date;
             } 
 
             HorizontalLayout {

@@ -111,13 +111,12 @@ export component PortalApp inherits Window {
         VerticalLayout {
             width: 70%; 
 
-            ListView { 
-                for i in [0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 2]
-                    : HorizontalLayout {
-                        if (i == 0) : IncomingMessage{}
-                        if (i == 1) : OutcomingMessage{}
-                        if (i == 2) : PluginMessage{}
-                    }             
+            ListView {
+                for message[i] in memory_messages : HorizontalLayout {
+                    if (message.message_type == 0) : IncomingMessage { message: message.message; }
+                    if (message.message_type == 1) : OutcomingMessage { message: message.message; }
+                    if (message.message_type == 2) : PluginMessage {}
+                }
             }
 
             HorizontalLayout {

@@ -5,8 +5,7 @@ export struct ChatMessageData {
     // 1 - out-coming
     // 1 - plugin
     message_type: int,
-    message: string,
-    plugin_picture: string,
+    message: string
 }
 
 export component IncomingMessage inherits Rectangle {
@@ -42,7 +41,7 @@ export component IncomingMessage inherits Rectangle {
                     Text {
                         wrap: word-wrap; 
                         font-size: 14px;                      
-                        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+                        text: message;
                     }
 
                     Text {
@@ -92,7 +91,7 @@ export component OutcomingMessage inherits Rectangle {
                     Text {
                         wrap: word-wrap; 
                         font-size: 14px;                      
-                        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+                        text: message;
                     }
 
                     Text {
@@ -119,8 +118,6 @@ export component OutcomingMessage inherits Rectangle {
 }
 
 export component PluginMessage inherits Rectangle {
-    in property <string> plugin_picture;
-
     Rectangle {
         background: #7196a8;
 

@@ -1,6 +1,17 @@
 import { RoundImage } from "common.slint";
 
+export struct ChatMessageData {
+    // 0 - incoming
+    // 1 - out-coming
+    // 1 - plugin
+    message_type: int,
+    message: string,
+    plugin_picture: string,
+}
+
 export component IncomingMessage inherits Rectangle {
+    in property <string> message;
+
     Rectangle {
         background: #7196a8;
 
@@ -9,7 +20,7 @@ export component IncomingMessage inherits Rectangle {
             padding: 10px;
             spacing: 10px;      
 
-            RoundImage{
+            RoundImage {
                 image-url: @image-url("assets/face.png");
                 size: 30px;
             }
@@ -53,6 +64,8 @@ export component IncomingMessage inherits Rectangle {
 }
 
 export component OutcomingMessage inherits Rectangle {
+    in property <string> message;
+
     Rectangle {
         background: #7196a8;
 
@@ -106,6 +119,8 @@ export component OutcomingMessage inherits Rectangle {
 }
 
 export component PluginMessage inherits Rectangle {
+    in property <string> plugin_picture;
+
     Rectangle {
         background: #7196a8;
 

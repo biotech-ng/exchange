@@ -1,7 +1,7 @@
 import { StandardButton, Button , ListView, LineEdit, TextEdit , GroupBox} from "std-widgets.slint";
 import { ImageButton } from "common.slint";
 import { ChatRow, ChatRowData } from "chat.slint";
-import { IncomingMessage, OutcomingMessage, PluginMessage } from "message.slint";
+import { ChatMessageData, IncomingMessage, OutcomingMessage, PluginMessage } from "message.slint";
 
 component InputSearch inherits Rectangle {
     //callback edit <=> input.edited;
@@ -67,6 +67,7 @@ export component InputText inherits Rectangle {
 
 export component PortalApp inherits Window {
     in property <[ChatRowData]> memory_chats: [];
+    in property <[ChatMessageData]> memory_messages: [];
 
     preferred-width: 100%;
     preferred-height: 100%;

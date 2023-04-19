@@ -7,12 +7,13 @@ use slint::VecModel;
 use wasm_bindgen::prelude::*;
 
 struct PortalState {
-    chats: Rc<VecModel<ChatRowData>>
+    chats: Rc<VecModel<ChatRowData>>,
+    messages: Rc<VecModel<ChatMessageData>>,
 }
 
 impl Default for PortalState {
     fn default() -> Self {
-        let items: Vec<ChatRowData> = (0..20).map(|i| {
+        let items: Vec<_> = (0..20).map(|i| {
             ChatRowData {
                 chat_name: format!("{} Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat", i).into(),
                 last_message_time_or_date: format!("00:0{}", i).into(),
@@ -23,7 +24,17 @@ impl Default for PortalState {
 
         let chats = Rc::new(slint::VecModel::from(items));
 
-        PortalState { chats }
+        let messages: Vec<_> = vec![0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 2].into_iter().map(|i| {
+            ChatMessageData {
+                message_type: i,
+                message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.".into(),
+                plugin_picture: "assets/plugin.png".into(),
+            }
+        }).collect();
+
+        let messages = Rc::new(slint::VecModel::from(messages));
+
+        PortalState { chats, messages }
     }
 }
 
@@ -39,6 +50,7 @@ pub fn start_ui() {
     let state = PortalState::default();
 
     window.set_memory_chats(state.chats.into());
+    window.set_memory_messages(state.messages.into());
 
     window.run().unwrap()
 }

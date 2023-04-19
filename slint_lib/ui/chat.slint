@@ -4,11 +4,13 @@ import { StandardButton, Button , ListView, LineEdit  } from "std-widgets.slint"
 export struct ChatRowData {
     chat_name: string,
     last_message_time_or_date: string,
+    last_message: string,
 }
 
 export component ChatRow inherits Rectangle {
     in property <string> chat_name;
     in property <string> last_message_time_or_date;
+    in property <string> last_message;
 
     background: touch.has-hover ? #e7e7e7 :  #ff000000;
    
@@ -33,7 +35,7 @@ export component ChatRow inherits Rectangle {
             } 
 
             Text {
-                text: "Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat";
+                text: last_message;
                 font-weight: 300;
                 color: #9f9f9f;
                 font-size: 14px;

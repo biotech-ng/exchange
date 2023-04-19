@@ -16,6 +16,7 @@ impl Default for PortalState {
             ChatRowData {
                 chat_name: format!("{} Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat", i).into(),
                 last_message_time_or_date: format!("00:0{}", i).into(),
+                last_message: "Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat Some Chat".into()
             }
         }).collect();
 

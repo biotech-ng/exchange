@@ -66,7 +66,7 @@ export component InputText inherits Rectangle {
 }
 
 export component PortalApp inherits Window {
-     in property <[ChatRowData]> memory_chats: [];
+    in property <[ChatRowData]> memory_chats: [];
 
     preferred-width: 100%;
     preferred-height: 100%;
@@ -97,6 +97,7 @@ export component PortalApp inherits Window {
                 for chat[i] in memory_chats : ChatRow {
                     chat_name: chat.chat_name;
                     last_message_time_or_date: chat.last_message_time_or_date;
+                    last_message: chat.last_message;
                 }
             }
         }

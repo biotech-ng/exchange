@@ -1,5 +1,7 @@
 
 1. Build for web-asm:
+wasm-pack build --debug --target web
+or
 wasm-pack build --release --target web
 
 2. Run

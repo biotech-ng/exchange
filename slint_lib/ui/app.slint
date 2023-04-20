@@ -1,7 +1,7 @@
 import { StandardButton, Button , ListView, LineEdit, TextEdit , GroupBox} from "std-widgets.slint";
 import { ImageButton } from "common.slint";
-import { ChatRow } from "chat.slint";
-import { IncomingMessage, OutcomingMessage, PluginMessage } from "message.slint";
+import { ChatRow, ChatRowData } from "chat.slint";
+import { ChatMessageData, IncomingMessage, OutcomingMessage, PluginMessage } from "message.slint";
 
 component InputSearch inherits Rectangle {
     //callback edit <=> input.edited;
@@ -15,8 +15,7 @@ component InputSearch inherits Rectangle {
     }
 }
 
-export component InputText inherits Rectangle { 
-
+export component InputText inherits Rectangle {
     in property <string> label;
 
     HorizontalLayout {
@@ -46,7 +45,7 @@ export component InputText inherits Rectangle {
         }
     }    
  
-    if(input.text == "") :  
+    if (input.text == "") :
         HorizontalLayout {
             width: 100%;
             padding-right: 10px;        
@@ -66,6 +65,16 @@ export component InputText inherits Rectangle {
 }
 
 export component PortalApp inherits Window {
+    in property <[ChatRowData]> memory_chats: [
+        { chat_name: "0 Some Chat Some", last_message_time_or_date: "00:01", last_message: "Some Chat Some Chat", unread_messages: 2 },
+        { chat_name: "1 Some Chat Some", last_message_time_or_date: "00:01", last_message: "Some Chat Some Chat", unread_messages: 100 },
+    ];
+    in property <[ChatMessageData]> memory_messages: [
+        { message_type: 0, message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum." },
+        { message_type: 1, message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum." },
+        { message_type: 2, message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum." },
+    ];
+
     preferred-width: 100%;
     preferred-height: 100%;
     min-width: 900px;
@@ -75,7 +84,7 @@ export component PortalApp inherits Window {
 
         VerticalLayout {
             width: 30%;
-            
+
             HorizontalLayout {
                 padding: 10px;
                 spacing: 10px;
@@ -87,13 +96,15 @@ export component PortalApp inherits Window {
                 InputSearch {
 
                 }              
-                       
             }
 
-            ListView { 
-                height: 100%;  
-                for i in 20 : ChatRow {
-                    index: i;
+            ListView {
+                height: 100%;
+                for chat[i] in memory_chats : ChatRow {
+                    chat_name: chat.chat_name;
+                    last_message_time_or_date: chat.last_message_time_or_date;
+                    last_message: chat.last_message;
+                    unread_messages: chat.unread_messages;
                 }
             }
         }
@@ -106,13 +117,12 @@ export component PortalApp inherits Window {
         VerticalLayout {
             width: 70%; 
 
-            ListView { 
-                for i in [0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 2]
-                    : HorizontalLayout {
-                        if (i == 0) : IncomingMessage{}
-                        if (i == 1) : OutcomingMessage{}
-                        if (i == 2) : PluginMessage{}
-                    }             
+            ListView {
+                for message[i] in memory_messages : HorizontalLayout {
+                    if (message.message_type == 0) : IncomingMessage { message: message.message; }
+                    if (message.message_type == 1) : OutcomingMessage { message: message.message; }
+                    if (message.message_type == 2) : PluginMessage {}
+                }
             }
 
             HorizontalLayout {
@@ -147,8 +157,7 @@ export component PortalApp inherits Window {
                     image-url: @image-url("assets/xxx.svg");
                 }
             }
-        }       
-
+        }
         
     }
 }

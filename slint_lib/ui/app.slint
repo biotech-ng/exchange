@@ -1,7 +1,7 @@
 import { StandardButton, Button , ListView, LineEdit, TextEdit , GroupBox} from "std-widgets.slint";
 import { ImageButton } from "common.slint";
-import { ChatRow } from "chat.slint";
-import { IncomingMessage, OutcomingMessage, PluginMessage } from "message.slint";
+import { ChatRow, ChatRowData } from "chat.slint";
+import { ChatMessageData, IncomingMessage, OutcomingMessage, PluginMessage } from "message.slint";
 
 component InputSearch inherits Rectangle {
     //callback edit <=> input.edited;
@@ -66,6 +66,9 @@ export component InputText inherits Rectangle {
 }
 
 export component PortalApp inherits Window {
+    in property <[ChatRowData]> memory_chats: [];
+    in property <[ChatMessageData]> memory_messages: [];
+
     preferred-width: 100%;
     preferred-height: 100%;
     min-width: 900px;
@@ -75,7 +78,7 @@ export component PortalApp inherits Window {
 
         VerticalLayout {
             width: 30%;
-            
+
             HorizontalLayout {
                 padding: 10px;
                 spacing: 10px;
@@ -87,13 +90,15 @@ export component PortalApp inherits Window {
                 InputSearch {
 
                 }              
-                       
             }
 
-            ListView { 
-                height: 100%;  
-                for i in 20 : ChatRow {
-                    index: i;
+            ListView {
+                height: 100%;
+                for chat[i] in memory_chats : ChatRow {
+                    chat_name: chat.chat_name;
+                    last_message_time_or_date: chat.last_message_time_or_date;
+                    last_message: chat.last_message;
+                    unread_messages: chat.unread_messages;
                 }
             }
         }
@@ -106,13 +111,12 @@ export component PortalApp inherits Window {
         VerticalLayout {
             width: 70%; 
 
-            ListView { 
-                for i in [0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 2]
-                    : HorizontalLayout {
-                        if (i == 0) : IncomingMessage{}
-                        if (i == 1) : OutcomingMessage{}
-                        if (i == 2) : PluginMessage{}
-                    }             
+            ListView {
+                for message[i] in memory_messages : HorizontalLayout {
+                    if (message.message_type == 0) : IncomingMessage { message: message.message; }
+                    if (message.message_type == 1) : OutcomingMessage { message: message.message; }
+                    if (message.message_type == 2) : PluginMessage {}
+                }
             }
 
             HorizontalLayout {

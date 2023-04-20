@@ -1,6 +1,15 @@
 import { RoundImage } from "common.slint";
 
+export struct ChatMessageData {
+    // 0 - incoming
+    // 1 - out-coming
+    // 1 - plugin
+    message_type: int,
+    message: string
+}
+
 export component IncomingMessage inherits Rectangle {
+    in property <string> message;
 
     Rectangle {
         background: #7196a8;
@@ -10,7 +19,7 @@ export component IncomingMessage inherits Rectangle {
             padding: 10px;
             spacing: 10px;      
 
-            RoundImage{
+            RoundImage {
                 image-url: @image-url("assets/face.png");
                 size: 30px;
             }
@@ -32,7 +41,7 @@ export component IncomingMessage inherits Rectangle {
                     Text {
                         wrap: word-wrap; 
                         font-size: 14px;                      
-                        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+                        text: message;
                     }
 
                     Text {
@@ -48,16 +57,13 @@ export component IncomingMessage inherits Rectangle {
                         y: parent.height - self.height;
                     }
                 }               
-
-                
             }
         }
     }
 }
 
 export component OutcomingMessage inherits Rectangle {
-
-    in property <bool> show_plagin;
+    in property <string> message;
 
     Rectangle {
         background: #7196a8;
@@ -85,7 +91,7 @@ export component OutcomingMessage inherits Rectangle {
                     Text {
                         wrap: word-wrap; 
                         font-size: 14px;                      
-                        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+                        text: message;
                     }
 
                     Text {
@@ -112,9 +118,6 @@ export component OutcomingMessage inherits Rectangle {
 }
 
 export component PluginMessage inherits Rectangle {
-
-    in property <bool> show_plagin;
-
     Rectangle {
         background: #7196a8;
 
@@ -144,7 +147,7 @@ export component PluginMessage inherits Rectangle {
                 }
             }
 
-            RoundImage{
+            RoundImage {
                 image-url: @image-url("assets/face.png");
                 size: 30px;
             }

@@ -156,7 +156,7 @@ dependencies = [
  "ndk",
  "ndk-context",
  "ndk-sys",
- "num_enum",
+ "num_enum 0.5.11",
 ]
 
 [[package]]
@@ -1559,7 +1559,7 @@ version = "0.1.0"
 dependencies = [
  "eframe",
  "frontend_lib",
- "slint 1.0.0",
+ "slint 1.0.1",
 ]
 
 [[package]]
@@ -1904,9 +1904,9 @@ dependencies = [
 
 [[package]]
 name = "i-slint-backend-qt"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2acca0025997104306ff5d872306d07ae585f10cdfbc49de8568e6f9f42ca1db"
+checksum = "4fc0d0004df0efbc2b2e9deda94e32f48b1179e51b40a32b7584051733b4342d"
 dependencies = [
  "const-field-offset",
  "cpp",
@@ -1924,9 +1924,9 @@ dependencies = [
 
 [[package]]
 name = "i-slint-backend-selector"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad8f450595e5dae9060c83aebf3626ba0b663bb17a86ff377dac10e3a13c9574"
+checksum = "0187fcc5fbc07917ad8bcfc03af57e31cdb42b7ee00e726967ad180a05594cb4"
 dependencies = [
  "cfg-if 1.0.0",
  "i-slint-backend-qt",
@@ -1936,9 +1936,9 @@ dependencies = [
 
 [[package]]
 name = "i-slint-backend-winit"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42975ff876e7c8a1d2979d699e9e17c3c36382f71912a5faf42d326c8b94fd50"
+checksum = "17086588560f8e7aadf9d79368e7a74866c06bd33c8caf3978c3611b863798b1"
 dependencies = [
  "cfg-if 1.0.0",
  "cfg_aliases",
@@ -1969,15 +1969,15 @@ dependencies = [
 
 [[package]]
 name = "i-slint-common"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03e77ce09f9dbdeb63a81890cdb7e1c4ef4567c96e89604390b8d3ab6766a5a4"
+checksum = "3611cf488c72dc24710fe28ac43bf50410a6932019251f9ac60b95d86d0cfae9"
 
 [[package]]
 name = "i-slint-compiler"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2644debf17174b4d778148da6b187f4f469ecec111ebb6cc16eebd60de546e5f"
+checksum = "b81d1711cb1116d40dd686232761b408fb06c4d90bb97f594851cc8b542399bd"
 dependencies = [
  "by_address",
  "codemap",
@@ -1994,7 +1994,7 @@ dependencies = [
  "linked_hash_set",
  "lyon_extra",
  "lyon_path",
- "num_enum",
+ "num_enum 0.6.1",
  "once_cell",
  "proc-macro2",
  "quote",
@@ -2009,9 +2009,9 @@ dependencies = [
 
 [[package]]
 name = "i-slint-core"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7920d50029be7386e9168e284aa9724b3a1042e8be04e7416c92b5aa98b90d82"
+checksum = "3101c6bad7eb4e3e35e9378b4b7e89328d8353ab61fcc55752c75e983d7d133f"
 dependencies = [
  "atomic-polyfill",
  "auto_enums",
@@ -2050,9 +2050,9 @@ dependencies = [
 
 [[package]]
 name = "i-slint-core-macros"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22cb64cf663d68a7c3c2b7e2fd02151a2dc5c50a0ffeb469e6d3d94bea99ad4b"
+checksum = "ce28f8435f79c5b6890671fd5159b9e7b8132251228e693ff7af0b591855aac6"
 dependencies = [
  "quote",
  "syn 2.0.13",
@@ -2060,9 +2060,9 @@ dependencies = [
 
 [[package]]
 name = "i-slint-renderer-femtovg"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff7a38dac373619f93be38cdcb95f09d52ba87ed50518ae6a13c35befac1dc57"
+checksum = "6ceae22ac052b41fc634c41933c5f00fc49ba310bf6688b6b331e9b5d74ad485"
 dependencies = [
  "cfg-if 1.0.0",
  "const-field-offset",
@@ -2097,9 +2097,9 @@ dependencies = [
 
 [[package]]
 name = "i-slint-renderer-skia"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a780f9bd34b6b9b373feaea3da2e51c12584b76198acba72af87481fcfecac73"
+checksum = "d60e31b7f01b161b7db1725e09f13feca58b60b93b49f8e1c2ec2ecdb10088a3"
 dependencies = [
  "cfg-if 1.0.0",
  "cfg_aliases",
@@ -2544,7 +2544,7 @@ dependencies = [
  "bitflags",
  "jni-sys",
  "ndk-sys",
- "num_enum",
+ "num_enum 0.5.11",
  "raw-window-handle",
  "thiserror",
 ]
@@ -2666,7 +2666,16 @@ version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f646caf906c20226733ed5b1374287eb97e3c2a5c227ce668c1f2ce20ae57c9"
 dependencies = [
- "num_enum_derive",
+ "num_enum_derive 0.5.11",
+]
+
+[[package]]
+name = "num_enum"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a015b430d3c108a207fd776d2e2196aaf8b1cf8cf93253e3a097ff3085076a1"
+dependencies = [
+ "num_enum_derive 0.6.1",
 ]
 
 [[package]]
@@ -2679,6 +2688,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "num_enum_derive"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96667db765a921f7b295ffee8b60472b686a51d4f21c2ee4ffdb94c7013b65a6"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -3531,9 +3552,9 @@ dependencies = [
 
 [[package]]
 name = "slint"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b65250c687b60c2f7cdd86c8e5c76dfabd583d533d347193f9e0477a4ce3683a"
+checksum = "09a9bddc55b3092b4fcc8cd128c8014157c9aa128d0710a209a598e735e6e082"
 dependencies = [
  "const-field-offset",
  "i-slint-backend-selector",
@@ -3547,9 +3568,9 @@ dependencies = [
 
 [[package]]
 name = "slint-build"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6ed9728c4b9044760f410e9965865ca72988defc76ea00288228f5c2fd446bc"
+checksum = "1e1e5226a2e73a26d7198047f0fc07d1de304f3a9191c837acb64d08be33abe5"
 dependencies = [
  "i-slint-compiler",
  "spin_on",
@@ -3559,9 +3580,9 @@ dependencies = [
 
 [[package]]
 name = "slint-macros"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b2969a6dff8588f15b0aad81a8f0fdcd43376bfc7021067d2e5be40d4cb0729"
+checksum = "a902b689b21af5fb7954c822ba986e482e9b0b0439422f6eaf92dd4b053d7add"
 dependencies = [
  "i-slint-compiler",
  "proc-macro2",
@@ -3574,7 +3595,7 @@ name = "slint_lib"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
- "slint 1.0.0",
+ "slint 1.0.1",
  "slint-build",
  "wasm-bindgen",
 ]
@@ -3625,9 +3646,9 @@ dependencies = [
 
 [[package]]
 name = "smol_str"
-version = "0.1.24"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fad6c857cbab2627dcf01ec85a623ca4e7dcb5691cbaa3d7fb7653671f0d09c9"
+checksum = "74212e6bbe9a4352329b2f68ba3130c15a3f26fe88ff22dbdc6cdd58fa85e99c"
 dependencies = [
  "serde",
 ]

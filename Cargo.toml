@@ -6,6 +6,7 @@ members = [
     "database_bin",
     "frontend",
     "frontend_lib",
+    "imgui",
     "slint",
     "slint_lib",
 ]

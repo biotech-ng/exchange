@@ -4,9 +4,10 @@ resolver = "2"
 members = [
     "database",
     "database_bin",
-    "frontend",
-    "frontend_lib",
-    "imgui",
+#    "frontend",
+#    "frontend_lib",
+#    "qt-app",
+#    "imgui",
     "slint",
     "slint_lib",
 ]

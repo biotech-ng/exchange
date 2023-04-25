@@ -1,5 +1,5 @@
 use slint_lib::start_ui;
 
-pub fn main() {
+fn main() {
     start_ui()
 }

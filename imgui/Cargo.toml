@@ -1,0 +1,17 @@
+[package]
+name = "imgui"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# imgui-rs = { version = "1.47.0" }
+copypasta = "0.8.2"
+glium = "0.32.1"
+imgui = "0.11.0"
+imgui-glium-renderer = "0.11.0"
+imgui-winit-support = "0.11.0"
+
+# imgui-winit-support = "0.11"
+# sdl2 = { version = "0.34.5", features = ["bundled", "static-link"] }

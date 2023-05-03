@@ -9,6 +9,7 @@ members = [
 #    "frontend_lib",
 #    "qt-app",
 #    "imgui",
+    "relm4-app",
     "slint",
     "slint_lib",
 ]

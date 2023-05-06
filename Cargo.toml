@@ -4,9 +4,10 @@ resolver = "2"
 members = [
     "database",
     "database_bin",
+    "druid-app",
     "gtk-app",
-#    "frontend",
-#    "frontend_lib",
+    "frontend",
+    "frontend_lib",
 #    "qt-app",
 #    "imgui",
     "relm4-app",

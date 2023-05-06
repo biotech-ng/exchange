@@ -1,8 +1,10 @@
+use gtk4::glib::{clone, Object};
+use gtk4::prelude::{
+    ApplicationExt, ApplicationExtManual, BoxExt, ButtonExt, GtkWindowExt, WidgetExt,
+};
+use gtk4::{glib, Application, ApplicationWindow, Button, Orientation};
 use std::cell::RefCell;
 use std::rc::Rc;
-use gtk4::{glib, Application, ApplicationWindow, Button, Orientation};
-use gtk4::glib::{clone, Object};
-use gtk4::prelude::{ApplicationExt, ApplicationExtManual, BoxExt, ButtonExt, GtkWindowExt, WidgetExt};
 
 const APP_ID: &str = "org.gtk_rs.HelloWorld2";
 
@@ -18,11 +20,13 @@ fn main() -> glib::ExitCode {
 }
 
 mod imp {
-    use std::cell::Cell;
     use gtk4::glib;
     use gtk4::prelude::ButtonExt;
     use gtk4::subclass::button::ButtonImpl;
-    use gtk4::subclass::prelude::{ObjectImpl, ObjectImplExt, ObjectSubclass, ObjectSubclassExt, WidgetImpl};
+    use gtk4::subclass::prelude::{
+        ObjectImpl, ObjectImplExt, ObjectSubclass, ObjectSubclassExt, WidgetImpl,
+    };
+    use std::cell::Cell;
 
     // Object holding the state
     #[derive(Default)]

@@ -17,7 +17,6 @@ struct AppWidgets {
 }
 
 impl SimpleComponent for AppModel {
-
     /// The type of the messages that this component can receive.
     type Input = AppInput;
     /// The type of the messages that this component can send.

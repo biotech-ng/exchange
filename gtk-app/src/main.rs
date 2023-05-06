@@ -18,13 +18,17 @@ fn main() -> glib::ExitCode {
 }
 
 mod imp {
+    use std::cell::Cell;
     use gtk4::glib;
+    use gtk4::prelude::ButtonExt;
     use gtk4::subclass::button::ButtonImpl;
-    use gtk4::subclass::prelude::{ObjectImpl, ObjectSubclass, WidgetImpl};
+    use gtk4::subclass::prelude::{ObjectImpl, ObjectImplExt, ObjectSubclass, ObjectSubclassExt, WidgetImpl};
 
     // Object holding the state
     #[derive(Default)]
-    pub struct CustomButton;
+    pub struct CustomButton {
+        number: Cell<i32>,
+    }
 
     // The central trait for subclassing a GObject
     #[glib::object_subclass]
@@ -36,13 +40,23 @@ mod imp {
     }
 
     // Trait shared by all GObjects
-    impl ObjectImpl for CustomButton {}
+    impl ObjectImpl for CustomButton {
+        fn constructed(&self) {
+            self.parent_constructed();
+            self.obj().set_label(&self.number.get().to_string());
+        }
+    }
 
     // Trait shared by all widgets
     impl WidgetImpl for CustomButton {}
 
     // Trait shared by all buttons
-    impl ButtonImpl for CustomButton {}
+    impl ButtonImpl for CustomButton {
+        fn clicked(&self) {
+            self.number.set(self.number.get() + 1);
+            self.obj().set_label(&self.number.get().to_string())
+        }
+    }
 }
 
 glib::wrapper! {
@@ -62,18 +76,12 @@ impl CustomButton {
 }
 
 fn build_ui(app: &Application) {
-// Create a button
-    let button = CustomButton::with_label("Press me!");
+    // Create a button
+    let button = CustomButton::new();
     button.set_margin_top(12);
     button.set_margin_bottom(12);
     button.set_margin_start(12);
     button.set_margin_end(12);
-
-    // Connect to "clicked" signal of `button`
-    button.connect_clicked(move |button| {
-    // Set the label to "Hello World!" after the button has been clicked on
-        button.set_label("Hello World!");
-    });
 
     // Create a window
     let window = ApplicationWindow::builder()

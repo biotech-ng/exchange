@@ -1,0 +1,14 @@
+[package]
+name = "relm4-app"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# Core library
+relm4 = "0.6.0-beta.1"
+# Optional: reusable components
+relm4-components = "0.6.0-beta.1"
+# Optional: icons
+relm4-icons = { version = "0.6.0-beta.6", features = ["plus"] }

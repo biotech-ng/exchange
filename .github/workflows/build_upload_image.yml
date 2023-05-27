@@ -29,9 +29,9 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-    - name: Get latest tag
-      id: latest_tag
-      run: echo ::set-output name=latest_tag::$(git describe --tags --abbrev=0)
+#     - name: Get latest tag
+#       id: latest_tag
+#       run: echo ::set-output name=latest_tag::$(git describe --tags --abbrev=0)
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
@@ -40,4 +40,4 @@ jobs:
         push: true
         tags: |
           sturivnyi/rust-wasm:latest
-          sturivnyi/rust-wasm:${{ steps.latest_tag.outputs.latest_tag }}
+#          sturivnyi/rust-wasm:${{ steps.latest_tag.outputs.latest_tag }}

@@ -170,7 +170,8 @@ pub async fn get_chat_message(pool: &PgPool, id: Uuid) -> Result<ChatMessage, sq
 pub mod tests {
     use super::*;
     use crate::pg_pool;
-    use crate::users::{get_user, insert_user, User, UserInput};
+    use crate::users::tests::create_random_user_inputs;
+    use crate::users::{get_user, insert_user, User};
 
     #[tokio::test]
     async fn test_create_chat() {
@@ -201,39 +202,23 @@ pub mod tests {
         let description = "chat description";
         let avatar = "https://some_avatar.png";
 
-        let id = insert_chat(&pool, r#type, &title, &description, &avatar)
+        let id = insert_chat(pool, r#type, &title, &description, &avatar)
             .await
             .expect("chat is created");
 
-        get_chat(&pool, id)
+        get_chat(pool, id)
             .await
             .expect("user for given id is expected")
     }
 
     pub async fn create_user(pool: &PgPool) -> User {
-        let alias = format!("vova:{}", Uuid::new_v4());
-        let first_name = "volodymyr";
-        let last_name = "gorbenko";
-        let phone_number = format!("pn:{}", Uuid::new_v4());
-        let language_code = "ru-ru";
-        let avatar = "https://some_image.png";
-        let country_code = "SW";
+        let user_input = create_random_user_inputs();
 
-        let user_input = UserInput {
-            alias,
-            first_name,
-            last_name,
-            phone_number,
-            language_code,
-            avatar,
-            country_code,
-        };
-
-        let id = insert_user(&pool, user_input)
+        let id = insert_user(pool, &user_input)
             .await
             .expect("user is created");
 
-        get_user(&pool, id)
+        get_user(pool, id)
             .await
             .expect("user for given id is expected")
     }

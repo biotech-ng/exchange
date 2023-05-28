@@ -1,6 +1,6 @@
 -- Project Member
 
-DROP INDEX project_members_user_id_and_company_id_index;
+DROP INDEX project_members_company_id_and_user_id_index;
 DROP INDEX project_members_id_index;
 
 DROP TABLE project_members;
@@ -61,6 +61,7 @@ DROP TYPE ChatType;
 -- Users
 
 DROP INDEX users_phone_number_index;
+DROP INDEX users_email_index;
 DROP INDEX users_alias_index;
 DROP INDEX users_id_index;
 DROP TABLE users;

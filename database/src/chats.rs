@@ -168,6 +168,8 @@ pub async fn get_chat_message(pool: &PgPool, id: Uuid) -> Result<ChatMessage, sq
 
 #[cfg(test)]
 pub mod tests {
+    use rand::distributions::Alphanumeric;
+    use rand::{Rng, thread_rng};
     use super::*;
     use crate::pg_pool;
     use crate::users::{get_user, insert_user, User, UserInput};
@@ -215,9 +217,17 @@ pub mod tests {
         let first_name = "volodymyr";
         let last_name = "gorbenko";
         let email = format!("em:{}", Uuid::new_v4());
-        let password_salt = format!("ps:{}", Uuid::new_v4());
+        let password_salt: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(22)
+            .map(char::from)
+            .collect();
         let password_sha512 = format!("ph:{}", Uuid::new_v4());
-        let phone_number = format!("pn:{}", Uuid::new_v4());
+        let phone_number: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(15)
+            .map(char::from)
+            .collect();
         let language_code = "ru-ru";
         let avatar = "https://some_image.png";
         let country_code = "SW";

@@ -7,7 +7,7 @@ CREATE TABLE users
     first_name    character varying(255),
     last_name     character varying(255),
     email         character varying(320), -- RFC 3696, "Application Techniques for Checking and Transformation of Names"
-    phone_number  character varying(255),
+    phone_number  character varying(15), -- ITU-T E. 164
     language_code character varying(5) NOT NULL, -- ISO 639-1 standard language codes
     avatar        text,
     country_code  character varying(2), -- ISO 3166-1 alpha-2

@@ -152,13 +152,13 @@ pub mod tests {
             .take(1025)
             .map(char::from)
             .collect();
-        let access_token_expires = PrimitiveDateTime::new(date!(2019-01-01), time!(0:00));
+        let access_token_expires = PrimitiveDateTime::new(date!(2019 - 01 - 01), time!(0:00));
         let refresh_token: String = thread_rng()
             .sample_iter(&Alphanumeric)
             .take(1025)
             .map(char::from)
             .collect();
-        let refresh_token_expires = PrimitiveDateTime::new(date!(2019-01-01), time!(0:00));
+        let refresh_token_expires = PrimitiveDateTime::new(date!(2019 - 01 - 01), time!(0:00));
         let phone_number: Option<String> = Some(
             thread_rng()
                 .sample_iter(&Alphanumeric)

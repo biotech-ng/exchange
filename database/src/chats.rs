@@ -170,8 +170,8 @@ pub async fn get_chat_message(pool: &PgPool, id: Uuid) -> Result<ChatMessage, sq
 pub mod tests {
     use super::*;
     use crate::pg_pool;
-    use crate::users::{get_user, insert_user, User};
     use crate::users::tests::create_random_user_inputs;
+    use crate::users::{get_user, insert_user, User};
 
     #[tokio::test]
     async fn test_create_chat() {

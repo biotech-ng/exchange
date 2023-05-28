@@ -98,12 +98,14 @@ pub async fn get_user(pool: &PgPool, id: Uuid) -> Result<User, sqlx::Error> {
 
 #[cfg(test)]
 pub mod tests {
-    use rand::distributions::Alphanumeric;
-    use rand::{Rng, thread_rng};
     use super::*;
     use crate::pg_pool;
+    use rand::distributions::Alphanumeric;
+    use rand::{thread_rng, Rng};
 
-    pub fn create_random_user_inputs() -> UserInput<String, String, String, String, String, String, String, String, String, String> {
+    pub fn create_random_user_inputs(
+    ) -> UserInput<String, String, String, String, String, String, String, String, String, String>
+    {
         let alias = format!("vova:{}", Uuid::new_v4());
         let first_name = "volodymyr".to_owned();
         let last_name = "gorbenko".to_owned();
@@ -114,11 +116,13 @@ pub mod tests {
             .map(char::from)
             .collect();
         let password_sha512 = format!("ph:{}", Uuid::new_v4());
-        let phone_number: Option<String> = Some(thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(15)
-            .map(char::from)
-            .collect());
+        let phone_number: Option<String> = Some(
+            thread_rng()
+                .sample_iter(&Alphanumeric)
+                .take(15)
+                .map(char::from)
+                .collect(),
+        );
         let language_code = "ru-ru".to_owned();
         let avatar = "https://some_image.png".to_owned();
         let country_code = "SW".to_owned();
@@ -160,6 +164,9 @@ pub mod tests {
         assert_eq!(user_input.phone_number, user.phone_number);
         assert_eq!(user_input.language_code, user.language_code);
         assert_eq!(user_input.avatar, user.avatar.expect("avatar"));
-        assert_eq!(user_input.country_code, user.country_code.expect("country code"));
+        assert_eq!(
+            user_input.country_code,
+            user.country_code.expect("country code")
+        );
     }
 }

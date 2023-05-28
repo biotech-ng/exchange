@@ -1,10 +1,8 @@
-use gtk4::glib::{clone, Object};
+use gtk4::glib::Object;
 use gtk4::prelude::{
-    ApplicationExt, ApplicationExtManual, BoxExt, ButtonExt, GtkWindowExt, WidgetExt,
+    ApplicationExt, ApplicationExtManual, GtkWindowExt, WidgetExt,
 };
-use gtk4::{glib, Application, ApplicationWindow, Button, Orientation};
-use std::cell::RefCell;
-use std::rc::Rc;
+use gtk4::{glib, Application, ApplicationWindow, Orientation};
 
 const APP_ID: &str = "org.gtk_rs.HelloWorld2";
 

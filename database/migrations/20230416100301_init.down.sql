@@ -1,6 +1,6 @@
 -- Project Member
 
-DROP INDEX project_members_user_id_and_company_id_index;
+DROP INDEX project_members_company_id_and_user_id_index;
 DROP INDEX project_members_id_index;
 
 DROP TABLE project_members;

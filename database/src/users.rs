@@ -57,7 +57,7 @@ pub async fn insert_user<
     T10: AsRef<str>,
 >(
     pool: &PgPool,
-    user_input: UserInput<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>,
+    user_input: &UserInput<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
             r#"
@@ -97,17 +97,16 @@ pub async fn get_user(pool: &PgPool, id: Uuid) -> Result<User, sqlx::Error> {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use rand::distributions::Alphanumeric;
     use rand::{Rng, thread_rng};
     use super::*;
     use crate::pg_pool;
 
-    #[tokio::test]
-    async fn test_create_user() {
+    pub fn create_random_user_inputs() -> UserInput<String, String, String, String, String, String, String, String, String, String> {
         let alias = format!("vova:{}", Uuid::new_v4());
-        let first_name = "volodymyr";
-        let last_name = "gorbenko";
+        let first_name = "volodymyr".to_owned();
+        let last_name = "gorbenko".to_owned();
         let email = format!("em:{}", Uuid::new_v4());
         let password_salt: String = thread_rng()
             .sample_iter(&Alphanumeric)
@@ -120,26 +119,31 @@ mod tests {
             .take(15)
             .map(char::from)
             .collect());
-        let language_code = "ru-ru";
-        let avatar = "https://some_image.png";
-        let country_code = "SW";
+        let language_code = "ru-ru".to_owned();
+        let avatar = "https://some_image.png".to_owned();
+        let country_code = "SW".to_owned();
 
-        let pool = pg_pool().await.expect("pool is expected");
-
-        let user_input = UserInput {
-            alias: &alias,
+        UserInput {
+            alias,
             first_name,
             last_name,
-            email: &email,
-            password_salt: &password_salt,
-            password_sha512: &password_sha512,
-            phone_number: phone_number.as_ref(),
+            email,
+            password_salt,
+            password_sha512,
+            phone_number,
             language_code,
             avatar,
             country_code,
-        };
+        }
+    }
 
-        let id = insert_user(&pool, user_input)
+    #[tokio::test]
+    async fn test_create_user() {
+        let pool = pg_pool().await.expect("pool is expected");
+
+        let user_input = create_random_user_inputs();
+
+        let id = insert_user(&pool, &user_input)
             .await
             .expect("user is created");
 
@@ -147,15 +151,15 @@ mod tests {
             .await
             .expect("user for given id is expected");
 
-        assert_eq!(alias, user.alias);
-        assert_eq!(first_name, user.first_name.expect("first name"));
-        assert_eq!(last_name, user.last_name.expect("last name"));
-        assert_eq!(email, user.email);
-        assert_eq!(password_salt, user.password_salt);
-        assert_eq!(password_sha512, user.password_sha512);
-        assert_eq!(phone_number, user.phone_number);
-        assert_eq!(language_code, user.language_code);
-        assert_eq!(avatar, user.avatar.expect("avatar"));
-        assert_eq!(country_code, user.country_code.expect("country code"));
+        assert_eq!(user_input.alias, user.alias);
+        assert_eq!(user_input.first_name, user.first_name.expect("first name"));
+        assert_eq!(user_input.last_name, user.last_name.expect("last name"));
+        assert_eq!(user_input.email, user.email);
+        assert_eq!(user_input.password_salt, user.password_salt);
+        assert_eq!(user_input.password_sha512, user.password_sha512);
+        assert_eq!(user_input.phone_number, user.phone_number);
+        assert_eq!(user_input.language_code, user.language_code);
+        assert_eq!(user_input.avatar, user.avatar.expect("avatar"));
+        assert_eq!(user_input.country_code, user.country_code.expect("country code"));
     }
 }

@@ -2,20 +2,28 @@
 
 CREATE TABLE users
 (
-    id            uuid PRIMARY KEY,
-    alias         character varying(255) NOT NULL,
-    first_name    character varying(255),
-    last_name     character varying(255),
-    phone_number  character varying(255) NOT NULL,
-    language_code character varying(5) NOT NULL, -- ISO 639-1 standard language codes
-    avatar        text,
-    country_code  character varying(2), -- ISO 3166-1 alpha-2
-    created_at    timestamp(0) without time zone NOT NULL,
-    updated_at    timestamp(0) without time zone NOT NULL,
-    accessed_at   timestamp(0) without time zone NOT NULL
+    id                    uuid PRIMARY KEY,
+    alias                 character varying(255) NOT NULL,
+    first_name            character varying(255),
+    last_name             character varying(255),
+    email                 character varying(320) NOT NULL, -- RFC 3696, "Application Techniques for Checking and Transformation of Names"
+    password_salt         character varying(22) NOT NULL,
+    password_sha512       character varying(128) NOT NULL,
+    access_token          text NOT NULL,
+    access_token_expires  timestamp(0) without time zone NOT NULL,
+    refresh_token         text NOT NULL,
+    refresh_token_expires timestamp(0) without time zone NOT NULL,
+    phone_number          character varying(15), -- ITU-T E. 164
+    language_code         character varying(5) NOT NULL, -- ISO 639-1 standard language codes
+    avatar                text,
+    country_code          character varying(2), -- ISO 3166-1 alpha-2
+    created_at            timestamp(0) without time zone NOT NULL,
+    updated_at            timestamp(0) without time zone NOT NULL,
+    accessed_at           timestamp(0) without time zone NOT NULL
 );
 CREATE UNIQUE INDEX users_id_index ON users (id uuid_ops);
 CREATE UNIQUE INDEX users_alias_index ON users (alias text_ops);
+CREATE UNIQUE INDEX users_email_index ON users (email text_ops);
 CREATE UNIQUE INDEX users_phone_number_index ON users (phone_number text_ops);
 
 -- Chats

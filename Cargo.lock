@@ -1103,7 +1103,9 @@ name = "database"
 version = "0.1.0"
 dependencies = [
  "dotenv",
+ "rand",
  "sqlx",
+ "time",
  "tokio",
  "uuid",
 ]
@@ -2462,13 +2464,6 @@ dependencies = [
  "once_cell",
  "pango 0.16.5",
  "pkg-config",
-]
-
-[[package]]
-name = "gtk-app"
-version = "0.1.0"
-dependencies = [
- "gtk4",
 ]
 
 [[package]]

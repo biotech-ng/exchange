@@ -7,7 +7,7 @@ mod widgets;
 use crate::ui_model::PortalState;
 use crate::widgets::ui_extensions::UiExtension;
 use eframe::egui;
-use wasm_bindgen::prelude::wasm_bindgen;
+#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
 #[cfg(target_arch = "wasm32")]

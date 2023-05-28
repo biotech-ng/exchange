@@ -5,7 +5,7 @@ members = [
     "database",
     "database_bin",
     "druid-app",
-    "gtk-app",
+#    "gtk-app",
     "frontend",
     "frontend_lib",
 #    "qt-app",

@@ -8,7 +8,8 @@ pub struct User {
     pub alias: String,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
-    pub phone_number: String,
+    pub email: Option<String>,
+    pub phone_number: Option<String>,
     pub language_code: String,
     pub avatar: Option<String>,
     pub country_code: Option<String>,
@@ -25,14 +26,16 @@ pub struct UserInput<
     T5: AsRef<str>,
     T6: AsRef<str>,
     T7: AsRef<str>,
+    T8: AsRef<str>,
 > {
     pub alias: T1,
     pub first_name: T2,
     pub last_name: T3,
-    pub phone_number: T4,
-    pub language_code: T5,
-    pub avatar: T6,
-    pub country_code: T7,
+    pub email: Option<T4>,
+    pub phone_number: Option<T5>,
+    pub language_code: T6,
+    pub avatar: T7,
+    pub country_code: T8,
 }
 
 pub async fn insert_user<
@@ -43,21 +46,23 @@ pub async fn insert_user<
     T5: AsRef<str>,
     T6: AsRef<str>,
     T7: AsRef<str>,
+    T8: AsRef<str>,
 >(
     pool: &PgPool,
-    user_input: UserInput<T1, T2, T3, T4, T5, T6, T7>,
+    user_input: UserInput<T1, T2, T3, T4, T5, T6, T7, T8>,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
             r#"
-                INSERT INTO users ( id, alias, first_name, last_name, phone_number, language_code, avatar, country_code, created_at, updated_at, accessed_at )
-                SELECT $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                INSERT INTO users ( id, alias, first_name, last_name, email, phone_number, language_code, avatar, country_code, created_at, updated_at, accessed_at )
+                SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
                 RETURNING id
             "#,
             Uuid::new_v4(),
             user_input.alias.as_ref(),
             user_input.first_name.as_ref(),
             user_input.last_name.as_ref(),
-            user_input.phone_number.as_ref(),
+            user_input.email.as_ref().map(|x| x.as_ref()),
+            user_input.phone_number.as_ref().map(|x| x.as_ref()),
             user_input.language_code.as_ref(),
             user_input.avatar.as_ref(),
             user_input.country_code.as_ref()
@@ -71,7 +76,7 @@ pub async fn get_user(pool: &PgPool, id: Uuid) -> Result<User, sqlx::Error> {
     sqlx::query_as!(
             User,
             r#"
-                SELECT id, alias, first_name, last_name, phone_number, language_code, avatar, country_code, created_at, updated_at, accessed_at FROM users
+                SELECT id, alias, first_name, last_name, email, phone_number, language_code, avatar, country_code, created_at, updated_at, accessed_at FROM users
                 WHERE id = $1
             "#,
             id
@@ -91,7 +96,8 @@ mod tests {
         let alias = format!("vova:{}", Uuid::new_v4());
         let first_name = "volodymyr";
         let last_name = "gorbenko";
-        let phone_number = format!("pn:{}", Uuid::new_v4());
+        let email = Some(format!("em:{}", Uuid::new_v4()));
+        let phone_number = Some(format!("pn:{}", Uuid::new_v4()));
         let language_code = "ru-ru";
         let avatar = "https://some_image.png";
         let country_code = "SW";
@@ -102,7 +108,8 @@ mod tests {
             alias: &alias,
             first_name,
             last_name,
-            phone_number: &phone_number,
+            email: email.as_ref(),
+            phone_number: phone_number.as_ref(),
             language_code,
             avatar,
             country_code,
@@ -119,6 +126,7 @@ mod tests {
         assert_eq!(alias, user.alias);
         assert_eq!(first_name, user.first_name.expect("first name"));
         assert_eq!(last_name, user.last_name.expect("last name"));
+        assert_eq!(email, user.email);
         assert_eq!(phone_number, user.phone_number);
         assert_eq!(language_code, user.language_code);
         assert_eq!(avatar, user.avatar.expect("avatar"));

@@ -214,6 +214,7 @@ pub mod tests {
         let alias = format!("vova:{}", Uuid::new_v4());
         let first_name = "volodymyr";
         let last_name = "gorbenko";
+        let email = format!("em:{}", Uuid::new_v4());
         let phone_number = format!("pn:{}", Uuid::new_v4());
         let language_code = "ru-ru";
         let avatar = "https://some_image.png";
@@ -223,7 +224,8 @@ pub mod tests {
             alias,
             first_name,
             last_name,
-            phone_number,
+            email: Some(email),
+            phone_number: Some(phone_number),
             language_code,
             avatar,
             country_code,

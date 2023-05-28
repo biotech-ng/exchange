@@ -2465,13 +2465,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gtk-app"
-version = "0.1.0"
-dependencies = [
- "gtk4",
-]
-
-[[package]]
 name = "gtk-sys"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -7,6 +7,8 @@ CREATE TABLE users
     first_name      character varying(255),
     last_name       character varying(255),
     email           character varying(320) NOT NULL, -- RFC 3696, "Application Techniques for Checking and Transformation of Names"
+    password_salt   character varying(22) NOT NULL,
+    password_sha512 character varying(128) NOT NULL,
     phone_number    character varying(15), -- ITU-T E. 164
     language_code   character varying(5) NOT NULL, -- ISO 639-1 standard language codes
     avatar          text,

@@ -3,6 +3,7 @@ pub mod chats;
 pub mod companies;
 pub mod projects;
 pub mod users;
+pub mod utils;
 
 use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;

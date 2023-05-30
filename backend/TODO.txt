@@ -1,0 +1,4 @@
+
+1. Apply jagger
+2. Add login
+3. Add project

@@ -88,19 +88,23 @@ pub async fn insert_user<
         .map(|x| x.id)
 }
 
-pub async fn update_user_token<T: AsRef<str>>(pool: &PgPool, id: &Uuid, token: T) -> Result<(), sqlx::Error> {
+pub async fn update_user_token<T: AsRef<str>>(
+    pool: &PgPool,
+    id: &Uuid,
+    token: T,
+) -> Result<(), sqlx::Error> {
     sqlx::query!(
-            r#"
+        r#"
                 UPDATE users
                 SET access_token = $1
                 WHERE id = $2
             "#,
-            token.as_ref(),
-            id
-        )
-        .execute(pool)
-        .await
-        .map(|_| ())
+        token.as_ref(),
+        id
+    )
+    .execute(pool)
+    .await
+    .map(|_| ())
 }
 
 pub async fn get_user(pool: &PgPool, id: &Uuid) -> Result<User, sqlx::Error> {
@@ -138,9 +142,9 @@ pub async fn get_user_by_email<T: AsRef<str> + std::fmt::Debug + Send>(
 pub mod tests {
     use super::*;
     use crate::pg_pool;
+    use crate::utils::random_samples::RandomSample;
     use rand::distributions::Alphanumeric;
     use rand::{thread_rng, Rng};
-    use crate::utils::random_samples::RandomSample;
 
     type TestUserInputs = UserInput<
         String,

@@ -1,13 +1,15 @@
+use crate::errors::errors::DbError;
 use crate::user::users::{OwnedUser, UserDb};
+use crate::utils::salted_hashes::{
+    generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
+};
+use crate::utils::tokens::{TokenResponse, UserInfo};
 use crate::web_service::{ErrorCode, ErrorResponseBody, WebService};
 use axum::extract::rejection::JsonRejection;
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::StatusCode, Json};
-use serde::{Deserialize, Serialize};
 use database::users::User;
-use crate::errors::errors::DbError;
-use crate::utils::salted_hashes::{generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text};
-use crate::utils::tokens::{TokenResponse, UserInfo};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterUserData {
@@ -45,22 +47,27 @@ impl IntoResponse for RegisterUserErrorResponse {
                     code: Some(ErrorCode::AlreadyRegistered),
                     error: "user for given email already exists".to_owned(),
                 }),
-            ).into_response(),
+            )
+                .into_response(),
         }
     }
 }
 
 fn login_user<T: AsRef<str>>(password: T, user: &User) -> Option<TokenResponse> {
-    let input_hash = generate_b64_hash_for_text_and_salt(password, &user.password_salt).expect("TODO");
+    let input_hash =
+        generate_b64_hash_for_text_and_salt(password, &user.password_salt).expect("TODO");
     let existing_hash = &user.password_sha512;
     if existing_hash != &input_hash {
-        return None
+        return None;
     }
 
-    Some(TokenResponse::new(UserInfo {
-        first_name: user.first_name.clone(),
-        last_name: user.last_name.clone(),
-    }).expect("TODO"))
+    Some(
+        TokenResponse::new(UserInfo {
+            first_name: user.first_name.clone(),
+            last_name: user.last_name.clone(),
+        })
+        .expect("TODO"),
+    )
 }
 
 /// Registers a new user
@@ -85,23 +92,32 @@ pub async fn post<UDB: UserDb>(
     match user_or_error {
         Ok(user) => {
             if let Some(token_response) = login_user(&body.data.password, &user) {
-                web_service.user_db.update_user_token(&user.id, &token_response.token).await.map_err(RegisterUserErrorResponse::DbError)?;
+                web_service
+                    .user_db
+                    .update_user_token(&user.id, &token_response.token)
+                    .await
+                    .map_err(RegisterUserErrorResponse::DbError)?;
 
                 Ok((
                     StatusCode::ACCEPTED,
-                    Json(RegisterUserResponseBody { data: body.data, token: token_response }),
+                    Json(RegisterUserResponseBody {
+                        data: body.data,
+                        token: token_response,
+                    }),
                 ))
             } else {
                 Err(RegisterUserErrorResponse::AlreadyRegistered)
             }
         }
         Err(DbError::NotFoundError) => {
-            let (password_sha512, password_salt) = generate_hash_and_salt_for_text(&body.data.password);
+            let (password_sha512, password_salt) =
+                generate_hash_and_salt_for_text(&body.data.password);
 
             let token_response = TokenResponse::new(UserInfo {
                 first_name: body.data.first_name.clone(),
                 last_name: body.data.last_name.clone(),
-            }).expect("TODO");
+            })
+            .expect("TODO");
 
             let user = OwnedUser {
                 alias: None,
@@ -125,11 +141,13 @@ pub async fn post<UDB: UserDb>(
 
             Ok((
                 StatusCode::CREATED,
-                Json(RegisterUserResponseBody { data: body.data, token: token_response }),
+                Json(RegisterUserResponseBody {
+                    data: body.data,
+                    token: token_response,
+                }),
             ))
         }
-        Err(db_error) =>
-            Err(RegisterUserErrorResponse::DbError(db_error)),
+        Err(db_error) => Err(RegisterUserErrorResponse::DbError(db_error)),
     }
 }
 
@@ -166,14 +184,16 @@ impl IntoResponse for LoginUserErrorResponse {
                     code: None,
                     error: "user for a given email is not registered".to_owned(),
                 }),
-            ).into_response(),
+            )
+                .into_response(),
             LoginUserErrorResponse::InvalidPassword => (
                 StatusCode::UNAUTHORIZED,
                 Json(ErrorResponseBody {
                     code: None,
                     error: "Entered password is wrong, please try again".to_owned(),
                 }),
-            ).into_response(),
+            )
+                .into_response(),
         }
     }
 }
@@ -195,16 +215,21 @@ pub async fn login<UDB: UserDb>(
     match user_or_error {
         Ok(user) => {
             if let Some(token_response) = login_user(&body.data.password, &user) {
-                web_service.user_db.update_user_token(&user.id, &token_response.token).await.map_err(LoginUserErrorResponse::DbError)?;
+                web_service
+                    .user_db
+                    .update_user_token(&user.id, &token_response.token)
+                    .await
+                    .map_err(LoginUserErrorResponse::DbError)?;
 
                 Ok((
                     StatusCode::ACCEPTED,
-                    Json(LoginUserResponseBody { token: token_response }),
+                    Json(LoginUserResponseBody {
+                        token: token_response,
+                    }),
                 ))
             } else {
                 Err(LoginUserErrorResponse::InvalidPassword)
             }
-
         }
         Err(DbError::NotFoundError) => Err(LoginUserErrorResponse::NotFound),
         Err(db_error) => Err(LoginUserErrorResponse::DbError(db_error)),
@@ -213,17 +238,22 @@ pub async fn login<UDB: UserDb>(
 
 #[cfg(test)]
 mod tests {
-    use axum::body::Bytes;
-    use axum::Router;
-    use http_body::combinators::UnsyncBoxBody;
-    use crate::utils::salted_hashes::{generate_hash_and_salt_for_text, generate_b64_hash_for_text_and_salt};
-    use uuid::Uuid;
-    use database::utils::random_samples::RandomSample;
     use crate::user::users::{PgUserDb, UserDb};
+    use crate::utils::salted_hashes::{
+        generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
+    };
     use crate::utils::tokens::AccessToken;
-    use crate::web::users::{LoginUserData, LoginUserDataBody, LoginUserResponseBody, RegisterUserData, RegisterUserRequestBody, RegisterUserResponseBody};
+    use crate::web::users::{
+        LoginUserData, LoginUserDataBody, LoginUserResponseBody, RegisterUserData,
+        RegisterUserRequestBody, RegisterUserResponseBody,
+    };
     use crate::web_service::tests::{deserialize_response_body, post};
     use crate::web_service::{ErrorCode, ErrorResponseBody, WebService};
+    use axum::body::Bytes;
+    use axum::Router;
+    use database::utils::random_samples::RandomSample;
+    use http_body::combinators::UnsyncBoxBody;
+    use uuid::Uuid;
 
     async fn create_test_router() -> Router {
         WebService::new_test().await.into_router()
@@ -240,7 +270,12 @@ mod tests {
         assert_eq!(hash, hash2)
     }
 
-    async fn register_new_user(user_data: Option<RegisterUserData>) -> (RegisterUserData, hyper::Response<UnsyncBoxBody<Bytes, axum::Error>>) {
+    async fn register_new_user(
+        user_data: Option<RegisterUserData>,
+    ) -> (
+        RegisterUserData,
+        hyper::Response<UnsyncBoxBody<Bytes, axum::Error>>,
+    ) {
         let router = create_test_router().await;
 
         let email = Uuid::new_v4().to_string();
@@ -280,9 +315,13 @@ mod tests {
         assert_eq!(response_body.data.last_name, request.last_name);
 
         // Token ok
-        let parsed_access_token = AccessToken::from_token(response_body.token.token).expect("valid token");
+        let parsed_access_token =
+            AccessToken::from_token(response_body.token.token).expect("valid token");
 
-        assert_eq!(parsed_access_token.get_user().first_name, request.first_name);
+        assert_eq!(
+            parsed_access_token.get_user().first_name,
+            request.first_name
+        );
         assert_eq!(parsed_access_token.get_user().last_name, request.last_name);
 
         // Test created user
@@ -291,7 +330,10 @@ mod tests {
             .expect("failed to create postgres pool");
         let user_db = PgUserDb::new(pool);
 
-        let user = user_db.get_user_by_email(&request.email).await.expect("user exists");
+        let user = user_db
+            .get_user_by_email(&request.email)
+            .await
+            .expect("user exists");
 
         assert_eq!(user.email, request.email);
         assert_eq!(user.first_name, request.first_name);
@@ -315,7 +357,10 @@ mod tests {
 
         let error_response_body = deserialize_response_body::<ErrorResponseBody>(response).await;
 
-        assert_eq!(error_response_body.error, "user for given email already exists");
+        assert_eq!(
+            error_response_body.error,
+            "user for given email already exists"
+        );
         assert_eq!(error_response_body.code, Some(ErrorCode::AlreadyRegistered));
     }
 
@@ -332,9 +377,13 @@ mod tests {
         assert_eq!(response_body.data.last_name, request.last_name);
 
         // Token ok
-        let parsed_access_token = AccessToken::from_token(response_body.token.token).expect("valid token");
+        let parsed_access_token =
+            AccessToken::from_token(response_body.token.token).expect("valid token");
 
-        assert_eq!(parsed_access_token.get_user().first_name, request.first_name);
+        assert_eq!(
+            parsed_access_token.get_user().first_name,
+            request.first_name
+        );
         assert_eq!(parsed_access_token.get_user().last_name, request.last_name);
 
         // Test created user
@@ -343,26 +392,27 @@ mod tests {
             .expect("failed to create postgres pool");
         let user_db = PgUserDb::new(pool);
 
-        let user = user_db.get_user_by_email(&request.email).await.expect("user exists");
+        let user = user_db
+            .get_user_by_email(&request.email)
+            .await
+            .expect("user exists");
 
         assert_eq!(user.email, request.email);
         assert_eq!(user.first_name, request.first_name);
         assert_eq!(user.last_name, request.last_name);
     }
 
-    async fn login_with_email_and_password(email: String, password: String) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
+    async fn login_with_email_and_password(
+        email: String,
+        password: String,
+    ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
         let router = create_test_router().await;
 
         let uri = "/api/user/login";
 
-        let login_data = LoginUserData {
-            email,
-            password,
-        };
+        let login_data = LoginUserData { email, password };
 
-        let request_body = LoginUserDataBody {
-            data: login_data,
-        };
+        let request_body = LoginUserDataBody { data: login_data };
 
         post(&router, uri, &request_body).await
     }
@@ -378,7 +428,10 @@ mod tests {
 
         let response_body = deserialize_response_body::<ErrorResponseBody>(response).await;
 
-        assert_eq!(response_body.error, "user for a given email is not registered");
+        assert_eq!(
+            response_body.error,
+            "user for a given email is not registered"
+        );
     }
 
     #[tokio::test]
@@ -396,7 +449,10 @@ mod tests {
 
         let response_body = deserialize_response_body::<ErrorResponseBody>(response).await;
 
-        assert_eq!(response_body.error, "Entered password is wrong, please try again");
+        assert_eq!(
+            response_body.error,
+            "Entered password is wrong, please try again"
+        );
     }
 
     #[tokio::test]
@@ -420,9 +476,11 @@ mod tests {
             .expect("failed to create postgres pool");
         let user_db = PgUserDb::new(pool);
 
-        let user = user_db.get_user_by_email(&request.email).await.expect("user exists");
+        let user = user_db
+            .get_user_by_email(&request.email)
+            .await
+            .expect("user exists");
 
         assert_eq!(response_body.token.token, user.access_token)
     }
-
 }

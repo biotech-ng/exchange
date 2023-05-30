@@ -1,5 +1,5 @@
 use rand::distributions::Alphanumeric;
-use rand::{Rng, thread_rng};
+use rand::{thread_rng, Rng};
 
 pub trait RandomSample {
     fn new_random(len: usize) -> Self;

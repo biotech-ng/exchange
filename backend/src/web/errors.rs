@@ -1,9 +1,9 @@
+use crate::errors::errors::DbError;
 use crate::web_service::ErrorResponseBody;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use lazy_static::lazy_static;
-use crate::errors::errors::DbError;
 
 const INTERNAL_SERVER_ERROR_MSG: &str = "Internal server error";
 pub const SERVICE_UNAVAILABLE_MSG: &str = "Service unavailable";

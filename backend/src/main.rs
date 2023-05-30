@@ -5,11 +5,11 @@ use crate::web_service::WebService;
 use dotenvy::dotenv;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
+mod errors;
 mod user;
 mod utils;
 mod web;
 mod web_service;
-mod errors;
 
 async fn pg_pool() -> Result<PgPool, sqlx::Error> {
     dotenv().expect("failed to load .env");

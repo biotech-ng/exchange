@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub enum ErrorCode {
-    AlreadyRegistered
+    AlreadyRegistered,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -23,11 +23,9 @@ pub struct WebService<UDB> {
     pub user_db: UDB,
 }
 
-impl<UDB: UserDb>
-    WebService<UDB>
-{
+impl<UDB: UserDb> WebService<UDB> {
     pub fn new(user_db: UDB) -> Self {
-        Self { user_db, }
+        Self { user_db }
     }
 
     pub fn into_router(self) -> Router {

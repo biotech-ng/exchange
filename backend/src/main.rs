@@ -1,15 +1,15 @@
 use std::{net::SocketAddr, time::Duration};
 
+use crate::models::user::users::PgUserDb;
 use crate::web_service::WebService;
 use dotenvy::dotenv;
 use sqlx::{postgres::PgPoolOptions, PgPool};
-use crate::models::user::users::PgUserDb;
 
 mod errors;
+mod models;
 mod utils;
 mod web;
 mod web_service;
-mod models;
 
 async fn pg_pool() -> Result<PgPool, sqlx::Error> {
     dotenv().expect("failed to load .env");

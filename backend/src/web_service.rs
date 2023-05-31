@@ -1,3 +1,4 @@
+use crate::models::project::projects::ProjectDb;
 use crate::models::user::users::UserDb;
 use crate::web::users;
 use axum::http::Request;
@@ -19,13 +20,17 @@ pub struct ErrorResponseBody {
 }
 
 #[derive(Clone)]
-pub struct WebService<UDB> {
+pub struct WebService<UDB, PDB> {
     pub user_db: UDB,
+    pub project_db: PDB,
 }
 
-impl<UDB: UserDb> WebService<UDB> {
-    pub fn new(user_db: UDB) -> Self {
-        Self { user_db }
+impl<UDB: UserDb, PDB: ProjectDb> WebService<UDB, PDB> {
+    pub fn new(user_db: UDB, project_db: PDB) -> Self {
+        Self {
+            user_db,
+            project_db,
+        }
     }
 
     pub fn into_router(self) -> Router {
@@ -72,6 +77,7 @@ async fn propagate_b3_headers<B>(req: Request<B>, next: Next<B>) -> Result<Respo
 
 #[cfg(test)]
 pub mod tests {
+    use crate::models::project::projects::PgProjectDb;
     use crate::models::user::users::PgUserDb;
     use async_recursion::async_recursion;
     use axum::{
@@ -84,13 +90,14 @@ pub mod tests {
 
     use super::*;
 
-    impl WebService<PgUserDb> {
+    impl WebService<PgUserDb, PgProjectDb> {
         pub async fn new_test() -> Self {
             let pool = crate::pg_pool()
                 .await
                 .expect("failed to create postgres pool");
             Self {
-                user_db: PgUserDb::new(pool),
+                user_db: PgUserDb::new(pool.clone()),
+                project_db: PgProjectDb::new(pool),
             }
         }
     }

@@ -1,4 +1,5 @@
 use crate::errors::errors::DbError;
+use crate::models::project::projects::ProjectDb;
 use crate::models::user::users::{OwnedUser, UserDb};
 use crate::utils::salted_hashes::{
     generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
@@ -78,8 +79,8 @@ fn login_user<T: AsRef<str>>(password: T, user: &User) -> Option<TokenResponse> 
 // 3. encode password
 // 4. prepare tokens response
 #[tracing::instrument(skip(web_service))]
-pub async fn post<UDB: UserDb>(
-    State(web_service): State<WebService<UDB /*T, PDB, RDB*/>>,
+pub async fn post<UDB: UserDb, PDB: ProjectDb>(
+    State(web_service): State<WebService<UDB, PDB>>,
     body_or_error: Result<Json<RegisterUserRequestBody>, JsonRejection>,
 ) -> Result<(StatusCode, Json<RegisterUserResponseBody>), RegisterUserErrorResponse> {
     let Json(body) = body_or_error.unwrap(); // TODO validate response
@@ -202,8 +203,8 @@ impl IntoResponse for LoginUserErrorResponse {
 ///
 /// TODO: add docs
 #[tracing::instrument(skip(web_service))]
-pub async fn login<UDB: UserDb>(
-    State(web_service): State<WebService<UDB>>,
+pub async fn login<UDB: UserDb, PDB: ProjectDb>(
+    State(web_service): State<WebService<UDB, PDB>>,
     body_or_error: Result<Json<LoginUserDataBody>, JsonRejection>,
 ) -> Result<(StatusCode, Json<LoginUserResponseBody>), LoginUserErrorResponse> {
     let Json(body) = body_or_error.unwrap(); // TODO validate response

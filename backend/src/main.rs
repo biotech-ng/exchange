@@ -1,5 +1,6 @@
 use std::{net::SocketAddr, time::Duration};
 
+use crate::models::project::projects::PgProjectDb;
 use crate::models::user::users::PgUserDb;
 use crate::web_service::WebService;
 use dotenvy::dotenv;
@@ -29,8 +30,9 @@ async fn main() {
 
     let pool = pg_pool().await.expect("failed to connect to postgres");
 
-    let user_db = PgUserDb::new(pool);
-    let router = WebService::new(user_db).into_router();
+    let user_db = PgUserDb::new(pool.clone());
+    let project_db = PgProjectDb::new(pool);
+    let router = WebService::new(user_db, project_db).into_router();
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 4000));
     tracing::info!("listening on http://{}", addr);

@@ -11,10 +11,15 @@ pub struct Project {
     pub updated_at: PrimitiveDateTime,
 }
 
+#[derive(Debug)]
+pub struct ProjectInput<T1: AsRef<str>, T2: AsRef<str>> {
+    pub name: T1,
+    pub description: T2,
+}
+
 pub async fn insert_project<T1: AsRef<str>, T2: AsRef<str>>(
     pool: &PgPool,
-    name: T1,
-    description: T2,
+    project: &ProjectInput<T1, T2>,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -23,15 +28,15 @@ pub async fn insert_project<T1: AsRef<str>, T2: AsRef<str>>(
                 RETURNING id
             "#,
         Uuid::new_v4(),
-        name.as_ref(),
-        description.as_ref(),
+        project.name.as_ref(),
+        project.description.as_ref(),
     )
     .fetch_one(pool)
     .await
     .map(|x| x.id)
 }
 
-pub async fn get_project(pool: &PgPool, id: Uuid) -> Result<Project, sqlx::Error> {
+pub async fn get_project(pool: &PgPool, id: &Uuid) -> Result<Project, sqlx::Error> {
     sqlx::query_as!(
         Project,
         r#"
@@ -139,10 +144,12 @@ mod tests {
     use crate::pg_pool;
 
     async fn create_project(pool: &PgPool) -> Project {
-        let name = "project name";
-        let description = "project description";
+        let project_input = ProjectInput {
+            name: "project name",
+            description: "project description",
+        };
 
-        let project_id = insert_project(&pool, name, description)
+        let project_id = insert_project(&pool, &project_input)
             .await
             .expect("project created");
         get_project(&pool, project_id)
@@ -154,18 +161,20 @@ mod tests {
     async fn test_create_project() {
         let pool = pg_pool().await.expect("pool is expected");
 
-        let name = "project name";
-        let description = "project description";
+        let project_input = ProjectInput {
+            name: "project name",
+            description: "project description",
+        };
 
-        let project_id = insert_project(&pool, name, description)
+        let project_id = insert_project(&pool, &project_input)
             .await
             .expect("project created");
         let project = get_project(&pool, project_id)
             .await
             .expect("project returned");
 
-        assert_eq!(project.name, name);
-        assert_eq!(project.description, description);
+        assert_eq!(project.name, project_input.name);
+        assert_eq!(project.description, project_input.description);
     }
 
     #[tokio::test]

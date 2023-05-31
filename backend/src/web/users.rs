@@ -1,5 +1,4 @@
 use crate::errors::errors::DbError;
-use crate::user::users::{OwnedUser, UserDb};
 use crate::utils::salted_hashes::{
     generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
 };
@@ -10,6 +9,7 @@ use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::StatusCode, Json};
 use database::users::User;
 use serde::{Deserialize, Serialize};
+use crate::models::user::users::{OwnedUser, UserDb};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterUserData {
@@ -238,7 +238,6 @@ pub async fn login<UDB: UserDb>(
 
 #[cfg(test)]
 mod tests {
-    use crate::user::users::{PgUserDb, UserDb};
     use crate::utils::salted_hashes::{
         generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
     };
@@ -254,6 +253,7 @@ mod tests {
     use database::utils::random_samples::RandomSample;
     use http_body::combinators::UnsyncBoxBody;
     use uuid::Uuid;
+    use crate::models::user::users::{PgUserDb, UserDb};
 
     async fn create_test_router() -> Router {
         WebService::new_test().await.into_router()

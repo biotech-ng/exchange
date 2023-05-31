@@ -1,4 +1,3 @@
-use crate::user::users::UserDb;
 use crate::web::users;
 use axum::http::Request;
 use axum::middleware::Next;
@@ -6,6 +5,7 @@ use axum::response::Response;
 use axum::{middleware, routing::post, Router};
 use axum_tracing_opentelemetry::{find_current_trace_id, opentelemetry_tracing_layer};
 use serde::{Deserialize, Serialize};
+use crate::models::user::users::UserDb;
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub enum ErrorCode {
@@ -80,9 +80,9 @@ pub mod tests {
     use http_body::combinators::UnsyncBoxBody;
     use serde::{de::DeserializeOwned, Serialize};
     use tower::ServiceExt;
+    use crate::models::user::users::PgUserDb;
 
     use super::*;
-    use crate::user::users::PgUserDb;
 
     impl WebService<PgUserDb> {
         pub async fn new_test() -> Self {

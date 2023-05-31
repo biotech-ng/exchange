@@ -1,6 +1,6 @@
 use crate::errors::errors::DbError;
-use crate::models::project::projects::ProjectDb;
-use crate::models::user::users::{OwnedUser, UserDb};
+use crate::models::project::ProjectDb;
+use crate::models::user::{OwnedUser, UserDb};
 use crate::utils::salted_hashes::{
     generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
 };
@@ -239,7 +239,7 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
 
 #[cfg(test)]
 mod tests {
-    use crate::models::user::users::{PgUserDb, UserDb};
+    use crate::models::user::{PgUserDb, UserDb};
     use crate::utils::salted_hashes::{
         generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
     };

@@ -1,5 +1,5 @@
-use crate::models::project::projects::ProjectDb;
-use crate::models::user::users::UserDb;
+use crate::models::project::ProjectDb;
+use crate::models::user::UserDb;
 use crate::web::users;
 use axum::http::Request;
 use axum::middleware::Next;
@@ -77,8 +77,8 @@ async fn propagate_b3_headers<B>(req: Request<B>, next: Next<B>) -> Result<Respo
 
 #[cfg(test)]
 pub mod tests {
-    use crate::models::project::projects::PgProjectDb;
-    use crate::models::user::users::PgUserDb;
+    use crate::models::project::PgProjectDb;
+    use crate::models::user::PgUserDb;
     use async_recursion::async_recursion;
     use axum::{
         body::Bytes,

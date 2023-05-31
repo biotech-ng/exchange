@@ -1,7 +1,7 @@
 use std::{net::SocketAddr, time::Duration};
 
-use crate::models::project::projects::PgProjectDb;
-use crate::models::user::users::PgUserDb;
+use crate::models::project::PgProjectDb;
+use crate::models::user::PgUserDb;
 use crate::web_service::WebService;
 use dotenvy::dotenv;
 use sqlx::{postgres::PgPoolOptions, PgPool};

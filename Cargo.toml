@@ -2,6 +2,7 @@
 resolver = "2"
 
 members = [
+    "backend",
     "database",
     "database_bin",
     "druid-app",

@@ -218,7 +218,7 @@ pub mod tests {
             .await
             .expect("user is created");
 
-        get_user(pool, id)
+        get_user(pool, &id)
             .await
             .expect("user for given id is expected")
     }
@@ -232,9 +232,10 @@ pub mod tests {
 
         let role = ChatMemberRole::Member;
 
-        let chat_participant_id = insert_chat_member(&pool, chat.id, user.alias, role)
-            .await
-            .expect("chat member created");
+        let chat_participant_id =
+            insert_chat_member(&pool, chat.id, user.alias.expect("alias is expected"), role)
+                .await
+                .expect("chat member created");
 
         let chat_participant = get_chat_member(&pool, chat_participant_id)
             .await

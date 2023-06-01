@@ -7,6 +7,7 @@ pub struct Project {
     pub id: Uuid,
     pub name: String,
     pub description: String,
+    pub user_id: Uuid,
     pub created_at: PrimitiveDateTime,
     pub updated_at: PrimitiveDateTime,
 }
@@ -15,6 +16,7 @@ pub struct Project {
 pub struct ProjectInput<T1: AsRef<str>, T2: AsRef<str>> {
     pub name: T1,
     pub description: T2,
+    pub user_id: Uuid,
 }
 
 pub async fn insert_project<T1: AsRef<str>, T2: AsRef<str>>(
@@ -23,13 +25,14 @@ pub async fn insert_project<T1: AsRef<str>, T2: AsRef<str>>(
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
         r#"
-                INSERT INTO projects ( id, name, description, created_at, updated_at )
-                SELECT $1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                INSERT INTO projects ( id, name, description, user_id, created_at, updated_at )
+                SELECT $1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
                 RETURNING id
             "#,
         Uuid::new_v4(),
         project.name.as_ref(),
         project.description.as_ref(),
+        project.user_id
     )
     .fetch_one(pool)
     .await
@@ -40,7 +43,7 @@ pub async fn get_project(pool: &PgPool, id: &Uuid) -> Result<Project, sqlx::Erro
     sqlx::query_as!(
         Project,
         r#"
-                SELECT id, name, description, created_at, updated_at FROM projects
+                SELECT id, name, description, created_at, user_id, updated_at FROM projects
                 WHERE id = $1
             "#,
         id
@@ -144,15 +147,18 @@ mod tests {
     use crate::pg_pool;
 
     async fn create_project(pool: &PgPool) -> Project {
+        let user_id = create_user(pool).await.id;
+
         let project_input = ProjectInput {
             name: "project name",
             description: "project description",
+            user_id
         };
 
-        let project_id = insert_project(&pool, &project_input)
+        let project_id = insert_project(pool, &project_input)
             .await
             .expect("project created");
-        get_project(&pool, project_id)
+        get_project(&pool, &project_id)
             .await
             .expect("project returned")
     }
@@ -160,21 +166,24 @@ mod tests {
     #[tokio::test]
     async fn test_create_project() {
         let pool = pg_pool().await.expect("pool is expected");
+        let user_id = create_user(&pool).await.id;
 
         let project_input = ProjectInput {
             name: "project name",
             description: "project description",
+            user_id,
         };
 
         let project_id = insert_project(&pool, &project_input)
             .await
             .expect("project created");
-        let project = get_project(&pool, project_id)
+        let project = get_project(&pool, &project_id)
             .await
             .expect("project returned");
 
         assert_eq!(project.name, project_input.name);
         assert_eq!(project.description, project_input.description);
+        assert_eq!(project.user_id, project_input.user_id);
     }
 
     #[tokio::test]

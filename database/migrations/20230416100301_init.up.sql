@@ -124,7 +124,8 @@ CREATE TABLE projects
     name        character varying(255) NOT NULL,
     description text NOT NULL,
     created_at  timestamp(0) without time zone NOT NULL,
-    updated_at  timestamp(0) without time zone NOT NULL
+    updated_at  timestamp(0) without time zone NOT NULL,
+    user_id     uuid REFERENCES users(id) NOT NULL
 );
 CREATE UNIQUE INDEX projects_id_index ON companies (id uuid_ops);
 

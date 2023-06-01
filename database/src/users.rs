@@ -35,6 +35,7 @@ pub struct UserInput<
     T10: AsRef<str>,
     T11: AsRef<str>,
 > {
+    pub user_id: Uuid,
     pub alias: Option<T1>,
     pub first_name: Option<T2>,
     pub last_name: Option<T3>,
@@ -70,7 +71,7 @@ pub async fn insert_user<
                 SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
                 RETURNING id
             "#,
-            Uuid::new_v4(),
+            user_input.user_id,
             user_input.alias.as_ref().map(|x| x.as_ref()),
             user_input.first_name.as_ref().map(|x| x.as_ref()),
             user_input.last_name.as_ref().map(|x| x.as_ref()),
@@ -162,6 +163,7 @@ pub mod tests {
 
     // TODO generate normal password
     pub fn create_random_user_inputs() -> TestUserInputs {
+        let user_id = Uuid::new_v4();
         let alias = Some(format!("vova:{}", Uuid::new_v4()));
         let first_name = Some("volodymyr".to_owned());
         let last_name = Some("gorbenko".to_owned());
@@ -181,6 +183,7 @@ pub mod tests {
         let country_code = Some("SW");
 
         UserInput {
+            user_id,
             alias,
             first_name,
             last_name,

@@ -6,6 +6,7 @@ use std::ops::Add;
 #[cfg(test)]
 use std::string::FromUtf8Error;
 use time::{Duration, OffsetDateTime, PrimitiveDateTime};
+use uuid::Uuid;
 
 const BASE_64: GeneralPurpose = general_purpose::STANDARD;
 
@@ -29,6 +30,7 @@ pub enum ParseAccessTokenError {
 pub struct UserInfo {
     pub first_name: Option<String>,
     pub last_name: Option<String>,
+    pub user_id: Uuid,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -163,10 +165,12 @@ mod tests {
     fn test_create_and_parse_a_valid_token() {
         dotenv().expect("failed to load .env");
 
+        let user_id = Uuid::new_v4();
         let first_name = Some(String::new_random(124));
         let last_name = Some(String::new_random(124));
 
         let user = UserInfo {
+            user_id,
             first_name,
             last_name,
         };
@@ -186,10 +190,12 @@ mod tests {
     fn test_parse_invalid_token() {
         dotenv().expect("failed to load .env");
 
+        let user_id = Uuid::new_v4();
         let first_name = Some(String::new_random(124));
         let last_name = Some(String::new_random(124));
 
         let user = UserInfo {
+            user_id,
             first_name,
             last_name,
         };

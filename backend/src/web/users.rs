@@ -11,6 +11,7 @@ use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::StatusCode, Json};
 use database::users::User;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterUserData {
@@ -64,10 +65,11 @@ fn login_user<T: AsRef<str>>(password: T, user: &User) -> Option<TokenResponse> 
 
     Some(
         TokenResponse::new(UserInfo {
+            user_id: user.id,
             first_name: user.first_name.clone(),
             last_name: user.last_name.clone(),
         })
-        .expect("TODO"),
+            .expect("TODO"),
     )
 }
 
@@ -114,13 +116,17 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
             let (password_sha512, password_salt) =
                 generate_hash_and_salt_for_text(&body.data.password);
 
+            let user_id = Uuid::new_v4();
+
             let token_response = TokenResponse::new(UserInfo {
                 first_name: body.data.first_name.clone(),
                 last_name: body.data.last_name.clone(),
+                user_id: user_id.clone(),
             })
-            .expect("TODO");
+                .expect("TODO");
 
             let user = OwnedUser {
+                user_id,
                 alias: None,
                 first_name: body.data.first_name.clone(),
                 last_name: body.data.last_name.clone(),

@@ -30,7 +30,7 @@ pub struct RegisterUserRequestBody {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterUserResponseBody {
     data: RegisterUserData,
-    token: TokenResponse,
+    access: TokenResponse,
 }
 
 #[derive(Debug)]
@@ -105,7 +105,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
                     StatusCode::ACCEPTED,
                     Json(RegisterUserResponseBody {
                         data: body.data,
-                        token: token_response,
+                        access: token_response,
                     }),
                 ))
             } else {
@@ -150,7 +150,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
                 StatusCode::CREATED,
                 Json(RegisterUserResponseBody {
                     data: body.data,
-                    token: token_response,
+                    access: token_response,
                 }),
             ))
         }
@@ -171,7 +171,7 @@ pub struct LoginUserDataBody {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LoginUserResponseBody {
-    token: TokenResponse,
+    access: TokenResponse,
 }
 
 #[derive(Debug)]
@@ -231,7 +231,7 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
                 Ok((
                     StatusCode::ACCEPTED,
                     Json(LoginUserResponseBody {
-                        token: token_response,
+                        access: token_response,
                     }),
                 ))
             } else {
@@ -323,7 +323,7 @@ mod tests {
 
         // Token ok
         let parsed_access_token =
-            AccessToken::from_token(response_body.token.token).expect("valid token");
+            AccessToken::from_token(response_body.access.token).expect("valid token");
 
         assert_eq!(
             parsed_access_token.get_user().first_name,
@@ -385,7 +385,7 @@ mod tests {
 
         // Token ok
         let parsed_access_token =
-            AccessToken::from_token(response_body.token.token).expect("valid token");
+            AccessToken::from_token(response_body.access.token).expect("valid token");
 
         assert_eq!(
             parsed_access_token.get_user().first_name,
@@ -488,6 +488,6 @@ mod tests {
             .await
             .expect("user exists");
 
-        assert_eq!(response_body.token.token, user.access_token)
+        assert_eq!(response_body.access.token, user.access_token)
     }
 }

@@ -4,7 +4,7 @@ use crate::models::user::{OwnedUser, UserDb};
 use crate::utils::salted_hashes::{
     generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
 };
-use crate::utils::tokens::{TokenResponse, UserInfo};
+use crate::utils::tokens::{AccessTokenResponse, UserInfo};
 use crate::web_service::{ErrorCode, ErrorResponseBody, WebService};
 use axum::extract::rejection::JsonRejection;
 use axum::response::{IntoResponse, Response};
@@ -30,7 +30,7 @@ pub struct RegisterUserRequestBody {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterUserResponseBody {
     data: RegisterUserData,
-    access: TokenResponse,
+    access: AccessTokenResponse,
 }
 
 #[derive(Debug)]
@@ -55,7 +55,7 @@ impl IntoResponse for RegisterUserErrorResponse {
     }
 }
 
-fn login_user<T: AsRef<str>>(password: T, user: &User) -> Option<TokenResponse> {
+fn login_user<T: AsRef<str>>(password: T, user: &User) -> Option<AccessTokenResponse> {
     let input_hash =
         generate_b64_hash_for_text_and_salt(password, &user.password_salt).expect("TODO");
     let existing_hash = &user.password_sha512;
@@ -64,7 +64,7 @@ fn login_user<T: AsRef<str>>(password: T, user: &User) -> Option<TokenResponse> 
     }
 
     Some(
-        TokenResponse::new(UserInfo {
+        AccessTokenResponse::new(UserInfo {
             user_id: user.id,
             first_name: user.first_name.clone(),
             last_name: user.last_name.clone(),
@@ -118,7 +118,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
 
             let user_id = Uuid::new_v4();
 
-            let token_response = TokenResponse::new(UserInfo {
+            let token_response = AccessTokenResponse::new(UserInfo {
                 first_name: body.data.first_name.clone(),
                 last_name: body.data.last_name.clone(),
                 user_id: user_id.clone(),
@@ -171,7 +171,7 @@ pub struct LoginUserDataBody {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LoginUserResponseBody {
-    access: TokenResponse,
+    access: AccessTokenResponse,
 }
 
 #[derive(Debug)]

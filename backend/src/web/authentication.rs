@@ -1,8 +1,8 @@
 use time::{OffsetDateTime, PrimitiveDateTime};
 use crate::models::user::UserDb;
-use crate::utils::tokens::{AccessToken, DigestAccessToken, TokenResponse};
+use crate::utils::tokens::{AccessToken, DigestAccessToken, AccessTokenResponse};
 
-pub async fn authenticate_with_token<T: AsRef<str>, UDB: UserDb>(token: T, user_db: &UDB) -> TokenResponse {
+pub async fn authenticate_with_token<T: AsRef<str>, UDB: UserDb>(token: T, user_db: &UDB) -> AccessTokenResponse {
 
     let access_token = AccessToken::from_token(token.as_ref()).expect("TODO");
 
@@ -15,7 +15,7 @@ pub async fn authenticate_with_token<T: AsRef<str>, UDB: UserDb>(token: T, user_
     let now = OffsetDateTime::now_utc();
     let now = PrimitiveDateTime::new(now.date(), now.time());
 
-    let access_token: TokenResponse = if access_token.get_expires_at() <= &now {
+    let access_token: AccessTokenResponse = if access_token.get_expires_at() <= &now {
         if access_token.get_expires_at() <= &now {
             panic!("TODO: wrong token");
         }

@@ -32,13 +32,13 @@ pub struct UserInfo {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct TokenResponse {
+pub struct AccessTokenResponse {
     pub token: String,
     pub expires_at: PrimitiveDateTime,
     pub refresh_at: PrimitiveDateTime,
 }
 
-impl TokenResponse {
+impl AccessTokenResponse {
     pub fn new(user: UserInfo) -> Result<Self, CreateAccessTokenError> {
         let access_token = AccessToken::new_with_user(user);
         let expires_at = access_token.expires_at;
@@ -125,13 +125,13 @@ impl AccessToken {
         &self.user
     }
 
-//    pub fn get_expires_at(&self) -> &PrimitiveDateTime {
-//        &self.expires_at
-//    }
+   pub fn get_expires_at(&self) -> &PrimitiveDateTime {
+       &self.expires_at
+   }
 
-//    pub fn get_refresh_at(&self) -> &PrimitiveDateTime {
-//        &self.refresh_at
-//    }
+   pub fn get_refresh_at(&self) -> &PrimitiveDateTime {
+       &self.refresh_at
+   }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -143,16 +143,12 @@ pub struct DigestAccessToken {
 }
 
 impl DigestAccessToken {
-    pub fn get_token(&self) -> &str {
-        &self.token
-    }
-
-    pub fn into_token_response(self) -> TokenResponse {
+    pub fn into_token_response(self) -> AccessTokenResponse {
         let token = serde_json::to_string(&self)
             .map_err(CreateAccessTokenError::JsonError)
             .expect("TODO");
 
-        TokenResponse {
+        AccessTokenResponse {
             token,
             expires_at: self.expires_at,
             refresh_at: self.refresh_at,
@@ -184,7 +180,7 @@ impl TryFrom<AccessToken> for DigestAccessToken {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::tokens::TokenResponse;
+    use crate::utils::tokens::AccessTokenResponse;
     use database::utils::random_samples::RandomSample;
     use dotenvy::dotenv;
 
@@ -202,7 +198,7 @@ mod tests {
             last_name,
         };
 
-        let token_response = TokenResponse::new(user.clone()).expect("valid token");
+        let token_response = AccessTokenResponse::new(user.clone()).expect("valid token");
 
         let token = token_response.token;
 

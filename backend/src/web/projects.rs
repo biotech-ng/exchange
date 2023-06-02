@@ -10,7 +10,7 @@ use crate::web_service::WebService;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use crate::errors::errors::DbError;
-use crate::utils::tokens::TokenResponse;
+use crate::utils::tokens::AccessTokenResponse;
 use crate::web::authentication::authenticate_with_token;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -22,7 +22,7 @@ pub struct CreateProject {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CreateProjectResponseBody {
     project_id: Uuid,
-    access: TokenResponse,
+    access: AccessTokenResponse,
 }
 
 #[derive(Debug)]

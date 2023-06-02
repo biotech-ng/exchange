@@ -1,4 +1,4 @@
-pub mod errors;
-pub mod users;
-pub mod projects;
 mod authentication;
+pub mod errors;
+pub mod projects;
+pub mod users;

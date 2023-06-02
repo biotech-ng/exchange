@@ -69,7 +69,7 @@ fn login_user<T: AsRef<str>>(password: T, user: &User) -> Option<AccessTokenResp
             first_name: user.first_name.clone(),
             last_name: user.last_name.clone(),
         })
-            .expect("TODO"),
+        .expect("TODO"),
     )
 }
 
@@ -123,7 +123,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
                 last_name: body.data.last_name.clone(),
                 user_id: user_id.clone(),
             })
-                .expect("TODO");
+            .expect("TODO");
 
             let user = OwnedUser {
                 user_id,

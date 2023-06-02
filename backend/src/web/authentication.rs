@@ -1,12 +1,17 @@
-use time::{OffsetDateTime, PrimitiveDateTime};
 use crate::models::user::UserDb;
-use crate::utils::tokens::{AccessToken, DigestAccessToken, AccessTokenResponse, UserInfo};
+use crate::utils::tokens::{AccessToken, AccessTokenResponse, DigestAccessToken, UserInfo};
+use time::{OffsetDateTime, PrimitiveDateTime};
 
-pub async fn authenticate_with_token<T: AsRef<str>, UDB: UserDb>(token: T, user_db: &UDB) -> (AccessTokenResponse, UserInfo) {
-
+pub async fn authenticate_with_token<T: AsRef<str>, UDB: UserDb>(
+    token: T,
+    user_db: &UDB,
+) -> (AccessTokenResponse, UserInfo) {
     let access_token = AccessToken::from_token(token.as_ref()).expect("TODO");
 
-    let user = user_db.get_user(&access_token.get_user().user_id).await.expect("TODO");
+    let user = user_db
+        .get_user(&access_token.get_user().user_id)
+        .await
+        .expect("TODO");
     let user_info = access_token.get_user().clone();
 
     if user.access_token != token.as_ref() {
@@ -23,13 +28,20 @@ pub async fn authenticate_with_token<T: AsRef<str>, UDB: UserDb>(token: T, user_
 
         let access_token = AccessToken::new_with_user(access_token.get_user().clone());
 
-        let token_response = DigestAccessToken::try_from(access_token).expect("TODO").into_token_response();
+        let token_response = DigestAccessToken::try_from(access_token)
+            .expect("TODO")
+            .into_token_response();
 
-        user_db.update_user_token(&user.id, &token_response.token).await.expect("TODO");
+        user_db
+            .update_user_token(&user.id, &token_response.token)
+            .await
+            .expect("TODO");
 
         token_response
     } else {
-        DigestAccessToken::try_from(access_token).expect("TODO").into_token_response()
+        DigestAccessToken::try_from(access_token)
+            .expect("TODO")
+            .into_token_response()
     };
 
     (access_token_response, user_info)

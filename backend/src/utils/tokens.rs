@@ -125,13 +125,9 @@ impl AccessToken {
         &self.user
     }
 
-   pub fn get_expires_at(&self) -> &PrimitiveDateTime {
-       &self.expires_at
-   }
-
-   pub fn get_refresh_at(&self) -> &PrimitiveDateTime {
-       &self.refresh_at
-   }
+    pub fn get_expires_at(&self) -> &PrimitiveDateTime {
+        &self.expires_at
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -154,7 +150,6 @@ impl DigestAccessToken {
             refresh_at: self.refresh_at,
         }
     }
-
 }
 
 impl TryFrom<AccessToken> for DigestAccessToken {

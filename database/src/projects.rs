@@ -152,7 +152,7 @@ mod tests {
         let project_input = ProjectInput {
             name: "project name",
             description: "project description",
-            user_id
+            user_id,
         };
 
         let project_id = insert_project(pool, &project_input)

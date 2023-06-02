@@ -4,6 +4,7 @@ use crate::models::project::PgProjectDb;
 use crate::models::user::PgUserDb;
 use crate::web_service::WebService;
 use dotenvy::dotenv;
+use opentelemetry::sdk;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
 mod errors;
@@ -68,9 +69,9 @@ fn init_tracing() {
         .tracing()
         .with_exporter(otel_exporter)
         .with_trace_config(
-            opentelemetry::sdk::trace::config()
+            sdk::trace::Config::default()
                 .with_resource(otel_resource)
-                .with_sampler(opentelemetry::sdk::trace::Sampler::AlwaysOn),
+                .with_sampler(sdk::trace::Sampler::AlwaysOn),
         )
         .install_simple()
         .expect("failed to setup otel tracer");

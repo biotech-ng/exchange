@@ -1,6 +1,6 @@
 use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
-use crate::web::users;
+use crate::web::{projects, users};
 use axum::http::Request;
 use axum::middleware::Next;
 use axum::response::Response;
@@ -37,6 +37,7 @@ impl<UDB: UserDb, PDB: ProjectDb> WebService<UDB, PDB> {
         Router::new()
             .route("/api/user", post(users::post))
             .route("/api/user/login", post(users::login))
+            .route("/api/project/new", post(projects::post))
             // .route("/api/payments", post(payments::post/*::<T, PDB, RDB>*/))
             // .route(
             //     "/api/payments/:payment_id",
@@ -79,7 +80,6 @@ async fn propagate_b3_headers<B>(req: Request<B>, next: Next<B>) -> Result<Respo
 pub mod tests {
     use crate::models::project::PgProjectDb;
     use crate::models::user::PgUserDb;
-    use async_recursion::async_recursion;
     use axum::{
         body::Bytes,
         http::{header::CONTENT_TYPE, Method, Request},
@@ -125,10 +125,9 @@ pub mod tests {
     //     send_request(router, request).await
     // }
 
-    #[async_recursion(?Send)]
     pub async fn post<T: Serialize>(
         router: &Router,
-        uri: impl AsRef<str> + 'async_recursion,
+        uri: impl AsRef<str>,
         body: &T,
     ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
         let request = Request::builder()

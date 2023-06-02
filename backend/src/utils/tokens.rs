@@ -3,7 +3,6 @@ use base64::engine::{general_purpose, GeneralPurpose};
 use base64::{DecodeError, Engine};
 use serde::{Deserialize, Serialize};
 use std::ops::Add;
-#[cfg(test)]
 use std::string::FromUtf8Error;
 use time::{Duration, OffsetDateTime, PrimitiveDateTime};
 use uuid::Uuid;
@@ -16,7 +15,6 @@ pub enum CreateAccessTokenError {
     DecodeError(DecodeError),
 }
 
-#[cfg(test)]
 #[derive(Debug)]
 pub enum ParseAccessTokenError {
     ParseJsonError(serde_json::Error),
@@ -42,13 +40,7 @@ pub struct TokenResponse {
 
 impl TokenResponse {
     pub fn new(user: UserInfo) -> Result<Self, CreateAccessTokenError> {
-        let duration_in_secs = std::env::var("TOKEN_DURATION_IN_SECS")
-            .expect("SECRET_SALT must be in environment")
-            .parse::<i64>()
-            .expect("integer duration");
-        let duration = Duration::seconds(duration_in_secs);
-
-        let access_token = AccessToken::new_with_user(user, duration);
+        let access_token = AccessToken::new_with_user(user);
         let expires_at = access_token.expires_at;
         let refresh_at = access_token.refresh_at;
 
@@ -73,7 +65,17 @@ pub struct AccessToken {
 }
 
 impl AccessToken {
-    fn new_with_user(user: UserInfo, duration: Duration) -> Self {
+    pub fn new_with_user(user: UserInfo) -> Self {
+        let duration_in_secs = std::env::var("TOKEN_DURATION_IN_SECS")
+            .expect("SECRET_SALT must be in environment")
+            .parse::<i64>()
+            .expect("integer duration");
+        let duration = Duration::seconds(duration_in_secs);
+
+        Self::new_with_user_and_duration(user, duration)
+    }
+
+    fn new_with_user_and_duration(user: UserInfo, duration: Duration) -> Self {
         let expires_at = OffsetDateTime::now_utc().add(duration);
         let expires_at = PrimitiveDateTime::new(expires_at.date(), expires_at.time());
 
@@ -87,7 +89,6 @@ impl AccessToken {
         }
     }
 
-    #[cfg(test)]
     pub fn from_token<T: AsRef<str>>(token_b64: T) -> Result<Self, ParseAccessTokenError> {
         let token_bytes = BASE_64
             .decode(token_b64.as_ref())
@@ -120,18 +121,44 @@ impl AccessToken {
         })
     }
 
-    #[cfg(test)]
     pub fn get_user(&self) -> &UserInfo {
         &self.user
     }
+
+//    pub fn get_expires_at(&self) -> &PrimitiveDateTime {
+//        &self.expires_at
+//    }
+
+//    pub fn get_refresh_at(&self) -> &PrimitiveDateTime {
+//        &self.refresh_at
+//    }
 }
 
 #[derive(Serialize, Deserialize)]
-struct DigestAccessToken {
+pub struct DigestAccessToken {
     digest: String,
     token: String,
     expires_at: PrimitiveDateTime,
     refresh_at: PrimitiveDateTime,
+}
+
+impl DigestAccessToken {
+    pub fn get_token(&self) -> &str {
+        &self.token
+    }
+
+    pub fn into_token_response(self) -> TokenResponse {
+        let token = serde_json::to_string(&self)
+            .map_err(CreateAccessTokenError::JsonError)
+            .expect("TODO");
+
+        TokenResponse {
+            token,
+            expires_at: self.expires_at,
+            refresh_at: self.refresh_at,
+        }
+    }
+
 }
 
 impl TryFrom<AccessToken> for DigestAccessToken {
@@ -200,13 +227,7 @@ mod tests {
             last_name,
         };
 
-        let duration_in_secs = std::env::var("TOKEN_DURATION_IN_SECS")
-            .expect("SECRET_SALT must be in environment")
-            .parse::<i64>()
-            .expect("integer duration");
-        let duration = Duration::seconds(duration_in_secs);
-
-        let access_token = AccessToken::new_with_user(user, duration);
+        let access_token = AccessToken::new_with_user(user);
         let expires_at = access_token.expires_at;
         let refresh_at = access_token.refresh_at;
 
@@ -214,20 +235,12 @@ mod tests {
             digest: String::new_random(88),
             token: serde_json::to_string(&access_token)
                 .map_err(CreateAccessTokenError::JsonError)
-                .expect("valid access token"),
+                .expect("TODO: valid access token"),
             expires_at,
             refresh_at,
         };
 
-        let token = serde_json::to_string(&digest_access_token)
-            .map_err(CreateAccessTokenError::JsonError)
-            .expect("???");
-
-        let token_response = TokenResponse {
-            token,
-            expires_at,
-            refresh_at,
-        };
+        let token_response = digest_access_token.into_token_response();
 
         let token = token_response.token;
 

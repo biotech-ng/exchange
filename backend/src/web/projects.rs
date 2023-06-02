@@ -9,6 +9,7 @@ use crate::models::user::UserDb;
 use crate::web_service::WebService;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use database::projects::ProjectInput;
 use crate::errors::errors::DbError;
 use crate::utils::tokens::AccessTokenResponse;
 use crate::web::authentication::authenticate_with_token;
@@ -38,33 +39,40 @@ impl IntoResponse for CreateProjectErrorResponse {
     }
 }
 
-/// Registers a new user
+/// Creates a new doc
 ///
 /// TODO: add docs
 #[tracing::instrument(skip(web_service))]
 pub async fn post<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
     AuthBearer(token): AuthBearer,
-    _body_or_error: Result<Json<CreateProject>, JsonRejection>,
+    body_or_error: Result<Json<CreateProject>, JsonRejection>,
 ) -> Result<(StatusCode, Json<CreateProjectResponseBody>), CreateProjectErrorResponse> {
 
-    let new_token = authenticate_with_token(token, &web_service.user_db).await;
+    let (access_token_response, user_info) = authenticate_with_token(token, &web_service.user_db).await;
+    let request = body_or_error.expect("TODO");
 
-    // let token = AccessToken::from_token(token).expect("TODO");
-    // token.get_user();
+    let user_input = ProjectInput {
+        name: request.name.clone(),
+        description: request.description.clone(),
+        user_id: user_info.user_id.clone(),
+    };
 
-    // 1. Check token
-    // 2. Refresh token if expired
-    // 3. create project
-    // 4. return data
+    let project_id = web_service.project_db.insert_project(&user_input).await.expect("TODO");
 
-    todo!()
+    Ok((
+        StatusCode::CREATED,
+        Json(CreateProjectResponseBody {
+            project_id,
+            access: access_token_response,
+        }),
+    ))
 }
 
 #[cfg(test)]
 mod tests {
     #[tokio::test]
-    async fn should_register_user_with_valid_parameters() {
+    async fn should_create_a_new_project_for_a_given_user() {
 
         // let router = create_test_router().await;
         //

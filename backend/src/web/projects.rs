@@ -55,7 +55,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
     let user_input = ProjectInput {
         name: request.name.clone(),
         description: request.description.clone(),
-        user_id: user_info.user_id.clone(),
+        user_id: user_info.user_id,
     };
 
     let project_id = web_service
@@ -75,17 +75,34 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
 
 #[cfg(test)]
 mod tests {
+    use database::utils::random_samples::RandomSample;
+    use crate::web::projects::{CreateProject, CreateProjectResponseBody};
+    use crate::web::users::RegisterUserResponseBody;
+    use crate::web::users::tests::{create_test_router, register_new_user};
+    use crate::web_service::tests::{deserialize_response_body, post_with_auth_header};
+
     #[tokio::test]
     async fn should_create_a_new_project_for_a_given_user() {
+        let (_, response) = register_new_user(None).await;
 
-        // let router = create_test_router().await;
-        //
-        // let uri = "/api/user/login";
-        //
-        // let login_data = LoginUserData { email, password };
-        //
-        // let request_body = LoginUserDataBody { data: login_data };
-        //
-        // post(&router, uri, &request_body).await
+        let token = deserialize_response_body::<RegisterUserResponseBody>(response).await.into_token();
+
+        let router = create_test_router().await;
+
+        let name = String::new_random(100);
+        let description = String::new_random(100);
+
+        let request_body = CreateProject {
+            name,
+            description,
+        };
+
+        let uri = "/api/project/new";
+
+        let response = post_with_auth_header(&router, uri, &request_body, Some(&token)).await;
+        assert_eq!(response.status(), 201);
+
+        let create_project_response = deserialize_response_body::<CreateProjectResponseBody>(response).await;
+        assert_eq!(create_project_response.access.token, token);
     }
 }

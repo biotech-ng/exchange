@@ -78,14 +78,17 @@ async fn propagate_b3_headers<B>(req: Request<B>, next: Next<B>) -> Result<Respo
 
 #[cfg(test)]
 pub mod tests {
+    use std::fmt::Display;
     use crate::models::project::PgProjectDb;
     use crate::models::user::PgUserDb;
     use axum::{
         body::Bytes,
         http::{header::CONTENT_TYPE, Method, Request},
     };
+    use axum::http::request::Builder;
     use http_body::combinators::UnsyncBoxBody;
     use serde::{de::DeserializeOwned, Serialize};
+    // use sqlx::encode::IsNull::No;
     use tower::ServiceExt;
 
     use super::*;
@@ -125,29 +128,54 @@ pub mod tests {
     //     send_request(router, request).await
     // }
 
-    pub async fn post<T: Serialize>(
+    trait Modify {
+        fn modify<D, F>(self, data: Option<D>, f: F) -> Self
+            where
+                F: Fn(Self, D) -> Self,
+                Self: Sized,
+        {
+            if let Some(data) = data {
+                f(self, data)
+            } else {
+                self
+            }
+        }
+    }
+
+    impl Modify for Builder {}
+
+    pub async fn post_with_auth_header<T: Serialize, S: AsRef<str> + Display>(
         router: &Router,
         uri: impl AsRef<str>,
         body: &T,
+        token: Option<S>,
     ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
         let request = Request::builder()
             .method(Method::POST)
             .uri(uri.as_ref())
             .header(CONTENT_TYPE, "application/json")
+            .modify(token.as_ref(), |this, token| this.header("Authorization", std::format!("Bearer {token}")))
             .body(
                 serde_json::to_vec(body)
                     .expect("failed to serialize POST body")
                     .into(),
-            )
-            .expect("failed to build POST request");
+            ).expect("failed to build POST request");
         send_request(router, request).await
+    }
+
+    pub async fn post<T: Serialize>(
+        router: &Router,
+        uri: impl AsRef<str>,
+        body: &T,
+    ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
+        post_with_auth_header(router, uri, body, Option::<String>::None).await
     }
 
     pub async fn deserialize_response_body<T>(
         response: hyper::Response<UnsyncBoxBody<Bytes, axum::Error>>,
     ) -> T
-    where
-        T: DeserializeOwned,
+        where
+            T: DeserializeOwned,
     {
         let bytes = hyper::body::to_bytes(response.into_body())
             .await

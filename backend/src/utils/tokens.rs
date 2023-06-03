@@ -41,18 +41,24 @@ pub struct AccessTokenResponse {
 impl AccessTokenResponse {
     pub fn new(user: UserInfo) -> Result<Self, CreateAccessTokenError> {
         let access_token = AccessToken::new_with_user(user);
-        let expires_at = access_token.expires_at;
-        let refresh_at = access_token.refresh_at;
 
         let digest_access_token: DigestAccessToken = access_token.try_into()?;
 
-        let token = serde_json::to_string(&digest_access_token)
+        digest_access_token.try_into()
+    }
+}
+
+impl TryFrom<DigestAccessToken> for AccessTokenResponse {
+    type Error = CreateAccessTokenError;
+
+    fn try_from(value: DigestAccessToken) -> Result<Self, Self::Error> {
+        let token = serde_json::to_string(&value)
             .map_err(CreateAccessTokenError::JsonError)?;
 
-        Ok(Self {
+        Ok(AccessTokenResponse {
             token: BASE_64.encode(token),
-            expires_at,
-            refresh_at,
+            expires_at: value.expires_at,
+            refresh_at: value.refresh_at,
         })
     }
 }
@@ -138,20 +144,6 @@ pub struct DigestAccessToken {
     refresh_at: PrimitiveDateTime,
 }
 
-impl DigestAccessToken {
-    pub fn into_token_response(self) -> AccessTokenResponse {
-        let token = serde_json::to_string(&self)
-            .map_err(CreateAccessTokenError::JsonError)
-            .expect("TODO");
-
-        AccessTokenResponse {
-            token,
-            expires_at: self.expires_at,
-            refresh_at: self.refresh_at,
-        }
-    }
-}
-
 impl TryFrom<AccessToken> for DigestAccessToken {
     type Error = CreateAccessTokenError;
 
@@ -231,7 +223,7 @@ mod tests {
             refresh_at,
         };
 
-        let token_response = digest_access_token.into_token_response();
+        let token_response: AccessTokenResponse = digest_access_token.try_into().expect("TODO");
 
         let token = token_response.token;
 

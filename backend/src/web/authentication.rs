@@ -2,6 +2,7 @@ use crate::models::user::UserDb;
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, DigestAccessToken, UserInfo};
 use time::{OffsetDateTime, PrimitiveDateTime};
 
+// TODO fix race condition
 pub async fn authenticate_with_token<T: AsRef<str>, UDB: UserDb>(
     token: T,
     user_db: &UDB,
@@ -28,9 +29,10 @@ pub async fn authenticate_with_token<T: AsRef<str>, UDB: UserDb>(
 
         let access_token = AccessToken::new_with_user(access_token.get_user().clone());
 
-        let token_response = DigestAccessToken::try_from(access_token)
-            .expect("TODO")
-            .into_token_response();
+        let token_response: AccessTokenResponse = DigestAccessToken::try_from(access_token)
+            .expect("TODO 1")
+            .try_into()
+            .expect("TODO 2");
 
         user_db
             .update_user_token(&user.id, &token_response.token)
@@ -40,8 +42,9 @@ pub async fn authenticate_with_token<T: AsRef<str>, UDB: UserDb>(
         token_response
     } else {
         DigestAccessToken::try_from(access_token)
-            .expect("TODO")
-            .into_token_response()
+            .expect("TODO 1")
+            .try_into()
+            .expect("TODO 2")
     };
 
     (access_token_response, user_info)

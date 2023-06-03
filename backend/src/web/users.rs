@@ -104,9 +104,10 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
             if let Some(token_response) = login_user(&body.data.password, &user) {
                 web_service
                     .user_db
-                    .update_user_token(&user.id, &token_response.token)
+                    .update_user_token(&user.id, &token_response.token, &user.access_token)
                     .await
                     .map_err(RegisterUserErrorResponse::DbError)?;
+                // TODO test update_result
 
                 Ok((
                     StatusCode::ACCEPTED,
@@ -229,11 +230,13 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
     match user_or_error {
         Ok(user) => {
             if let Some(token_response) = login_user(&body.data.password, &user) {
+                // TODO handle not found for access_token_seq_num
                 web_service
                     .user_db
-                    .update_user_token(&user.id, &token_response.token)
+                    .update_user_token(&user.id, &token_response.token, &user.access_token)
                     .await
                     .map_err(LoginUserErrorResponse::DbError)?;
+                // TODO test update_result
 
                 Ok((
                     StatusCode::ACCEPTED,

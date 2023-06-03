@@ -1,6 +1,7 @@
 use crate::models::user::UserDb;
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, DigestAccessToken, UserInfo};
-use time::{OffsetDateTime, PrimitiveDateTime};
+use std::ops::Add;
+use time::{Duration, OffsetDateTime, PrimitiveDateTime};
 
 // TODO fix race condition
 // TODO: must be a layer
@@ -16,31 +17,68 @@ pub async fn authenticate_with_token(
         .expect("TODO");
     let user_info = access_token.get_user().clone();
 
+    let now = OffsetDateTime::now_utc();
+
     if user.access_token != token.as_ref() {
-        panic!("TODO: wrong token");
+        // In case of token refresh race condition, check a previous token
+        if let Some(previous_access_token) = user.previous_access_token {
+            let two_minutes_before_now = now.add(-Duration::minutes(2));
+            let two_minutes_before_now = PrimitiveDateTime::new(
+                two_minutes_before_now.date(),
+                two_minutes_before_now.time(),
+            );
+
+            if previous_access_token == token.as_ref()
+                && access_token.get_expires_at() > &two_minutes_before_now
+            {
+                let access_token = AccessToken::from_token(&user.access_token).expect("TODO");
+                return (
+                    DigestAccessToken::try_from(access_token)
+                        .expect("TODO 1")
+                        .try_into()
+                        .expect("TODO 2"),
+                    user_info,
+                );
+            }
+        }
+
+        panic!("TODO: wrong token 1, return un-authorised");
     }
 
-    let now = OffsetDateTime::now_utc();
     let now = PrimitiveDateTime::new(now.date(), now.time());
 
     let access_token_response = if access_token.get_expires_at() <= &now {
         if access_token.get_refresh_at() <= &now {
-            panic!("TODO: wrong token");
+            panic!("TODO: wrong token 2, return un-authorised");
         }
 
-        let access_token = AccessToken::new_with_user(access_token.get_user().clone());
+        let access_token: DigestAccessToken =
+            AccessToken::new_with_user(access_token.get_user().clone())
+                .try_into()
+                .expect("TODO 1");
 
-        let token_response: AccessTokenResponse = DigestAccessToken::try_from(access_token)
-            .expect("TODO 1")
-            .try_into()
-            .expect("TODO 2");
+        let token_response: AccessTokenResponse = access_token.try_into().expect("TODO 2");
 
-        user_db
-            .update_user_token(&user.id, &token_response.token)
+        let update_result = user_db
+            .update_user_token(&user.id, &token_response.token, &user.access_token)
             .await
             .expect("TODO");
 
-        token_response
+        if update_result == 0 {
+            // In case of token refresh race condition, return token from database
+            let token = user_db
+                .get_user(&user_info.user_id)
+                .await
+                .expect("TODO")
+                .access_token;
+            let access_token = AccessToken::from_token(token).expect("TODO");
+            DigestAccessToken::try_from(access_token)
+                .expect("TODO 1")
+                .try_into()
+                .expect("TODO 2")
+        } else {
+            token_response
+        }
     } else {
         DigestAccessToken::try_from(access_token)
             .expect("TODO 1")
@@ -59,6 +97,7 @@ mod tests {
     use crate::utils::tokens::{AccessTokenResponse, UserInfo};
     use crate::web::authentication::authenticate_with_token;
     use database::utils::random_samples::RandomSample;
+    use time::Duration;
     use uuid::Uuid;
 
     async fn create_user(
@@ -103,17 +142,34 @@ mod tests {
         let user_db = PgUserDb::new(pool);
 
         let (user, token_response) = create_token();
+        let old_token = token_response.token.clone();
 
         let user_id = create_user(&user_db, user.clone(), token_response).await;
 
-        let expired_token = make_expired_token(user);
-        user_db
-            .update_user_token(&user_id, &expired_token.token)
+        let expired_token = make_expired_token(user, Duration::minutes(1));
+        let updated = user_db
+            .update_user_token(&user_id, &expired_token.token, &old_token)
             .await
             .expect("token updated");
+        assert!(updated > 0);
 
-        let result = authenticate_with_token(&expired_token.token, &user_db).await;
+        let refresh_a = authenticate_with_token(&expired_token.token, &user_db);
+        let refresh_b = authenticate_with_token(&expired_token.token, &user_db);
+        let refresh_c = authenticate_with_token(&expired_token.token, &user_db);
+        let refresh_d = authenticate_with_token(&expired_token.token, &user_db);
+        let refresh_e = authenticate_with_token(&expired_token.token, &user_db);
 
-        assert_ne!(result.0.token, expired_token.token)
+        let (result_a, result_b, result_c, result_d, result_e) =
+            tokio::join!(refresh_a, refresh_b, refresh_c, refresh_d, refresh_e);
+        assert_ne!(result_a.0.token, expired_token.token);
+        assert_ne!(result_b.0.token, expired_token.token);
+        assert_ne!(result_c.0.token, expired_token.token);
+        assert_ne!(result_d.0.token, expired_token.token);
+        assert_ne!(result_e.0.token, expired_token.token);
+
+        assert_eq!(result_a.0.token, result_b.0.token);
+        assert_eq!(result_a.0.token, result_c.0.token);
+        assert_eq!(result_a.0.token, result_d.0.token);
+        assert_eq!(result_a.0.token, result_e.0.token);
     }
 }

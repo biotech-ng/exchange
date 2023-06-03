@@ -12,6 +12,7 @@ pub struct User {
     pub password_salt: String,
     pub password_sha512: String,
     pub access_token: String,
+    pub previous_access_token: Option<String>,
     pub phone_number: Option<String>,
     pub language_code: String,
     pub avatar: Option<String>,
@@ -93,26 +94,28 @@ pub async fn update_user_token(
     pool: &PgPool,
     id: &Uuid,
     token: impl AsRef<str>,
-) -> Result<(), sqlx::Error> {
+    previous_token: impl AsRef<str>,
+) -> Result<u64, sqlx::Error> {
     sqlx::query!(
         r#"
-                UPDATE users
-                SET access_token = $1
-                WHERE id = $2
-            "#,
+            UPDATE users
+            SET access_token = $1, previous_access_token = $2
+            WHERE id = $3 and (previous_access_token != $2 or previous_access_token is null)
+        "#,
         token.as_ref(),
-        id
+        previous_token.as_ref(),
+        id,
     )
     .execute(pool)
     .await
-    .map(|_| ())
+    .map(|res| res.rows_affected())
 }
 
 pub async fn get_user(pool: &PgPool, id: &Uuid) -> Result<User, sqlx::Error> {
     sqlx::query_as!(
             User,
             r#"
-                SELECT id, alias, first_name, last_name, email, password_salt, password_sha512, phone_number, access_token, language_code, avatar, country_code, created_at, updated_at, accessed_at FROM users
+                SELECT id, alias, first_name, last_name, email, password_salt, password_sha512, phone_number, access_token, previous_access_token, language_code, avatar, country_code, created_at, updated_at, accessed_at FROM users
                 WHERE id = $1
             "#,
             id
@@ -129,7 +132,7 @@ pub async fn get_user_by_email(
     sqlx::query_as!(
             User,
             r#"
-                SELECT id, alias, first_name, last_name, email, password_salt, password_sha512, phone_number, access_token, language_code, avatar, country_code, created_at, updated_at, accessed_at FROM users
+                SELECT id, alias, first_name, last_name, email, password_salt, password_sha512, phone_number, access_token, previous_access_token, language_code, avatar, country_code, created_at, updated_at, accessed_at FROM users
                 WHERE email = $1
             "#,
             email.as_ref()
@@ -277,7 +280,7 @@ pub mod tests {
 
         let access_token = String::new_random(1025);
 
-        _ = update_user_token(&pool, &id, &access_token).await;
+        _ = update_user_token(&pool, &id, &access_token, &user.access_token).await;
 
         let user = get_user_by_email(&pool, &user_input.email)
             .await

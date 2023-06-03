@@ -43,7 +43,8 @@ pub trait UserDb: Clone + Send + Sync + 'static {
         &self,
         id: &Uuid,
         token: impl AsRef<str> + std::fmt::Debug + Send,
-    ) -> Result<(), DbError>;
+        refresh_token: impl AsRef<str> + std::fmt::Debug + Send,
+    ) -> Result<u64, DbError>;
 }
 
 #[async_trait::async_trait]
@@ -77,8 +78,9 @@ impl UserDb for PgUserDb {
         &self,
         id: &Uuid,
         token: impl AsRef<str> + std::fmt::Debug + Send,
-    ) -> Result<(), DbError> {
-        database::users::update_user_token(&self.pool, id, token)
+        refresh_token: impl AsRef<str> + std::fmt::Debug + Send,
+    ) -> Result<u64, DbError> {
+        database::users::update_user_token(&self.pool, id, token, refresh_token)
             .await
             .map_err(Into::into)
     }

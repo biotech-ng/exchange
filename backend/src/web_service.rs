@@ -138,10 +138,10 @@ pub mod tests {
         send_request(router, request).await
     }
 
-    pub async fn post_with_auth_header<T: Serialize>(
+    pub async fn post_with_auth_header(
         router: &Router,
         uri: impl AsRef<str>,
-        body: &T,
+        body: &impl Serialize,
         token: Option<impl AsRef<str> + Display>,
     ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
         let request = Request::builder()
@@ -160,10 +160,10 @@ pub mod tests {
         send_request(router, request).await
     }
 
-    pub async fn post<T: Serialize>(
+    pub async fn post(
         router: &Router,
         uri: impl AsRef<str>,
-        body: &T,
+        body: &impl Serialize,
     ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
         post_with_auth_header(router, uri, body, Option::<String>::None).await
     }

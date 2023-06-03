@@ -10,6 +10,7 @@ use axum_tracing_opentelemetry::{find_current_trace_id, opentelemetry_tracing_la
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+// TODO check how it is serialized
 pub enum ErrorCode {
     AlreadyRegistered,
 }
@@ -137,11 +138,11 @@ pub mod tests {
         send_request(router, request).await
     }
 
-    pub async fn post_with_auth_header<T: Serialize, S: AsRef<str> + Display>(
+    pub async fn post_with_auth_header<T: Serialize>(
         router: &Router,
         uri: impl AsRef<str>,
         body: &T,
-        token: Option<S>,
+        token: Option<impl AsRef<str> + Display>,
     ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
         let request = Request::builder()
             .method(Method::POST)

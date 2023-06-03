@@ -133,6 +133,10 @@ impl AccessToken {
     pub fn get_expires_at(&self) -> &PrimitiveDateTime {
         &self.expires_at
     }
+
+    pub fn get_refresh_at(&self) -> &PrimitiveDateTime {
+        &self.refresh_at
+    }
 }
 
 #[derive(Serialize, Deserialize)]

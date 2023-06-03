@@ -4,9 +4,9 @@ use time::{OffsetDateTime, PrimitiveDateTime};
 
 // TODO fix race condition
 // TODO: must be a layer
-pub async fn authenticate_with_token<UDB: UserDb>(
+pub async fn authenticate_with_token(
     token: impl AsRef<str>,
-    user_db: &UDB,
+    user_db: &impl UserDb,
 ) -> (AccessTokenResponse, UserInfo) {
     let access_token = AccessToken::from_token(token.as_ref()).expect("TODO");
 
@@ -24,7 +24,7 @@ pub async fn authenticate_with_token<UDB: UserDb>(
     let now = PrimitiveDateTime::new(now.date(), now.time());
 
     let access_token_response = if access_token.get_expires_at() <= &now {
-        if access_token.get_expires_at() <= &now {
+        if access_token.get_refresh_at() <= &now {
             panic!("TODO: wrong token");
         }
 
@@ -59,6 +59,7 @@ mod tests {
     use crate::utils::salted_hashes::generate_hash_and_salt_for_text;
     use crate::utils::tokens::tests::{create_token, make_expired_token};
     use crate::utils::tokens::{AccessTokenResponse, UserInfo};
+    use crate::web::authentication::authenticate_with_token;
 
     async fn create_user(user_db: &impl UserDb, user: UserInfo, token_response: AccessTokenResponse) -> Uuid {
         let email = Uuid::new_v4().to_string();
@@ -100,8 +101,13 @@ mod tests {
         let user_id = create_user(&user_db, user.clone(), token_response).await;
 
         let expired_token = make_expired_token(user);
-        user_db.update_user_token(&user_id, expired_token.token).await.expect("token updated");
+        user_db.update_user_token(&user_id, &expired_token.token).await.expect("token updated");
 
+        let result = authenticate_with_token(
+            &expired_token.token,
+            &user_db,
+        ).await;
 
+        assert_ne!(result.0.token, expired_token.token)
     }
 }

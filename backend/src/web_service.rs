@@ -4,8 +4,8 @@ use crate::web::{projects, users};
 use axum::http::Request;
 use axum::middleware::Next;
 use axum::response::Response;
-use axum::{middleware, routing::post, Router};
 use axum::routing::get;
+use axum::{middleware, routing::post, Router};
 use axum_tracing_opentelemetry::{find_current_trace_id, opentelemetry_tracing_layer};
 use serde::{Deserialize, Serialize};
 
@@ -39,10 +39,7 @@ impl<UDB: UserDb, PDB: ProjectDb> WebService<UDB, PDB> {
             .route("/api/user", post(users::post))
             .route("/api/user/login", post(users::login))
             .route("/api/project/new", post(projects::post))
-            .route(
-                "/api/project/:payment_id",
-                get(projects::get),
-            )
+            .route("/api/project/:payment_id", get(projects::get))
             .layer(middleware::from_fn(propagate_b3_headers))
             .layer(opentelemetry_tracing_layer())
             .with_state(self)
@@ -110,9 +107,9 @@ pub mod tests {
 
     trait Modify {
         fn modify<D, F>(self, data: Option<D>, f: F) -> Self
-            where
-                F: Fn(Self, D) -> Self,
-                Self: Sized,
+        where
+            F: Fn(Self, D) -> Self,
+            Self: Sized,
         {
             if let Some(data) = data {
                 f(self, data)
@@ -173,8 +170,8 @@ pub mod tests {
     pub async fn deserialize_response_body<T>(
         response: hyper::Response<UnsyncBoxBody<Bytes, axum::Error>>,
     ) -> T
-        where
-            T: DeserializeOwned,
+    where
+        T: DeserializeOwned,
     {
         let bytes = hyper::body::to_bytes(response.into_body())
             .await

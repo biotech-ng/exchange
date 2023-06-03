@@ -1,3 +1,4 @@
+use crate::errors::errors::DbError;
 use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
 use crate::utils::tokens::AccessTokenResponse;
@@ -13,7 +14,6 @@ use database::projects::{Project, ProjectInput};
 use serde::{Deserialize, Serialize};
 use time::PrimitiveDateTime;
 use uuid::Uuid;
-use crate::errors::errors::DbError;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CreateProject {
@@ -111,8 +111,7 @@ pub async fn get<UDB: UserDb, PDB: ProjectDb>(
     AuthBearer(token): AuthBearer,
     project_id_or_error: Result<Path<Uuid>, PathRejection>,
 ) -> Result<(StatusCode, Json<ProjectResponseBody>), CreateProjectErrorResponse> {
-    let (access_token_response, _) =
-        authenticate_with_token(token, &web_service.user_db).await;
+    let (access_token_response, _) = authenticate_with_token(token, &web_service.user_db).await;
     let project_id = project_id_or_error.expect("TODO");
 
     let project = web_service
@@ -135,7 +134,9 @@ mod tests {
     use crate::web::projects::{CreateProject, CreateProjectResponseBody, ProjectResponseBody};
     use crate::web::users::tests::{create_test_router, register_new_user};
     use crate::web::users::RegisterUserResponseBody;
-    use crate::web_service::tests::{deserialize_response_body, get_with_auth_header, post_with_auth_header};
+    use crate::web_service::tests::{
+        deserialize_response_body, get_with_auth_header, post_with_auth_header,
+    };
     use database::utils::random_samples::RandomSample;
 
     #[tokio::test]
@@ -151,7 +152,10 @@ mod tests {
         let name = String::new_random(100);
         let description = String::new_random(100);
 
-        let request_body = CreateProject { name: name.clone(), description: description.clone() };
+        let request_body = CreateProject {
+            name: name.clone(),
+            description: description.clone(),
+        };
 
         let uri = "/api/project/new";
 
@@ -166,8 +170,7 @@ mod tests {
         let response = get_with_auth_header(&router, uri, Some(&token)).await;
         assert_eq!(response.status(), 201);
 
-        let project_response =
-            deserialize_response_body::<ProjectResponseBody>(response).await;
+        let project_response = deserialize_response_body::<ProjectResponseBody>(response).await;
         assert_eq!(project_response.access.token, token);
         assert_eq!(project_response.project.name, name);
         assert_eq!(project_response.project.description, description);

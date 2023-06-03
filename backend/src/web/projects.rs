@@ -73,6 +73,40 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
     ))
 }
 
+/// Creates a new doc
+///
+/// TODO: add docs
+#[tracing::instrument(skip(web_service))]
+pub async fn get<UDB: UserDb, PDB: ProjectDb>(
+    State(web_service): State<WebService<UDB, PDB>>,
+    AuthBearer(token): AuthBearer,
+    body_or_error: Result<Json<CreateProject>, JsonRejection>,
+) -> Result<(StatusCode, Json<CreateProjectResponseBody>), CreateProjectErrorResponse> {
+    let (access_token_response, user_info) =
+        authenticate_with_token(token, &web_service.user_db).await;
+    let request = body_or_error.expect("TODO");
+
+    let user_input = ProjectInput {
+        name: request.name.clone(),
+        description: request.description.clone(),
+        user_id: user_info.user_id,
+    };
+
+    let project_id = web_service
+        .project_db
+        .insert_project(&user_input)
+        .await
+        .expect("TODO");
+
+    Ok((
+        StatusCode::CREATED,
+        Json(CreateProjectResponseBody {
+            project_id,
+            access: access_token_response,
+        }),
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use crate::web::projects::{CreateProject, CreateProjectResponseBody};
@@ -104,5 +138,7 @@ mod tests {
         let create_project_response =
             deserialize_response_body::<CreateProjectResponseBody>(response).await;
         assert_eq!(create_project_response.access.token, token);
+
+        // TODO fetch project and test it
     }
 }

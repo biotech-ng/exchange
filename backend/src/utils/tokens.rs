@@ -52,8 +52,7 @@ impl TryFrom<DigestAccessToken> for AccessTokenResponse {
     type Error = CreateAccessTokenError;
 
     fn try_from(value: DigestAccessToken) -> Result<Self, Self::Error> {
-        let token = serde_json::to_string(&value)
-            .map_err(CreateAccessTokenError::JsonError)?;
+        let token = serde_json::to_string(&value).map_err(CreateAccessTokenError::JsonError)?;
 
         Ok(AccessTokenResponse {
             token: BASE_64.encode(token),

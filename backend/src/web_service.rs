@@ -78,16 +78,16 @@ async fn propagate_b3_headers<B>(req: Request<B>, next: Next<B>) -> Result<Respo
 
 #[cfg(test)]
 pub mod tests {
-    use std::fmt::Display;
     use crate::models::project::PgProjectDb;
     use crate::models::user::PgUserDb;
+    use axum::http::request::Builder;
     use axum::{
         body::Bytes,
         http::{header::CONTENT_TYPE, Method, Request},
     };
-    use axum::http::request::Builder;
     use http_body::combinators::UnsyncBoxBody;
     use serde::{de::DeserializeOwned, Serialize};
+    use std::fmt::Display;
     // use sqlx::encode::IsNull::No;
     use tower::ServiceExt;
 
@@ -130,9 +130,9 @@ pub mod tests {
 
     trait Modify {
         fn modify<D, F>(self, data: Option<D>, f: F) -> Self
-            where
-                F: Fn(Self, D) -> Self,
-                Self: Sized,
+        where
+            F: Fn(Self, D) -> Self,
+            Self: Sized,
         {
             if let Some(data) = data {
                 f(self, data)
@@ -154,12 +154,15 @@ pub mod tests {
             .method(Method::POST)
             .uri(uri.as_ref())
             .header(CONTENT_TYPE, "application/json")
-            .modify(token.as_ref(), |this, token| this.header("Authorization", std::format!("Bearer {token}")))
+            .modify(token.as_ref(), |this, token| {
+                this.header("Authorization", std::format!("Bearer {token}"))
+            })
             .body(
                 serde_json::to_vec(body)
                     .expect("failed to serialize POST body")
                     .into(),
-            ).expect("failed to build POST request");
+            )
+            .expect("failed to build POST request");
         send_request(router, request).await
     }
 
@@ -174,8 +177,8 @@ pub mod tests {
     pub async fn deserialize_response_body<T>(
         response: hyper::Response<UnsyncBoxBody<Bytes, axum::Error>>,
     ) -> T
-        where
-            T: DeserializeOwned,
+    where
+        T: DeserializeOwned,
     {
         let bytes = hyper::body::to_bytes(response.into_body())
             .await

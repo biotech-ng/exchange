@@ -164,14 +164,13 @@ impl TryFrom<AccessToken> for DigestAccessToken {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use crate::utils::tokens::AccessTokenResponse;
     use database::utils::random_samples::RandomSample;
     use dotenvy::dotenv;
 
-    #[test]
-    fn test_create_and_parse_a_valid_token() {
+    pub fn create_token() -> (UserInfo, AccessTokenResponse) {
         dotenv().expect("failed to load .env");
 
         let user_id = Uuid::new_v4();
@@ -184,7 +183,32 @@ mod tests {
             last_name,
         };
 
-        let token_response = AccessTokenResponse::new(user.clone()).expect("valid token");
+        (user.clone(), AccessTokenResponse::new(user).expect("valid token"))
+    }
+
+    pub fn make_expired_token(user: UserInfo) -> AccessTokenResponse {
+        // distant past
+        let expires_at = OffsetDateTime::from_unix_timestamp(0).expect("valid date");
+        let expires_at = PrimitiveDateTime::new(expires_at.date(), expires_at.time());
+
+        // distant future
+        let refresh_at: OffsetDateTime = OffsetDateTime::now_utc().add(Duration::days(1000));
+        let refresh_at = PrimitiveDateTime::new(refresh_at.date(), refresh_at.time());
+
+        let access_token = AccessToken {
+            user,
+            expires_at,
+            refresh_at,
+        };
+
+        let digest_access_token: DigestAccessToken = access_token.try_into().expect("valid digest token");
+
+        digest_access_token.try_into().expect("valid token")
+    }
+
+    #[test]
+    fn test_create_and_parse_a_valid_token() {
+        let (user, token_response) = create_token();
 
         let token = token_response.token;
 

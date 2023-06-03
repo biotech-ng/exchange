@@ -62,7 +62,7 @@ impl IntoResponse for RegisterUserErrorResponse {
     }
 }
 
-fn login_user<T: AsRef<str>>(password: T, user: &User) -> Option<AccessTokenResponse> {
+fn login_user(password: impl AsRef<str>, user: &User) -> Option<AccessTokenResponse> {
     let input_hash =
         generate_b64_hash_for_text_and_salt(password, &user.password_salt).expect("TODO");
     let existing_hash = &user.password_sha512;

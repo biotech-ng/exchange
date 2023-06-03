@@ -21,12 +21,12 @@ pub struct Chat {
     pub updated_at: PrimitiveDateTime,
 }
 
-pub async fn insert_chat<T1: AsRef<str>, T2: AsRef<str>, T3: AsRef<str>>(
+pub async fn insert_chat(
     pool: &PgPool,
     r#type: ChatType,
-    title: T1,
-    description: T2,
-    avatar: T3,
+    title: impl AsRef<str>,
+    description: impl AsRef<str>,
+    avatar: impl AsRef<str>,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -80,10 +80,10 @@ pub struct ChatMember {
     pub updated_at: PrimitiveDateTime,
 }
 
-pub async fn insert_chat_member<T: AsRef<str>>(
+pub async fn insert_chat_member(
     pool: &PgPool,
     chat_id: Uuid,
-    member: T,
+    member: impl AsRef<str>,
     role: ChatMemberRole,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
@@ -128,11 +128,11 @@ pub struct ChatMessage {
     pub deleted_at: Option<PrimitiveDateTime>,
 }
 
-pub async fn insert_chat_message<T1: AsRef<str>, T2: AsRef<str>>(
+pub async fn insert_chat_message(
     pool: &PgPool,
     chat_id: Uuid,
-    sender: T1,
-    message: T2,
+    sender: impl AsRef<str>,
+    message: impl AsRef<str>,
     parent_id: Option<Uuid>,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(

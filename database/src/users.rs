@@ -89,10 +89,10 @@ pub async fn insert_user<
         .map(|x| x.id)
 }
 
-pub async fn update_user_token<T: AsRef<str>>(
+pub async fn update_user_token(
     pool: &PgPool,
     id: &Uuid,
-    token: T,
+    token: impl AsRef<str>,
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
@@ -122,9 +122,9 @@ pub async fn get_user(pool: &PgPool, id: &Uuid) -> Result<User, sqlx::Error> {
         .map_err(Into::into)
 }
 
-pub async fn get_user_by_email<T: AsRef<str> + std::fmt::Debug + Send>(
+pub async fn get_user_by_email(
     pool: &PgPool,
-    email: T,
+    email: impl AsRef<str> + std::fmt::Debug + Send,
 ) -> Result<User, sqlx::Error> {
     sqlx::query_as!(
             User,

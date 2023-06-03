@@ -33,6 +33,13 @@ pub struct RegisterUserResponseBody {
     access: AccessTokenResponse,
 }
 
+impl RegisterUserResponseBody {
+    #[cfg(test)]
+    pub fn into_token(self) -> String {
+        self.access.token
+    }
+}
+
 #[derive(Debug)]
 pub enum RegisterUserErrorResponse {
     DbError(DbError),
@@ -55,7 +62,7 @@ impl IntoResponse for RegisterUserErrorResponse {
     }
 }
 
-fn login_user<T: AsRef<str>>(password: T, user: &User) -> Option<AccessTokenResponse> {
+fn login_user(password: impl AsRef<str>, user: &User) -> Option<AccessTokenResponse> {
     let input_hash =
         generate_b64_hash_for_text_and_salt(password, &user.password_salt).expect("TODO");
     let existing_hash = &user.password_sha512;
@@ -244,7 +251,7 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use crate::models::user::{PgUserDb, UserDb};
     use crate::utils::salted_hashes::{
         generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
@@ -262,7 +269,7 @@ mod tests {
     use http_body::combinators::UnsyncBoxBody;
     use uuid::Uuid;
 
-    async fn create_test_router() -> Router {
+    pub async fn create_test_router() -> Router {
         WebService::new_test().await.into_router()
     }
 
@@ -277,7 +284,7 @@ mod tests {
         assert_eq!(hash, hash2)
     }
 
-    async fn register_new_user(
+    pub async fn register_new_user(
         user_data: Option<RegisterUserData>,
     ) -> (
         RegisterUserData,

@@ -4,11 +4,13 @@ use crate::web::{projects, users};
 use axum::http::Request;
 use axum::middleware::Next;
 use axum::response::Response;
+use axum::routing::get;
 use axum::{middleware, routing::post, Router};
 use axum_tracing_opentelemetry::{find_current_trace_id, opentelemetry_tracing_layer};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+// TODO check how it is serialized
 pub enum ErrorCode {
     AlreadyRegistered,
 }
@@ -38,19 +40,7 @@ impl<UDB: UserDb, PDB: ProjectDb> WebService<UDB, PDB> {
             .route("/api/user", post(users::post))
             .route("/api/user/login", post(users::login))
             .route("/api/project/new", post(projects::post))
-            // .route("/api/payments", post(payments::post/*::<T, PDB, RDB>*/))
-            // .route(
-            //     "/api/payments/:payment_id",
-            //     get(payments::get/*::<T, PDB, RDB>*/),
-            // )
-            // .route(
-            //     "/api/payments/:payment_id/refunds",
-            //     post(refunds::post/*::<T, PDB, RDB>*/),
-            // )
-            // .route(
-            //     "/api/payments/:payment_id/refunds/:refund_id",
-            //     get(refunds::get/*::<T, PDB, RDB>*/),
-            // )
+            .route("/api/project/:payment_id", get(projects::get))
             .layer(middleware::from_fn(propagate_b3_headers))
             .layer(opentelemetry_tracing_layer())
             .with_state(self)
@@ -80,12 +70,15 @@ async fn propagate_b3_headers<B>(req: Request<B>, next: Next<B>) -> Result<Respo
 pub mod tests {
     use crate::models::project::PgProjectDb;
     use crate::models::user::PgUserDb;
+    use axum::http::request::Builder;
     use axum::{
         body::Bytes,
         http::{header::CONTENT_TYPE, Method, Request},
     };
     use http_body::combinators::UnsyncBoxBody;
     use serde::{de::DeserializeOwned, Serialize};
+    use std::fmt::Display;
+    // use sqlx::encode::IsNull::No;
     use tower::ServiceExt;
 
     use super::*;
@@ -113,27 +106,51 @@ pub mod tests {
             .expect("failed to send oneshot request")
     }
 
-    // pub async fn get(
-    //     router: &Router,
-    //     uri: impl AsRef<str>,
-    // ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
-    //     let request = Request::builder()
-    //         .method(Method::GET)
-    //         .uri(uri.as_ref())
-    //         .body(hyper::Body::empty())
-    //         .expect("failed to build GET request");
-    //     send_request(router, request).await
-    // }
+    trait Modify {
+        fn modify<D, F>(self, data: Option<D>, f: F) -> Self
+        where
+            F: Fn(Self, D) -> Self,
+            Self: Sized,
+        {
+            if let Some(data) = data {
+                f(self, data)
+            } else {
+                self
+            }
+        }
+    }
 
-    pub async fn post<T: Serialize>(
+    impl Modify for Builder {}
+
+    pub async fn get_with_auth_header(
+        router: &Router,
+        uri: impl AsRef<str>,
+        token: Option<impl AsRef<str> + Display>,
+    ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
+        let request = Request::builder()
+            .method(Method::GET)
+            .uri(uri.as_ref())
+            .modify(token.as_ref(), |this, token| {
+                this.header("Authorization", std::format!("Bearer {token}"))
+            })
+            .body(hyper::Body::empty())
+            .expect("failed to build GET request");
+        send_request(router, request).await
+    }
+
+    pub async fn post_with_auth_header<T: Serialize>(
         router: &Router,
         uri: impl AsRef<str>,
         body: &T,
+        token: Option<impl AsRef<str> + Display>,
     ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
         let request = Request::builder()
             .method(Method::POST)
             .uri(uri.as_ref())
             .header(CONTENT_TYPE, "application/json")
+            .modify(token.as_ref(), |this, token| {
+                this.header("Authorization", std::format!("Bearer {token}"))
+            })
             .body(
                 serde_json::to_vec(body)
                     .expect("failed to serialize POST body")
@@ -141,6 +158,14 @@ pub mod tests {
             )
             .expect("failed to build POST request");
         send_request(router, request).await
+    }
+
+    pub async fn post<T: Serialize>(
+        router: &Router,
+        uri: impl AsRef<str>,
+        body: &T,
+    ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
+        post_with_auth_header(router, uri, body, Option::<String>::None).await
     }
 
     pub async fn deserialize_response_body<T>(

@@ -13,7 +13,7 @@ fn generate_salt(salt_bytes: &mut [u8]) {
     rng.fill_bytes(salt_bytes);
 }
 
-fn hash_password<T: AsRef<str>>(password: T, salt_bytes: &[u8]) -> String {
+fn hash_password(password: impl AsRef<str>, salt_bytes: &[u8]) -> String {
     let salted_password = [salt_bytes, password.as_ref().as_bytes()].concat();
 
     let mut mac = Hmac::<Sha512>::new_from_slice(salt_bytes).unwrap();
@@ -23,7 +23,7 @@ fn hash_password<T: AsRef<str>>(password: T, salt_bytes: &[u8]) -> String {
     BASE_64.encode(result.into_bytes())
 }
 
-pub fn generate_hash_and_salt_for_text<T: AsRef<str>>(password: T) -> (String, String) {
+pub fn generate_hash_and_salt_for_text(password: impl AsRef<str>) -> (String, String) {
     let mut salt_bytes = [0u8; SALT_LENGTH];
     generate_salt(&mut salt_bytes);
 
@@ -33,9 +33,9 @@ pub fn generate_hash_and_salt_for_text<T: AsRef<str>>(password: T) -> (String, S
     )
 }
 
-pub fn generate_b64_hash_for_text_and_salt<T1: AsRef<str>, T2: AsRef<str>>(
-    test: T1,
-    salt_b64: T2,
+pub fn generate_b64_hash_for_text_and_salt(
+    test: impl AsRef<str>,
+    salt_b64: impl AsRef<str>,
 ) -> Result<String, DecodeError> {
     let salt_bytes = BASE_64.decode(salt_b64.as_ref())?;
 

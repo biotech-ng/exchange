@@ -11,9 +11,9 @@ pub struct Company {
     pub updated_at: PrimitiveDateTime,
 }
 
-pub async fn insert_company<T: AsRef<str>>(
+pub async fn insert_company(
     pool: &PgPool,
-    name: T,
+    name: impl AsRef<str>,
     address_id: Uuid,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(

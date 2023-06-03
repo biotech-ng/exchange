@@ -108,18 +108,6 @@ pub mod tests {
             .expect("failed to send oneshot request")
     }
 
-    // pub async fn get(
-    //     router: &Router,
-    //     uri: impl AsRef<str>,
-    // ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
-    //     let request = Request::builder()
-    //         .method(Method::GET)
-    //         .uri(uri.as_ref())
-    //         .body(hyper::Body::empty())
-    //         .expect("failed to build GET request");
-    //     send_request(router, request).await
-    // }
-
     trait Modify {
         fn modify<D, F>(self, data: Option<D>, f: F) -> Self
             where
@@ -135,6 +123,22 @@ pub mod tests {
     }
 
     impl Modify for Builder {}
+
+    pub async fn get_with_auth_header(
+        router: &Router,
+        uri: impl AsRef<str>,
+        token: Option<impl AsRef<str> + Display>,
+    ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
+        let request = Request::builder()
+            .method(Method::GET)
+            .uri(uri.as_ref())
+            .modify(token.as_ref(), |this, token| {
+                this.header("Authorization", std::format!("Bearer {token}"))
+            })
+            .body(hyper::Body::empty())
+            .expect("failed to build GET request");
+        send_request(router, request).await
+    }
 
     pub async fn post_with_auth_header<T: Serialize, S: AsRef<str> + Display>(
         router: &Router,

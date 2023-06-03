@@ -139,8 +139,7 @@ mod tests {
     };
     use database::utils::random_samples::RandomSample;
 
-    #[tokio::test]
-    async fn should_create_a_new_project_for_a_given_user() {
+    async fn create_project() -> (CreateProject, CreateProjectResponseBody, String) {
         let (_, response) = register_new_user(None).await;
 
         let token = deserialize_response_body::<RegisterUserResponseBody>(response)
@@ -166,13 +165,25 @@ mod tests {
             deserialize_response_body::<CreateProjectResponseBody>(response).await;
         assert_eq!(create_project_response.access.token, token);
 
+        (request_body, create_project_response, token)
+    }
+
+    #[tokio::test]
+    async fn should_create_a_new_project_for_a_given_user() {
+        let router = create_test_router().await;
+
+        let (create_project_request, create_project_response, token) = create_project().await;
+
         let uri = std::format!("/api/project/{}", create_project_response.project_id);
         let response = get_with_auth_header(&router, uri, Some(&token)).await;
         assert_eq!(response.status(), 201);
 
         let project_response = deserialize_response_body::<ProjectResponseBody>(response).await;
         assert_eq!(project_response.access.token, token);
-        assert_eq!(project_response.project.name, name);
-        assert_eq!(project_response.project.description, description);
+        assert_eq!(project_response.project.name, create_project_request.name);
+        assert_eq!(
+            project_response.project.description,
+            create_project_request.description
+        );
     }
 }

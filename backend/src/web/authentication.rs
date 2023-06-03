@@ -3,6 +3,7 @@ use crate::utils::tokens::{AccessToken, AccessTokenResponse, DigestAccessToken, 
 use time::{OffsetDateTime, PrimitiveDateTime};
 
 // TODO fix race condition
+// TODO: must be a layer
 pub async fn authenticate_with_token<T: AsRef<str>, UDB: UserDb>(
     token: T,
     user_db: &UDB,

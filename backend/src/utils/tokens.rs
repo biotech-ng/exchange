@@ -187,7 +187,10 @@ pub mod tests {
             last_name,
         };
 
-        (user.clone(), AccessTokenResponse::new(user).expect("valid token"))
+        (
+            user.clone(),
+            AccessTokenResponse::new(user).expect("valid token"),
+        )
     }
 
     pub fn make_expired_token(user: UserInfo) -> AccessTokenResponse {
@@ -205,7 +208,8 @@ pub mod tests {
             refresh_at,
         };
 
-        let digest_access_token: DigestAccessToken = access_token.try_into().expect("valid digest token");
+        let digest_access_token: DigestAccessToken =
+            access_token.try_into().expect("valid digest token");
 
         digest_access_token.try_into().expect("valid token")
     }

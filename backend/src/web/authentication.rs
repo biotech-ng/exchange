@@ -53,23 +53,26 @@ pub async fn authenticate_with_token(
 
 #[cfg(test)]
 mod tests {
-    use uuid::Uuid;
-    use database::utils::random_samples::RandomSample;
     use crate::models::user::{OwnedUser, PgUserDb, UserDb};
     use crate::utils::salted_hashes::generate_hash_and_salt_for_text;
     use crate::utils::tokens::tests::{create_token, make_expired_token};
     use crate::utils::tokens::{AccessTokenResponse, UserInfo};
     use crate::web::authentication::authenticate_with_token;
+    use database::utils::random_samples::RandomSample;
+    use uuid::Uuid;
 
-    async fn create_user(user_db: &impl UserDb, user: UserInfo, token_response: AccessTokenResponse) -> Uuid {
+    async fn create_user(
+        user_db: &impl UserDb,
+        user: UserInfo,
+        token_response: AccessTokenResponse,
+    ) -> Uuid {
         let email = Uuid::new_v4().to_string();
         let password = std::format!("password:{:?}", String::new_random(124));
         let first_name = user.first_name;
         let last_name = user.last_name;
         let language_code = "ru-ru".to_owned();
 
-        let (password_sha512, password_salt) =
-            generate_hash_and_salt_for_text(&password);
+        let (password_sha512, password_salt) = generate_hash_and_salt_for_text(&password);
 
         let user_input = OwnedUser {
             user_id: user.user_id,
@@ -86,7 +89,10 @@ mod tests {
             country_code: None,
         };
 
-        user_db.insert_user(&user_input).await.expect("user created")
+        user_db
+            .insert_user(&user_input)
+            .await
+            .expect("user created")
     }
 
     #[tokio::test]
@@ -101,12 +107,12 @@ mod tests {
         let user_id = create_user(&user_db, user.clone(), token_response).await;
 
         let expired_token = make_expired_token(user);
-        user_db.update_user_token(&user_id, &expired_token.token).await.expect("token updated");
+        user_db
+            .update_user_token(&user_id, &expired_token.token)
+            .await
+            .expect("token updated");
 
-        let result = authenticate_with_token(
-            &expired_token.token,
-            &user_db,
-        ).await;
+        let result = authenticate_with_token(&expired_token.token, &user_db).await;
 
         assert_ne!(result.0.token, expired_token.token)
     }

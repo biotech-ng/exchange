@@ -13,6 +13,7 @@ use database::projects::{Project, ProjectInput};
 use serde::{Deserialize, Serialize};
 use time::PrimitiveDateTime;
 use uuid::Uuid;
+use crate::errors::errors::DbError;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CreateProject {
@@ -28,15 +29,14 @@ pub struct CreateProjectResponseBody {
 
 #[derive(Debug)]
 pub enum CreateProjectErrorResponse {
-    // DbError(DbError),
+    DbError(DbError),
 }
 
 impl IntoResponse for CreateProjectErrorResponse {
     fn into_response(self) -> Response {
-        // match self {
-        //     CreateProjectErrorResponse::DbError(db_error) => db_error.into_response(),
-        // }
-        todo!()
+        match self {
+            CreateProjectErrorResponse::DbError(db_error) => db_error.into_response(),
+        }
     }
 }
 
@@ -63,7 +63,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
         .project_db
         .insert_project(&user_input)
         .await
-        .expect("TODO");
+        .map_err(CreateProjectErrorResponse::DbError)?;
 
     Ok((
         StatusCode::CREATED,

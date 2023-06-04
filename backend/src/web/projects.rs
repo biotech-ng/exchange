@@ -49,8 +49,9 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
     AuthBearer(token): AuthBearer,
     body_or_error: Result<Json<CreateProject>, JsonRejection>,
 ) -> Result<(StatusCode, Json<CreateProjectResponseBody>), CreateProjectErrorResponse> {
-    let (access_token_response, user_info) =
-        authenticate_with_token(token, &web_service.user_db).await.expect("TODO");
+    let (access_token_response, user_info) = authenticate_with_token(token, &web_service.user_db)
+        .await
+        .expect("TODO");
     let request = body_or_error.expect("TODO");
 
     let user_input = ProjectInput {
@@ -111,7 +112,9 @@ pub async fn get<UDB: UserDb, PDB: ProjectDb>(
     AuthBearer(token): AuthBearer,
     project_id_or_error: Result<Path<Uuid>, PathRejection>,
 ) -> Result<(StatusCode, Json<ProjectResponseBody>), CreateProjectErrorResponse> {
-    let (access_token_response, _) = authenticate_with_token(token, &web_service.user_db).await.expect("TODO");
+    let (access_token_response, _) = authenticate_with_token(token, &web_service.user_db)
+        .await
+        .expect("TODO");
     let project_id = project_id_or_error.expect("TODO");
 
     let project = web_service

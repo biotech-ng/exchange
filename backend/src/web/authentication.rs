@@ -1,13 +1,15 @@
+use crate::errors::errors::DbError;
 use crate::models::user::UserDb;
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, DigestAccessToken, UserInfo};
 use std::ops::Add;
 use time::{Duration, OffsetDateTime, PrimitiveDateTime};
-use crate::errors::errors::DbError;
 
 #[derive(Debug)]
 pub enum AuthenticationError {
-    InvalidToken,
-    DbError(DbError)
+    InvalidTokenFormat,
+    InvalidTokenFormatInDb,
+    DbError(DbError),
+    Unauthorised,
 }
 
 // TODO fix race condition
@@ -16,7 +18,8 @@ pub async fn authenticate_with_token(
     token: impl AsRef<str>,
     user_db: &impl UserDb,
 ) -> Result<(AccessTokenResponse, UserInfo), AuthenticationError> {
-    let access_token = AccessToken::from_token(token.as_ref()).map_err(|_| AuthenticationError::InvalidToken)?;
+    let access_token = AccessToken::from_token(token.as_ref())
+        .map_err(|_| AuthenticationError::InvalidTokenFormat)?;
     let user_info = access_token.get_user().clone();
 
     let now = OffsetDateTime::now_utc();
@@ -40,7 +43,7 @@ pub async fn authenticate_with_token(
     if user.access_token != token.as_ref() {
         // In case of token refresh race condition, check a previous token
         if let Some(previous_access_token) = user.previous_access_token {
-            let two_minutes_before_now = now.add(-Duration::seconds(30));
+            let two_minutes_before_now = now.add(-Duration::minutes(1));
             let two_minutes_before_now = PrimitiveDateTime::new(
                 two_minutes_before_now.date(),
                 two_minutes_before_now.time(),
@@ -49,7 +52,9 @@ pub async fn authenticate_with_token(
             if previous_access_token == token.as_ref()
                 && access_token.get_expires_at() > &two_minutes_before_now
             {
-                let access_token = AccessToken::from_token(&user.access_token).expect("TODO critical error");
+                let access_token =
+                    AccessToken::from_token(&user.access_token)
+                        .map_err(|_| AuthenticationError::InvalidTokenFormatInDb)?;
                 let access_token_response = AccessTokenResponse {
                     token: user.access_token,
                     expires_at: *access_token.get_expires_at(),
@@ -59,11 +64,11 @@ pub async fn authenticate_with_token(
             }
         }
 
-        panic!("TODO: wrong token 1, return un-authorised");
+        return Err(AuthenticationError::Unauthorised);
     }
 
     if access_token.get_refresh_at() <= &now {
-        panic!("TODO: wrong token 2, return un-authorised");
+        return Err(AuthenticationError::Unauthorised);
     }
 
     let access_token: DigestAccessToken =
@@ -165,7 +170,9 @@ mod tests {
             token: impl AsRef<str>,
             user_db: &impl UserDb,
         ) -> (AccessTokenResponse, UserInfo) {
-            authenticate_with_token(token.as_ref(), user_db).await.expect("valid token")
+            authenticate_with_token(token.as_ref(), user_db)
+                .await
+                .expect("valid token")
         }
 
         let refresh_a = no_error_authenticate_with_token(&expired_token.token, &user_db);

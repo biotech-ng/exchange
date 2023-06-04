@@ -17,7 +17,7 @@ pub async fn authenticate_with_token(
 
     // When token is fresh
     if access_token.get_expires_at() > &now {
-        let access_token_response: AccessTokenResponse = AccessTokenResponse {
+        let access_token_response = AccessTokenResponse {
             token: String::from(token.as_ref()),
             expires_at: *access_token.get_expires_at(),
             refresh_at: *access_token.get_refresh_at(),
@@ -33,7 +33,7 @@ pub async fn authenticate_with_token(
     if user.access_token != token.as_ref() {
         // In case of token refresh race condition, check a previous token
         if let Some(previous_access_token) = user.previous_access_token {
-            let two_minutes_before_now = now.add(-Duration::minutes(2));
+            let two_minutes_before_now = now.add(-Duration::seconds(30));
             let two_minutes_before_now = PrimitiveDateTime::new(
                 two_minutes_before_now.date(),
                 two_minutes_before_now.time(),
@@ -42,14 +42,13 @@ pub async fn authenticate_with_token(
             if previous_access_token == token.as_ref()
                 && access_token.get_expires_at() > &two_minutes_before_now
             {
-                let access_token = AccessToken::from_token(&user.access_token).expect("TODO");
-                return (
-                    DigestAccessToken::try_from(access_token)
-                        .expect("TODO 1")
-                        .try_into()
-                        .expect("TODO 2"),
-                    user_info,
-                );
+                let access_token = AccessToken::from_token(&user.access_token).expect("TODO critical error");
+                let access_token_response = AccessTokenResponse {
+                    token: user.access_token,
+                    expires_at: *access_token.get_expires_at(),
+                    refresh_at: *access_token.get_refresh_at(),
+                };
+                return (access_token_response, user_info);
             }
         }
 
@@ -148,7 +147,7 @@ mod tests {
 
         let user_id = create_user(&user_db, user.clone(), token_response).await;
 
-        let expired_token = make_expired_token(user, Duration::minutes(1));
+        let expired_token = make_expired_token(user, Duration::microseconds(1));
         let updated = user_db
             .update_user_token(&user_id, &expired_token.token, &old_token)
             .await

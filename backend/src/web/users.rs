@@ -9,9 +9,11 @@ use crate::web_service::{ErrorCode, ErrorResponseBody, WebService};
 use axum::extract::rejection::JsonRejection;
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::StatusCode, Json};
+use axum::http::HeaderMap;
 use database::users::User;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use crate::web::authentication::AuthHeaders;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterUserData {
@@ -30,14 +32,6 @@ pub struct RegisterUserRequestBody {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterUserResponseBody {
     data: RegisterUserData,
-    access: AccessTokenResponse,
-}
-
-impl RegisterUserResponseBody {
-    #[cfg(test)]
-    pub fn into_token(self) -> String {
-        self.access.token
-    }
 }
 
 #[derive(Debug)]
@@ -91,7 +85,7 @@ fn login_user(password: impl AsRef<str>, user: &User) -> Option<AccessTokenRespo
 pub async fn post<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
     body_or_error: Result<Json<RegisterUserRequestBody>, JsonRejection>,
-) -> Result<(StatusCode, Json<RegisterUserResponseBody>), RegisterUserErrorResponse> {
+) -> Result<(StatusCode, HeaderMap, Json<RegisterUserResponseBody>), RegisterUserErrorResponse> {
     let Json(body) = body_or_error.unwrap(); // TODO validate response
 
     // TODO: don't fetch whole user
@@ -107,13 +101,15 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
                     .update_user_token(&user.id, &token_response.token, &user.access_token)
                     .await
                     .map_err(RegisterUserErrorResponse::DbError)?;
-                // TODO test update_result
+
+                let mut headers = HeaderMap::new();
+                headers.add_auth_headers(token_response);
 
                 Ok((
                     StatusCode::ACCEPTED,
+                    headers,
                     Json(RegisterUserResponseBody {
                         data: body.data,
-                        access: token_response,
                     }),
                 ))
             } else {
@@ -154,11 +150,14 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
                 .await
                 .map_err(RegisterUserErrorResponse::DbError)?;
 
+            let mut headers = HeaderMap::new();
+            headers.add_auth_headers(token_response);
+
             Ok((
                 StatusCode::CREATED,
+                headers,
                 Json(RegisterUserResponseBody {
                     data: body.data,
-                    access: token_response,
                 }),
             ))
         }
@@ -179,7 +178,6 @@ pub struct LoginUserDataBody {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LoginUserResponseBody {
-    access: AccessTokenResponse,
 }
 
 #[derive(Debug)]
@@ -220,7 +218,7 @@ impl IntoResponse for LoginUserErrorResponse {
 pub async fn login<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
     body_or_error: Result<Json<LoginUserDataBody>, JsonRejection>,
-) -> Result<(StatusCode, Json<LoginUserResponseBody>), LoginUserErrorResponse> {
+) -> Result<(StatusCode, HeaderMap, Json<LoginUserResponseBody>), LoginUserErrorResponse> {
     let Json(body) = body_or_error.unwrap(); // TODO validate response
 
     let user_or_error = web_service
@@ -238,11 +236,13 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
                     .map_err(LoginUserErrorResponse::DbError)?;
                 // TODO test update_result
 
+                let mut headers = HeaderMap::new();
+                headers.add_auth_headers(token_response);
+
                 Ok((
                     StatusCode::ACCEPTED,
-                    Json(LoginUserResponseBody {
-                        access: token_response,
-                    }),
+                    headers,
+                    Json(LoginUserResponseBody {}),
                 ))
             } else {
                 Err(LoginUserErrorResponse::InvalidPassword)
@@ -321,19 +321,32 @@ pub mod tests {
         (result, response)
     }
 
+    pub fn get_auth_header_for_name(
+        response: &hyper::Response<UnsyncBoxBody<Bytes, axum::Error>>,
+    ) -> String {
+        response
+            .headers()
+            .iter()
+            .filter(|(x, _)| x.as_str() == "x-auth-token")
+            .flat_map(|(_, x)| x.to_str().map(String::from))
+            .next()
+            .expect("existing header")
+    }
+
     #[tokio::test]
     async fn should_register_user_with_valid_parameters() {
         let (request, response) = register_new_user(None).await;
 
         assert_eq!(response.status(), 201);
 
+        let access_token = get_auth_header_for_name(&response);
+
         let response_body = deserialize_response_body::<RegisterUserResponseBody>(response).await;
         assert_eq!(response_body.data.first_name, request.first_name);
         assert_eq!(response_body.data.last_name, request.last_name);
 
         // Token ok
-        let parsed_access_token =
-            AccessToken::from_token(response_body.access.token).expect("valid token");
+        let parsed_access_token = AccessToken::from_token(access_token).expect("valid token");
 
         assert_eq!(
             parsed_access_token.get_user().first_name,
@@ -389,13 +402,14 @@ pub mod tests {
 
         assert_eq!(response.status(), 202);
 
+        let access_token = get_auth_header_for_name(&response);
+
         let response_body = deserialize_response_body::<RegisterUserResponseBody>(response).await;
         assert_eq!(response_body.data.first_name, request.first_name);
         assert_eq!(response_body.data.last_name, request.last_name);
 
         // Token ok
-        let parsed_access_token =
-            AccessToken::from_token(response_body.access.token).expect("valid token");
+        let parsed_access_token = AccessToken::from_token(access_token).expect("valid token");
 
         assert_eq!(
             parsed_access_token.get_user().first_name,
@@ -485,7 +499,9 @@ pub mod tests {
 
         assert_eq!(response.status(), 202);
 
-        let response_body = deserialize_response_body::<LoginUserResponseBody>(response).await;
+        let access_token = get_auth_header_for_name(&response);
+
+        let _ = deserialize_response_body::<LoginUserResponseBody>(response).await;
 
         // Test token
         let pool = crate::pg_pool()
@@ -498,6 +514,6 @@ pub mod tests {
             .await
             .expect("user exists");
 
-        assert_eq!(response_body.access.token, user.access_token)
+        assert_eq!(access_token, user.access_token)
     }
 }

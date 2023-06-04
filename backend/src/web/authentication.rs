@@ -7,7 +7,7 @@ use crate::web::errors::{
 };
 use crate::web_service::{ErrorResponseBody, WebService};
 use axum::extract::{FromRequestParts, State};
-use axum::http::{HeaderValue, Request};
+use axum::http::{HeaderMap, HeaderValue, Request};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -25,9 +25,31 @@ pub enum AuthenticationError {
     Unauthorised,
 }
 
-// TODO fix race condition
-// TODO: must be a layer
-pub async fn authenticate_with_token(
+pub trait AuthHeaders {
+    fn add_auth_headers(&mut self, token: AccessTokenResponse);
+}
+
+impl AuthHeaders for HeaderMap {
+
+    fn add_auth_headers(&mut self, token: AccessTokenResponse) {
+        self.insert(
+            "x-auth-token",
+            HeaderValue::try_from(token.token).expect("TODO"),
+        );
+        // TODO choose better serialization format
+        self.insert(
+            "x-auth-token-expires-at",
+            HeaderValue::try_from(token.expires_at.to_string()).expect("TODO"),
+        );
+        self.insert(
+            "x-auth-token-refresh-at",
+            HeaderValue::try_from(token.refresh_at.to_string()).expect("TODO"),
+        );
+    }
+
+}
+
+async fn authenticate_with_token(
     token: impl AsRef<str>,
     user_db: &impl UserDb,
 ) -> Result<(AccessTokenResponse, UserInfo), AuthenticationError> {
@@ -143,20 +165,7 @@ pub async fn check_and_refresh_auth_token<B, UDB: UserDb, PDB: ProjectDb>(
                 let req = Request::from_parts(parts, body);
 
                 let mut response = next.run(req).await;
-
-                response.headers_mut().insert(
-                    "x-auth-token",
-                    HeaderValue::try_from(token_info.token).expect("TODO"),
-                );
-                response.headers_mut().insert(
-                    "x-auth-token-expires-at",
-                    HeaderValue::try_from(token_info.expires_at.to_string()).expect("TODO"),
-                );
-                response.headers_mut().insert(
-                    "x-auth-token-refresh-at",
-                    HeaderValue::try_from(token_info.refresh_at.to_string()).expect("TODO"),
-                );
-
+                response.headers_mut().add_auth_headers(token_info);
                 Ok(response)
             }
             Err(AuthenticationError::Unauthorised) => Err((

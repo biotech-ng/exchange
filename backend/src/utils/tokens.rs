@@ -31,7 +31,7 @@ pub struct UserInfo {
     pub user_id: Uuid,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone)]
 pub struct AccessTokenResponse {
     pub token: String,
     pub expires_at: PrimitiveDateTime,

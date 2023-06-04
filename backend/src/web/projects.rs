@@ -124,33 +124,16 @@ pub async fn get<UDB: UserDb, PDB: ProjectDb>(
 #[cfg(test)]
 mod tests {
     use crate::web::projects::{CreateProject, CreateProjectResponseBody, ProjectResponseBody};
-    use crate::web::users::tests::{create_test_router, register_new_user};
-    use crate::web::users::RegisterUserResponseBody;
+    use crate::web::users::tests::{create_test_router, get_auth_header_for_name, register_new_user};
     use crate::web_service::tests::{
         deserialize_response_body, get_with_auth_header, post_with_auth_header,
     };
-    use axum::body::Bytes;
     use database::utils::random_samples::RandomSample;
-    use http_body::combinators::UnsyncBoxBody;
-
-    fn get_auth_header_for_name(
-        response: &hyper::Response<UnsyncBoxBody<Bytes, axum::Error>>,
-    ) -> String {
-        response
-            .headers()
-            .iter()
-            .filter(|(x, _)| x.as_str() == "x-auth-token")
-            .flat_map(|(_, x)| x.to_str().map(String::from))
-            .next()
-            .expect("existing header")
-    }
 
     async fn create_project() -> (CreateProject, CreateProjectResponseBody, String) {
         let (_, response) = register_new_user(None).await;
 
-        let token = deserialize_response_body::<RegisterUserResponseBody>(response)
-            .await
-            .into_token();
+        let auth_token = get_auth_header_for_name(&response);
 
         let router = create_test_router().await;
 
@@ -164,16 +147,16 @@ mod tests {
 
         let uri = "/api/project/new";
 
-        let response = post_with_auth_header(&router, uri, &request_body, Some(&token)).await;
+        let response = post_with_auth_header(&router, uri, &request_body, Some(&auth_token)).await;
         assert_eq!(response.status(), 201);
 
         let auth_tokens = get_auth_header_for_name(&response);
-        assert_eq!(auth_tokens, token);
+        assert_eq!(auth_tokens, auth_token);
 
         let create_project_response =
             deserialize_response_body::<CreateProjectResponseBody>(response).await;
 
-        (request_body, create_project_response, token)
+        (request_body, create_project_response, auth_token)
     }
 
     #[tokio::test]

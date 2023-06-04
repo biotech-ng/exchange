@@ -71,20 +71,20 @@ pub async fn authenticate_with_token(
         return Err(AuthenticationError::Unauthorised);
     }
 
-    let access_token: DigestAccessToken =
+    let new_access_token: DigestAccessToken =
         AccessToken::new_with_user(access_token.get_user().clone())
             .try_into()
             .expect("TODO 1");
 
-    let token_response: AccessTokenResponse = access_token.try_into().expect("TODO 2");
+    let new_token_response: AccessTokenResponse = new_access_token.try_into().expect("TODO 2");
 
-    let update_result = user_db
-        .update_user_token(&user.id, &token_response.token, &user.access_token)
+    let updated_tokens_count = user_db
+        .update_user_token(&user.id, &new_token_response.token, &user.access_token)
         .await
         .expect("TODO");
 
-    let access_token_response = if update_result == 0 {
-        // In case of token refresh race condition, return token from database
+    let access_token_response = if updated_tokens_count == 0 {
+        // In case of token refresh race condition, return token from a database
         let token = user_db
             .get_user(&user_info.user_id)
             .await
@@ -96,7 +96,7 @@ pub async fn authenticate_with_token(
             .try_into()
             .expect("TODO 2")
     } else {
-        token_response
+        new_token_response
     };
 
     Ok((access_token_response, user_info))

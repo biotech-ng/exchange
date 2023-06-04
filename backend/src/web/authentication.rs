@@ -2,14 +2,21 @@ use crate::models::user::UserDb;
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, DigestAccessToken, UserInfo};
 use std::ops::Add;
 use time::{Duration, OffsetDateTime, PrimitiveDateTime};
+use crate::errors::errors::DbError;
+
+#[derive(Debug)]
+pub enum AuthenticationError {
+    InvalidToken,
+    DbError(DbError)
+}
 
 // TODO fix race condition
 // TODO: must be a layer
 pub async fn authenticate_with_token(
     token: impl AsRef<str>,
     user_db: &impl UserDb,
-) -> (AccessTokenResponse, UserInfo) {
-    let access_token = AccessToken::from_token(token.as_ref()).expect("TODO");
+) -> Result<(AccessTokenResponse, UserInfo), AuthenticationError> {
+    let access_token = AccessToken::from_token(token.as_ref()).map_err(|_| AuthenticationError::InvalidToken)?;
     let user_info = access_token.get_user().clone();
 
     let now = OffsetDateTime::now_utc();
@@ -22,13 +29,13 @@ pub async fn authenticate_with_token(
             expires_at: *access_token.get_expires_at(),
             refresh_at: *access_token.get_refresh_at(),
         };
-        return (access_token_response, user_info);
+        return Ok((access_token_response, user_info));
     }
 
     let user = user_db
         .get_user(&access_token.get_user().user_id)
         .await
-        .expect("TODO");
+        .map_err(AuthenticationError::DbError)?;
 
     if user.access_token != token.as_ref() {
         // In case of token refresh race condition, check a previous token
@@ -48,7 +55,7 @@ pub async fn authenticate_with_token(
                     expires_at: *access_token.get_expires_at(),
                     refresh_at: *access_token.get_refresh_at(),
                 };
-                return (access_token_response, user_info);
+                return Ok((access_token_response, user_info));
             }
         }
 
@@ -87,7 +94,7 @@ pub async fn authenticate_with_token(
         token_response
     };
 
-    (access_token_response, user_info)
+    Ok((access_token_response, user_info))
 }
 
 #[cfg(test)]
@@ -154,11 +161,18 @@ mod tests {
             .expect("token updated");
         assert!(updated > 0);
 
-        let refresh_a = authenticate_with_token(&expired_token.token, &user_db);
-        let refresh_b = authenticate_with_token(&expired_token.token, &user_db);
-        let refresh_c = authenticate_with_token(&expired_token.token, &user_db);
-        let refresh_d = authenticate_with_token(&expired_token.token, &user_db);
-        let refresh_e = authenticate_with_token(&expired_token.token, &user_db);
+        async fn no_error_authenticate_with_token(
+            token: impl AsRef<str>,
+            user_db: &impl UserDb,
+        ) -> (AccessTokenResponse, UserInfo) {
+            authenticate_with_token(token.as_ref(), user_db).await.expect("valid token")
+        }
+
+        let refresh_a = no_error_authenticate_with_token(&expired_token.token, &user_db);
+        let refresh_b = no_error_authenticate_with_token(&expired_token.token, &user_db);
+        let refresh_c = no_error_authenticate_with_token(&expired_token.token, &user_db);
+        let refresh_d = no_error_authenticate_with_token(&expired_token.token, &user_db);
+        let refresh_e = no_error_authenticate_with_token(&expired_token.token, &user_db);
 
         let (result_a, result_b, result_c, result_d, result_e) =
             tokio::join!(refresh_a, refresh_b, refresh_c, refresh_d, refresh_e);

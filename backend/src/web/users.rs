@@ -5,15 +5,15 @@ use crate::utils::salted_hashes::{
     generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
 };
 use crate::utils::tokens::{AccessTokenResponse, UserInfo};
+use crate::web::authentication::AuthHeaders;
 use crate::web_service::{ErrorCode, ErrorResponseBody, WebService};
 use axum::extract::rejection::JsonRejection;
+use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::StatusCode, Json};
-use axum::http::HeaderMap;
 use database::users::User;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::web::authentication::AuthHeaders;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterUserData {
@@ -108,9 +108,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
                 Ok((
                     StatusCode::ACCEPTED,
                     headers,
-                    Json(RegisterUserResponseBody {
-                        data: body.data,
-                    }),
+                    Json(RegisterUserResponseBody { data: body.data }),
                 ))
             } else {
                 Err(RegisterUserErrorResponse::AlreadyRegistered)
@@ -156,9 +154,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
             Ok((
                 StatusCode::CREATED,
                 headers,
-                Json(RegisterUserResponseBody {
-                    data: body.data,
-                }),
+                Json(RegisterUserResponseBody { data: body.data }),
             ))
         }
         Err(db_error) => Err(RegisterUserErrorResponse::DbError(db_error)),
@@ -177,8 +173,7 @@ pub struct LoginUserDataBody {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct LoginUserResponseBody {
-}
+pub struct LoginUserResponseBody {}
 
 #[derive(Debug)]
 pub enum LoginUserErrorResponse {

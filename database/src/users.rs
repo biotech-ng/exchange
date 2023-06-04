@@ -90,25 +90,22 @@ pub async fn insert_user<
         .map(|x| x.id)
 }
 
-pub async fn get_access_token(
-    pool: &PgPool,
-    id: &Uuid,
-) -> Result<String, sqlx::Error> {
+pub async fn get_access_token(pool: &PgPool, id: &Uuid) -> Result<String, sqlx::Error> {
     struct Result {
         access_token: String,
     }
     sqlx::query_as!(
-            Result,
-            r#"
+        Result,
+        r#"
                 SELECT access_token FROM users
                 WHERE id = $1
             "#,
-            id
-        )
-        .fetch_one(pool)
-        .await
-        .map(|x| x.access_token)
-        .map_err(Into::into)
+        id
+    )
+    .fetch_one(pool)
+    .await
+    .map(|x| x.access_token)
+    .map_err(Into::into)
 }
 
 pub async fn update_user_token(

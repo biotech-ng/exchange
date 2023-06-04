@@ -30,7 +30,6 @@ pub trait AuthHeaders {
 }
 
 impl AuthHeaders for HeaderMap {
-
     fn add_auth_headers(&mut self, token: AccessTokenResponse) {
         self.insert(
             "x-auth-token",
@@ -46,7 +45,6 @@ impl AuthHeaders for HeaderMap {
             HeaderValue::try_from(token.refresh_at.to_string()).expect("TODO"),
         );
     }
-
 }
 
 async fn authenticate_with_token(

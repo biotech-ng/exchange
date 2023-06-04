@@ -124,7 +124,9 @@ pub async fn get<UDB: UserDb, PDB: ProjectDb>(
 #[cfg(test)]
 mod tests {
     use crate::web::projects::{CreateProject, CreateProjectResponseBody, ProjectResponseBody};
-    use crate::web::users::tests::{create_test_router, get_auth_header_for_name, register_new_user};
+    use crate::web::users::tests::{
+        create_test_router, get_auth_header_for_name, register_new_user,
+    };
     use crate::web_service::tests::{
         deserialize_response_body, get_with_auth_header, post_with_auth_header,
     };

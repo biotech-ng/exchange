@@ -1,7 +1,10 @@
 use crate::errors::errors::DbError;
+use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, DigestAccessToken, UserInfo};
-use crate::web::errors::{INTERNAL_SERVER_ERROR_RESPONSE, INVALID_TOKEN_FORMAT_ERROR_MSG, UNAUTHORIZED_ERROR_MSG};
+use crate::web::errors::{
+    INTERNAL_SERVER_ERROR_RESPONSE, INVALID_TOKEN_FORMAT_ERROR_MSG, UNAUTHORIZED_ERROR_MSG,
+};
 use crate::web_service::{ErrorResponseBody, WebService};
 use axum::extract::{FromRequestParts, State};
 use axum::http::{HeaderValue, Request};
@@ -12,7 +15,6 @@ use axum_auth::AuthBearer;
 use hyper::StatusCode;
 use std::ops::Add;
 use time::{Duration, OffsetDateTime, PrimitiveDateTime};
-use crate::models::project::ProjectDb;
 
 #[derive(Debug)]
 pub enum AuthenticationError {
@@ -25,7 +27,6 @@ pub enum AuthenticationError {
 
 // TODO fix race condition
 // TODO: must be a layer
-// TODO remove UserInfo from response
 pub async fn authenticate_with_token(
     token: impl AsRef<str>,
     user_db: &impl UserDb,
@@ -137,43 +138,44 @@ pub async fn check_and_refresh_auth_token<B, UDB: UserDb, PDB: ProjectDb>(
         .into_response();
 
     match AuthBearer::from_request_parts(&mut parts, &()).await {
-        Ok(AuthBearer(token)) => {
-            match authenticate_with_token(token, &web_service.user_db).await {
-                Ok((token_info, _)) => {
-                    let req = Request::from_parts(parts, body);
+        Ok(AuthBearer(token)) => match authenticate_with_token(token, &web_service.user_db).await {
+            Ok((token_info, _)) => {
+                let req = Request::from_parts(parts, body);
 
-                    let mut response = next.run(req).await;
+                let mut response = next.run(req).await;
 
-                    response.headers_mut().insert("x-auth-token", HeaderValue::try_from(token_info.token).expect("TODO"));
-                    response.headers_mut().insert("x-auth-token-expires-at", HeaderValue::try_from(token_info.expires_at.to_string()).expect("TODO"));
-                    response.headers_mut().insert("x-auth-token-refresh-at", HeaderValue::try_from(token_info.refresh_at.to_string()).expect("TODO"));
+                response.headers_mut().insert(
+                    "x-auth-token",
+                    HeaderValue::try_from(token_info.token).expect("TODO"),
+                );
+                response.headers_mut().insert(
+                    "x-auth-token-expires-at",
+                    HeaderValue::try_from(token_info.expires_at.to_string()).expect("TODO"),
+                );
+                response.headers_mut().insert(
+                    "x-auth-token-refresh-at",
+                    HeaderValue::try_from(token_info.refresh_at.to_string()).expect("TODO"),
+                );
 
-                    Ok(response)
-                }
-                Err(AuthenticationError::Unauthorised) => {
-                    Err((
-                        StatusCode::UNAUTHORIZED,
-                        Json(ErrorResponseBody {
-                            code: None,
-                            error: UNAUTHORIZED_ERROR_MSG.into(),
-                        }),
-                    )
-                        .into_response())
-                }
-                Err(AuthenticationError::DbError(db_error)) => {
-                    Err(db_error.into_response())
-                }
-                Err(AuthenticationError::InvalidInputTokenFormat) => {
-                    Err(invalid_token_format_error)
-                }
-                Err(AuthenticationError::DecodeTokenError) => {
-                    Err(INTERNAL_SERVER_ERROR_RESPONSE.clone().into_response())
-                }
-                Err(AuthenticationError::InvalidTokenFormatInDb) => {
-                    Err(INTERNAL_SERVER_ERROR_RESPONSE.clone().into_response())
-                }
+                Ok(response)
             }
-        }
+            Err(AuthenticationError::Unauthorised) => Err((
+                StatusCode::UNAUTHORIZED,
+                Json(ErrorResponseBody {
+                    code: None,
+                    error: UNAUTHORIZED_ERROR_MSG.into(),
+                }),
+            )
+                .into_response()),
+            Err(AuthenticationError::DbError(db_error)) => Err(db_error.into_response()),
+            Err(AuthenticationError::InvalidInputTokenFormat) => Err(invalid_token_format_error),
+            Err(AuthenticationError::DecodeTokenError) => {
+                Err(INTERNAL_SERVER_ERROR_RESPONSE.clone().into_response())
+            }
+            Err(AuthenticationError::InvalidTokenFormatInDb) => {
+                Err(INTERNAL_SERVER_ERROR_RESPONSE.clone().into_response())
+            }
+        },
         Err(_) => Err(invalid_token_format_error),
     }
 }

@@ -1,8 +1,7 @@
 use crate::errors::errors::DbError;
 use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
-use crate::utils::tokens::AccessTokenResponse;
-use crate::web::authentication::authenticate_with_token;
+use crate::utils::tokens::AccessToken;
 use crate::web_service::WebService;
 use axum::extract::rejection::{JsonRejection, PathRejection};
 use axum::extract::{Path, State};
@@ -24,7 +23,6 @@ pub struct CreateProject {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CreateProjectResponseBody {
     project_id: Uuid,
-    access: AccessTokenResponse,
 }
 
 #[derive(Debug)]
@@ -49,9 +47,9 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
     AuthBearer(token): AuthBearer,
     body_or_error: Result<Json<CreateProject>, JsonRejection>,
 ) -> Result<(StatusCode, Json<CreateProjectResponseBody>), CreateProjectErrorResponse> {
-    let (access_token_response, user_info) = authenticate_with_token(token, &web_service.user_db)
-        .await
-        .expect("TODO");
+    let access_token = AccessToken::from_token(token).expect("TODO");
+    let user_info = access_token.get_user();
+
     let request = body_or_error.expect("TODO");
 
     let user_input = ProjectInput {
@@ -68,10 +66,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
 
     Ok((
         StatusCode::CREATED,
-        Json(CreateProjectResponseBody {
-            project_id,
-            access: access_token_response,
-        }),
+        Json(CreateProjectResponseBody { project_id }),
     ))
 }
 
@@ -99,7 +94,6 @@ impl From<Project> for ProjectResponseData {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ProjectResponseBody {
     project: ProjectResponseData,
-    access: AccessTokenResponse,
 }
 
 /// Creates a new doc
@@ -109,12 +103,8 @@ pub struct ProjectResponseBody {
 #[tracing::instrument(skip(web_service))]
 pub async fn get<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
-    AuthBearer(token): AuthBearer,
     project_id_or_error: Result<Path<Uuid>, PathRejection>,
 ) -> Result<(StatusCode, Json<ProjectResponseBody>), CreateProjectErrorResponse> {
-    let (access_token_response, _) = authenticate_with_token(token, &web_service.user_db)
-        .await
-        .expect("TODO");
     let project_id = project_id_or_error.expect("TODO");
 
     let project = web_service
@@ -127,7 +117,6 @@ pub async fn get<UDB: UserDb, PDB: ProjectDb>(
         StatusCode::CREATED,
         Json(ProjectResponseBody {
             project: project.into(),
-            access: access_token_response,
         }),
     ))
 }
@@ -140,7 +129,21 @@ mod tests {
     use crate::web_service::tests::{
         deserialize_response_body, get_with_auth_header, post_with_auth_header,
     };
+    use axum::body::Bytes;
     use database::utils::random_samples::RandomSample;
+    use http_body::combinators::UnsyncBoxBody;
+
+    fn get_auth_header_for_name(
+        response: &hyper::Response<UnsyncBoxBody<Bytes, axum::Error>>,
+    ) -> String {
+        response
+            .headers()
+            .iter()
+            .filter(|(x, _)| x.as_str() == "x-auth-token")
+            .flat_map(|(_, x)| x.to_str().map(String::from))
+            .next()
+            .expect("existing header")
+    }
 
     async fn create_project() -> (CreateProject, CreateProjectResponseBody, String) {
         let (_, response) = register_new_user(None).await;
@@ -164,9 +167,11 @@ mod tests {
         let response = post_with_auth_header(&router, uri, &request_body, Some(&token)).await;
         assert_eq!(response.status(), 201);
 
+        let auth_tokens = get_auth_header_for_name(&response);
+        assert_eq!(auth_tokens, token);
+
         let create_project_response =
             deserialize_response_body::<CreateProjectResponseBody>(response).await;
-        assert_eq!(create_project_response.access.token, token);
 
         (request_body, create_project_response, token)
     }
@@ -181,8 +186,10 @@ mod tests {
         let response = get_with_auth_header(&router, uri, Some(&token)).await;
         assert_eq!(response.status(), 201);
 
+        let auth_tokens = get_auth_header_for_name(&response);
+        assert_eq!(auth_tokens, token);
+
         let project_response = deserialize_response_body::<ProjectResponseBody>(response).await;
-        assert_eq!(project_response.access.token, token);
         assert_eq!(project_response.project.name, create_project_request.name);
         assert_eq!(
             project_response.project.description,

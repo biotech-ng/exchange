@@ -40,7 +40,10 @@ impl<UDB: UserDb, PDB: ProjectDb> WebService<UDB, PDB> {
         Router::new()
             .route("/api/project/new", post(projects::post))
             .route("/api/project/:payment_id", get(projects::get))
-            .layer(middleware::from_fn_with_state(self.clone(), check_and_refresh_auth_token))
+            .layer(middleware::from_fn_with_state(
+                self.clone(),
+                check_and_refresh_auth_token,
+            ))
             .route("/api/user", post(users::post))
             .route("/api/user/login", post(users::login))
             .layer(middleware::from_fn(propagate_b3_headers))

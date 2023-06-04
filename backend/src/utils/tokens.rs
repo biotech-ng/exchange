@@ -31,7 +31,7 @@ pub struct UserInfo {
     pub user_id: Uuid,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone)]
 pub struct AccessTokenResponse {
     pub token: String,
     pub expires_at: PrimitiveDateTime,
@@ -94,7 +94,7 @@ impl AccessToken {
         }
     }
 
-    pub fn from_token<T: AsRef<str>>(token_b64: T) -> Result<Self, ParseAccessTokenError> {
+    pub fn from_token(token_b64: impl AsRef<str>) -> Result<Self, ParseAccessTokenError> {
         let token_bytes = BASE_64
             .decode(token_b64.as_ref())
             .map_err(ParseAccessTokenError::Base64DecodeError)?;
@@ -193,9 +193,9 @@ pub mod tests {
         )
     }
 
-    pub fn make_expired_token(user: UserInfo) -> AccessTokenResponse {
-        // distant past
-        let expires_at = OffsetDateTime::from_unix_timestamp(0).expect("valid date");
+    pub fn make_expired_token(user: UserInfo, minus_duration: Duration) -> AccessTokenResponse {
+        // past
+        let expires_at = OffsetDateTime::now_utc().add(-minus_duration);
         let expires_at = PrimitiveDateTime::new(expires_at.date(), expires_at.time());
 
         // distant future

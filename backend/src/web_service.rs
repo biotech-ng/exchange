@@ -1,5 +1,6 @@
 use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
+use crate::web::authentication::check_and_refresh_auth_token;
 use crate::web::{projects, users};
 use axum::http::Request;
 use axum::middleware::Next;
@@ -37,14 +38,17 @@ impl<UDB: UserDb, PDB: ProjectDb> WebService<UDB, PDB> {
 
     pub fn into_router(self) -> Router {
         Router::new()
-            .route("/api/user", post(users::post))
-            .route("/api/user/login", post(users::login))
             .route("/api/project/new", post(projects::post))
             .route("/api/project/:payment_id", get(projects::get))
+            .layer(middleware::from_fn_with_state(
+                self.clone(),
+                check_and_refresh_auth_token,
+            ))
+            .route("/api/user", post(users::post))
+            .route("/api/user/login", post(users::login))
             .layer(middleware::from_fn(propagate_b3_headers))
             .layer(opentelemetry_tracing_layer())
             .with_state(self)
-            .with_state(())
     }
 }
 
@@ -138,10 +142,10 @@ pub mod tests {
         send_request(router, request).await
     }
 
-    pub async fn post_with_auth_header<T: Serialize>(
+    pub async fn post_with_auth_header(
         router: &Router,
         uri: impl AsRef<str>,
-        body: &T,
+        body: &impl Serialize,
         token: Option<impl AsRef<str> + Display>,
     ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
         let request = Request::builder()
@@ -160,10 +164,10 @@ pub mod tests {
         send_request(router, request).await
     }
 
-    pub async fn post<T: Serialize>(
+    pub async fn post(
         router: &Router,
         uri: impl AsRef<str>,
-        body: &T,
+        body: &impl Serialize,
     ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
         post_with_auth_header(router, uri, body, Option::<String>::None).await
     }

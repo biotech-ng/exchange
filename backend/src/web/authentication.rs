@@ -10,14 +10,25 @@ pub async fn authenticate_with_token(
     user_db: &impl UserDb,
 ) -> (AccessTokenResponse, UserInfo) {
     let access_token = AccessToken::from_token(token.as_ref()).expect("TODO");
+    let user_info = access_token.get_user().clone();
+
+    let now = OffsetDateTime::now_utc();
+    let now = PrimitiveDateTime::new(now.date(), now.time());
+
+    // When token is fresh
+    if access_token.get_expires_at() > &now {
+        let access_token_response: AccessTokenResponse = AccessTokenResponse {
+            token: String::from(token.as_ref()),
+            expires_at: *access_token.get_expires_at(),
+            refresh_at: *access_token.get_refresh_at(),
+        };
+        return (access_token_response, user_info);
+    }
 
     let user = user_db
         .get_user(&access_token.get_user().user_id)
         .await
         .expect("TODO");
-    let user_info = access_token.get_user().clone();
-
-    let now = OffsetDateTime::now_utc();
 
     if user.access_token != token.as_ref() {
         // In case of token refresh race condition, check a previous token
@@ -45,45 +56,36 @@ pub async fn authenticate_with_token(
         panic!("TODO: wrong token 1, return un-authorised");
     }
 
-    let now = PrimitiveDateTime::new(now.date(), now.time());
+    if access_token.get_refresh_at() <= &now {
+        panic!("TODO: wrong token 2, return un-authorised");
+    }
 
-    let access_token_response = if access_token.get_expires_at() <= &now {
-        if access_token.get_refresh_at() <= &now {
-            panic!("TODO: wrong token 2, return un-authorised");
-        }
+    let access_token: DigestAccessToken =
+        AccessToken::new_with_user(access_token.get_user().clone())
+            .try_into()
+            .expect("TODO 1");
 
-        let access_token: DigestAccessToken =
-            AccessToken::new_with_user(access_token.get_user().clone())
-                .try_into()
-                .expect("TODO 1");
+    let token_response: AccessTokenResponse = access_token.try_into().expect("TODO 2");
 
-        let token_response: AccessTokenResponse = access_token.try_into().expect("TODO 2");
+    let update_result = user_db
+        .update_user_token(&user.id, &token_response.token, &user.access_token)
+        .await
+        .expect("TODO");
 
-        let update_result = user_db
-            .update_user_token(&user.id, &token_response.token, &user.access_token)
+    let access_token_response = if update_result == 0 {
+        // In case of token refresh race condition, return token from database
+        let token = user_db
+            .get_user(&user_info.user_id)
             .await
-            .expect("TODO");
-
-        if update_result == 0 {
-            // In case of token refresh race condition, return token from database
-            let token = user_db
-                .get_user(&user_info.user_id)
-                .await
-                .expect("TODO")
-                .access_token;
-            let access_token = AccessToken::from_token(token).expect("TODO");
-            DigestAccessToken::try_from(access_token)
-                .expect("TODO 1")
-                .try_into()
-                .expect("TODO 2")
-        } else {
-            token_response
-        }
-    } else {
+            .expect("TODO")
+            .access_token;
+        let access_token = AccessToken::from_token(token).expect("TODO");
         DigestAccessToken::try_from(access_token)
             .expect("TODO 1")
             .try_into()
             .expect("TODO 2")
+    } else {
+        token_response
     };
 
     (access_token_response, user_info)

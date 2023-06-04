@@ -3,7 +3,7 @@ use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, DigestAccessToken, UserInfo};
 use crate::web::errors::{
-    INTERNAL_SERVER_ERROR_RESPONSE, INVALID_TOKEN_FORMAT_ERROR_MSG, UNAUTHORIZED_ERROR_MSG,
+    INTERNAL_SERVER_ERROR_RESPONSE, INVALID_TOKEN_FORMAT_ERROR_MSG, UNAUTHORIZED_ERROR_RESPONSE,
 };
 use crate::web_service::{ErrorResponseBody, WebService};
 use axum::extract::{FromRequestParts, State};
@@ -166,14 +166,9 @@ pub async fn check_and_refresh_auth_token<B, UDB: UserDb, PDB: ProjectDb>(
                 response.headers_mut().add_auth_headers(token_info);
                 Ok(response)
             }
-            Err(AuthenticationError::Unauthorised) => Err((
-                StatusCode::UNAUTHORIZED,
-                Json(ErrorResponseBody {
-                    code: None,
-                    error: UNAUTHORIZED_ERROR_MSG.into(),
-                }),
-            )
-                .into_response()),
+            Err(AuthenticationError::Unauthorised) => {
+                Err(UNAUTHORIZED_ERROR_RESPONSE.clone().into_response())
+            }
             Err(AuthenticationError::DbError(db_error)) => Err(db_error.into_response()),
             Err(AuthenticationError::InvalidInputTokenFormat) => Err(invalid_token_format_error),
             Err(AuthenticationError::DecodeTokenError) => {

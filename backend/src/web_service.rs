@@ -11,7 +11,6 @@ use axum_tracing_opentelemetry::{find_current_trace_id, opentelemetry_tracing_la
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
-// TODO check how it is serialized
 pub enum ErrorCode {
     AlreadyRegistered,
 }

@@ -28,6 +28,13 @@ lazy_static! {
             error: INTERNAL_SERVER_ERROR_MSG.into(),
         }),
     );
+    pub static ref UNAUTHORIZED_ERROR_RESPONSE: ErrorResponseType = (
+        StatusCode::UNAUTHORIZED,
+        Json(ErrorResponseBody {
+            code: None,
+            error: UNAUTHORIZED_ERROR_MSG.into(),
+        }),
+    );
     pub static ref STATUS_CODE_430: StatusCode =
         StatusCode::from_u16(430).unwrap_or_else(|error| {
             debug_assert!(false, "Can not create StatusCode for 430, error: {}", error);

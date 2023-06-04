@@ -1,4 +1,4 @@
-use crate::errors::errors::DbError;
+use crate::models::errors::DbError;
 use crate::models::project::ProjectDb;
 use crate::models::user::{OwnedUser, UserDb};
 use crate::utils::salted_hashes::{

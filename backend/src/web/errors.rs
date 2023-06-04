@@ -1,4 +1,4 @@
-use crate::errors::errors::DbError;
+use crate::models::errors::DbError;
 use crate::web_service::ErrorResponseBody;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};

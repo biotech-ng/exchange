@@ -1,4 +1,4 @@
-use crate::errors::errors::DbError;
+use crate::models::errors::DbError;
 use database::users::{User, UserInput};
 use sqlx::PgPool;
 use uuid::Uuid;

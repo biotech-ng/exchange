@@ -95,12 +95,13 @@ pub async fn authenticate_with_token(
             .get_access_token(&user_info.user_id)
             .await
             .map_err(AuthenticationError::DbError)?;
-        let access_token = AccessToken::from_token(token)
+        let access_token = AccessToken::from_token(token.clone())
             .map_err(|_| AuthenticationError::InvalidTokenFormatInDb)?;
-        DigestAccessToken::try_from(access_token)
-            .expect("TODO 1")
-            .try_into()
-            .expect("TODO 2")
+        AccessTokenResponse {
+            token,
+            expires_at: *access_token.get_expires_at(),
+            refresh_at: *access_token.get_refresh_at(),
+        }
     } else {
         new_token_response
     };

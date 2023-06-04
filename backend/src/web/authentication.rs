@@ -1,6 +1,15 @@
 use crate::errors::errors::DbError;
 use crate::models::user::UserDb;
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, DigestAccessToken, UserInfo};
+use crate::web::errors::INVALID_TOKEN_FORMAT_ERROR_MSG;
+use crate::web_service::ErrorResponseBody;
+use axum::extract::FromRequestParts;
+use axum::http::Request;
+use axum::middleware::Next;
+use axum::response::{IntoResponse, Response};
+use axum::Json;
+use axum_auth::AuthBearer;
+use hyper::StatusCode;
 use std::ops::Add;
 use time::{Duration, OffsetDateTime, PrimitiveDateTime};
 
@@ -107,6 +116,32 @@ pub async fn authenticate_with_token(
     };
 
     Ok((access_token_response, user_info))
+}
+
+pub async fn check_and_refresh_auth_token<B>(
+    req: Request<B>,
+    next: Next<B>,
+) -> Result<Response, Response> {
+    let (mut parts, body) = req.into_parts();
+
+    match AuthBearer::from_request_parts(&mut parts, &()).await {
+        Ok(token) => {
+            /// println!("token: {:?}", token);
+            let req = Request::from_parts(parts, body);
+
+            let response = next.run(req).await;
+
+            Ok(response)
+        }
+        Err(_) => Err((
+            StatusCode::UNAUTHORIZED,
+            Json(ErrorResponseBody {
+                code: None,
+                error: INVALID_TOKEN_FORMAT_ERROR_MSG.into(),
+            }),
+        )
+            .into_response()),
+    }
 }
 
 #[cfg(test)]

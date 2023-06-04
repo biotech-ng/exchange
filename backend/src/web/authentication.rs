@@ -6,8 +6,9 @@ use time::{Duration, OffsetDateTime, PrimitiveDateTime};
 
 #[derive(Debug)]
 pub enum AuthenticationError {
-    InvalidTokenFormat,
+    InvalidInputTokenFormat,
     InvalidTokenFormatInDb,
+    DecodeTokenError,
     DbError(DbError),
     Unauthorised,
 }
@@ -19,7 +20,7 @@ pub async fn authenticate_with_token(
     user_db: &impl UserDb,
 ) -> Result<(AccessTokenResponse, UserInfo), AuthenticationError> {
     let access_token = AccessToken::from_token(token.as_ref())
-        .map_err(|_| AuthenticationError::InvalidTokenFormat)?;
+        .map_err(|_| AuthenticationError::InvalidInputTokenFormat)?;
     let user_info = access_token.get_user().clone();
 
     let now = OffsetDateTime::now_utc();
@@ -52,9 +53,8 @@ pub async fn authenticate_with_token(
             if previous_access_token == token.as_ref()
                 && access_token.get_expires_at() > &two_minutes_before_now
             {
-                let access_token =
-                    AccessToken::from_token(&user.access_token)
-                        .map_err(|_| AuthenticationError::InvalidTokenFormatInDb)?;
+                let access_token = AccessToken::from_token(&user.access_token)
+                    .map_err(|_| AuthenticationError::InvalidTokenFormatInDb)?;
                 let access_token_response = AccessTokenResponse {
                     token: user.access_token,
                     expires_at: *access_token.get_expires_at(),
@@ -71,17 +71,23 @@ pub async fn authenticate_with_token(
         return Err(AuthenticationError::Unauthorised);
     }
 
-    let new_access_token: DigestAccessToken =
-        AccessToken::new_with_user(access_token.get_user().clone())
-            .try_into()
-            .expect("TODO 1");
+    let new_user_info = UserInfo {
+        first_name: user.first_name,
+        last_name: user.last_name,
+        user_id: user.id,
+    };
+    let new_access_token: DigestAccessToken = AccessToken::new_with_user(new_user_info)
+        .try_into()
+        .map_err(|_| AuthenticationError::DecodeTokenError)?;
 
-    let new_token_response: AccessTokenResponse = new_access_token.try_into().expect("TODO 2");
+    let new_token_response: AccessTokenResponse = new_access_token
+        .try_into()
+        .map_err(|_| AuthenticationError::DecodeTokenError)?;
 
     let updated_tokens_count = user_db
         .update_user_token(&user.id, &new_token_response.token, &user.access_token)
         .await
-        .expect("TODO");
+        .map_err(AuthenticationError::DbError)?;
 
     let access_token_response = if updated_tokens_count == 0 {
         // In case of token refresh race condition, return token from a database

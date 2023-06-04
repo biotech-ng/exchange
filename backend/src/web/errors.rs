@@ -5,7 +5,7 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use lazy_static::lazy_static;
 
-const INTERNAL_SERVER_ERROR_MSG: &str = "Internal server error";
+pub const INTERNAL_SERVER_ERROR_MSG: &str = "Internal server error";
 pub const SERVICE_UNAVAILABLE_MSG: &str = "Service unavailable";
 const NOT_FOUND_ERROR_MSG: &str = "Not found";
 pub const INVALID_TOKEN_FORMAT_ERROR_MSG: &str = "Invalid token format";

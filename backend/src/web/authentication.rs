@@ -1,10 +1,10 @@
 use crate::errors::errors::DbError;
 use crate::models::user::UserDb;
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, DigestAccessToken, UserInfo};
-use crate::web::errors::INVALID_TOKEN_FORMAT_ERROR_MSG;
-use crate::web_service::ErrorResponseBody;
-use axum::extract::FromRequestParts;
-use axum::http::Request;
+use crate::web::errors::{INTERNAL_SERVER_ERROR_MSG, INTERNAL_SERVER_ERROR_RESPONSE, INVALID_TOKEN_FORMAT_ERROR_MSG};
+use crate::web_service::{ErrorResponseBody, WebService};
+use axum::extract::{FromRequestParts, State};
+use axum::http::{HeaderValue, Request};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -12,6 +12,7 @@ use axum_auth::AuthBearer;
 use hyper::StatusCode;
 use std::ops::Add;
 use time::{Duration, OffsetDateTime, PrimitiveDateTime};
+use crate::models::project::ProjectDb;
 
 #[derive(Debug)]
 pub enum AuthenticationError {
@@ -24,6 +25,7 @@ pub enum AuthenticationError {
 
 // TODO fix race condition
 // TODO: must be a layer
+// TODO remove UserInfo from response
 pub async fn authenticate_with_token(
     token: impl AsRef<str>,
     user_db: &impl UserDb,
@@ -118,29 +120,55 @@ pub async fn authenticate_with_token(
     Ok((access_token_response, user_info))
 }
 
-pub async fn check_and_refresh_auth_token<B>(
+pub async fn check_and_refresh_auth_token<B, UDB: UserDb, PDB: ProjectDb>(
+    State(web_service): State<WebService<UDB, PDB>>,
     req: Request<B>,
     next: Next<B>,
 ) -> Result<Response, Response> {
     let (mut parts, body) = req.into_parts();
 
+    let invalid_token_format_error = (
+        StatusCode::UNAUTHORIZED,
+        Json(ErrorResponseBody {
+            code: None,
+            error: INVALID_TOKEN_FORMAT_ERROR_MSG.into(),
+        }),
+    )
+        .into_response();
+
     match AuthBearer::from_request_parts(&mut parts, &()).await {
-        Ok(token) => {
-            /// println!("token: {:?}", token);
-            let req = Request::from_parts(parts, body);
+        Ok(AuthBearer(token)) => {
+            match authenticate_with_token(token, &web_service.user_db).await {
+                Ok((token_info, _)) => {
+                    let req = Request::from_parts(parts, body);
 
-            let response = next.run(req).await;
+                    let mut response = next.run(req).await;
 
-            Ok(response)
+                    response.headers_mut().insert("x-auth-token", HeaderValue::try_from(token_info.token).expect("TODO"));
+                    response.headers_mut().insert("x-auth-token-expires-at", HeaderValue::try_from(token_info.expires_at.to_string()).expect("TODO"));
+                    response.headers_mut().insert("x-auth-token-refresh-at", HeaderValue::try_from(token_info.refresh_at.to_string()).expect("TODO"));
+
+                    Ok(response)
+                }
+                // pub enum AuthenticationError {
+                //     DbError(DbError),
+                //     Unauthorised,
+                // }
+                Err(AuthenticationError::InvalidInputTokenFormat) => {
+                    Err(invalid_token_format_error)
+                }
+                Err(AuthenticationError::DecodeTokenError) => {
+                    Err(INTERNAL_SERVER_ERROR_RESPONSE.clone().into_response())
+                }
+                Err(AuthenticationError::InvalidTokenFormatInDb) => {
+                    Err(INTERNAL_SERVER_ERROR_RESPONSE.clone().into_response())
+                }
+                Err(error) => {
+                    todo!()
+                }
+            }
         }
-        Err(_) => Err((
-            StatusCode::UNAUTHORIZED,
-            Json(ErrorResponseBody {
-                code: None,
-                error: INVALID_TOKEN_FORMAT_ERROR_MSG.into(),
-            }),
-        )
-            .into_response()),
+        Err(_) => Err(invalid_token_format_error),
     }
 }
 

@@ -39,6 +39,8 @@ pub trait UserDb: Clone + Send + Sync + 'static {
 
     async fn get_user(&self, id: &Uuid) -> Result<User, DbError>;
 
+    async fn get_access_token(&self, id: &Uuid) -> Result<String, DbError>;
+
     async fn update_user_token(
         &self,
         id: &Uuid,
@@ -69,6 +71,13 @@ impl UserDb for PgUserDb {
     #[tracing::instrument(skip(self))]
     async fn get_user(&self, id: &Uuid) -> Result<User, DbError> {
         database::users::get_user(&self.pool, id)
+            .await
+            .map_err(Into::into)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn get_access_token(&self, id: &Uuid) -> Result<String, DbError> {
+        database::users::get_access_token(&self.pool, id)
             .await
             .map_err(Into::into)
     }

@@ -92,11 +92,11 @@ pub async fn authenticate_with_token(
     let access_token_response = if updated_tokens_count == 0 {
         // In case of token refresh race condition, return token from a database
         let token = user_db
-            .get_user(&user_info.user_id)
+            .get_access_token(&user_info.user_id)
             .await
-            .expect("TODO")
-            .access_token;
-        let access_token = AccessToken::from_token(token).expect("TODO");
+            .map_err(AuthenticationError::DbError)?;
+        let access_token = AccessToken::from_token(token)
+            .map_err(|_| AuthenticationError::InvalidTokenFormatInDb)?;
         DigestAccessToken::try_from(access_token)
             .expect("TODO 1")
             .try_into()

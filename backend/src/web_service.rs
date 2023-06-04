@@ -37,10 +37,10 @@ impl<UDB: UserDb, PDB: ProjectDb> WebService<UDB, PDB> {
 
     pub fn into_router(self) -> Router {
         Router::new()
-            .route("/api/user", post(users::post))
-            .route("/api/user/login", post(users::login))
             .route("/api/project/new", post(projects::post))
             .route("/api/project/:payment_id", get(projects::get))
+            .route("/api/user", post(users::post))
+            .route("/api/user/login", post(users::login))
             .layer(middleware::from_fn(propagate_b3_headers))
             .layer(opentelemetry_tracing_layer())
             .with_state(self)

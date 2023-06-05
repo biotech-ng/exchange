@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub enum ErrorCode {
     AlreadyRegistered,
+    InvalidInput,
 }
 
 #[derive(Clone, Deserialize, Serialize)]

@@ -2,7 +2,7 @@ use crate::models::errors::DbError;
 use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
 use crate::utils::tokens::AccessToken;
-use crate::web::errors::UNAUTHORIZED_ERROR_RESPONSE;
+use crate::web::errors::{create_invalid_response, UNAUTHORIZED_ERROR_RESPONSE};
 use crate::web_service::WebService;
 use axum::extract::rejection::{JsonRejection, PathRejection};
 use axum::extract::{Path, State};
@@ -30,6 +30,7 @@ pub struct CreateProjectResponseBody {
 pub enum CreateProjectErrorResponse {
     UnAuthorized,
     DbError(DbError),
+    InvalidInputDataFormat(String),
 }
 
 impl IntoResponse for CreateProjectErrorResponse {
@@ -39,6 +40,9 @@ impl IntoResponse for CreateProjectErrorResponse {
                 UNAUTHORIZED_ERROR_RESPONSE.clone().into_response()
             }
             CreateProjectErrorResponse::DbError(db_error) => db_error.into_response(),
+            CreateProjectErrorResponse::InvalidInputDataFormat(error) => {
+                create_invalid_response(error).into_response()
+            }
         }
     }
 }
@@ -55,7 +59,9 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
         AccessToken::from_token(token).map_err(|_| CreateProjectErrorResponse::UnAuthorized)?;
     let user_info = access_token.get_user();
 
-    let request = body_or_error.expect("TODO");
+    let request = body_or_error
+        .map_err(|x| x.to_string())
+        .map_err(CreateProjectErrorResponse::InvalidInputDataFormat)?;
 
     let user_input = ProjectInput {
         name: request.name.clone(),
@@ -101,6 +107,23 @@ pub struct ProjectResponseBody {
     project: ProjectResponseData,
 }
 
+#[derive(Debug)]
+pub enum GetProjectErrorResponse {
+    DbError(DbError),
+    InvalidInputDataFormat(String),
+}
+
+impl IntoResponse for GetProjectErrorResponse {
+    fn into_response(self) -> Response {
+        match self {
+            GetProjectErrorResponse::DbError(db_error) => db_error.into_response(),
+            GetProjectErrorResponse::InvalidInputDataFormat(error) => {
+                create_invalid_response(error).into_response()
+            }
+        }
+    }
+}
+
 /// Creates a new doc
 ///
 /// TODO: add docs
@@ -109,14 +132,16 @@ pub struct ProjectResponseBody {
 pub async fn get<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
     project_id_or_error: Result<Path<Uuid>, PathRejection>,
-) -> Result<(StatusCode, Json<ProjectResponseBody>), CreateProjectErrorResponse> {
-    let project_id = project_id_or_error.expect("TODO");
+) -> Result<(StatusCode, Json<ProjectResponseBody>), GetProjectErrorResponse> {
+    let project_id = project_id_or_error
+        .map_err(|x| x.to_string())
+        .map_err(GetProjectErrorResponse::InvalidInputDataFormat)?;
 
     let project = web_service
         .project_db
         .get_project_by_id(&project_id)
         .await
-        .expect("TODO");
+        .map_err(GetProjectErrorResponse::DbError)?;
 
     Ok((
         StatusCode::CREATED,

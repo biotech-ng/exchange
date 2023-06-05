@@ -128,13 +128,12 @@ pub async fn get<UDB: UserDb, PDB: ProjectDb>(
 
 #[cfg(test)]
 mod tests {
+    use uuid::Uuid;
     use crate::web::projects::{CreateProject, CreateProjectResponseBody, ProjectResponseBody};
     use crate::web::users::tests::{
         create_test_router, get_auth_header_for_name, register_new_user,
     };
-    use crate::web_service::tests::{
-        deserialize_response_body, get_with_auth_header, post_with_auth_header,
-    };
+    use crate::web_service::tests::{deserialize_response_body, get, get_with_auth_header, post_with_auth_header};
     use database::utils::random_samples::RandomSample;
 
     async fn create_project() -> (CreateProject, CreateProjectResponseBody, String) {
@@ -185,5 +184,14 @@ mod tests {
             project_response.project.description,
             create_project_request.description
         );
+    }
+
+    #[tokio::test]
+    async fn should_return_unauthorized_error_when_no_auth_token_is_provided() {
+        let router = create_test_router().await;
+
+        let uri = std::format!("/api/project/{}", Uuid::new_v4());
+        let response = get(&router, uri).await;
+        assert_eq!(response.status(), 401);
     }
 }

@@ -116,11 +116,7 @@ async fn login_user(
 
 /// Registers a new user
 ///
-/// TODO: add docs
-// 1. Validate input, each field, format and length
-// 2. create salt
-// 3. encode password
-// 4. prepare tokens response
+// TODO: Validate input, each field, format and length
 #[tracing::instrument(skip(web_service))]
 pub async fn post<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
@@ -128,7 +124,6 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
 ) -> Result<(StatusCode, HeaderMap, Json<LoginUserResponseBody>), RegisterUserErrorResponse> {
     let Json(body) = body_or_error.unwrap(); // TODO validate response
 
-    // TODO: don't fetch whole user
     let user_or_error = web_service
         .user_db
         .get_user_by_email(&body.data.email)
@@ -234,7 +229,6 @@ impl IntoResponse for LoginUserErrorResponse {
 
 /// Login existing user
 ///
-/// TODO: add docs
 #[tracing::instrument(skip(web_service))]
 pub async fn login<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,

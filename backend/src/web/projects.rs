@@ -1,7 +1,8 @@
-use crate::errors::errors::DbError;
+use crate::models::errors::DbError;
 use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
 use crate::utils::tokens::AccessToken;
+use crate::web::errors::UNAUTHORIZED_ERROR_RESPONSE;
 use crate::web_service::WebService;
 use axum::extract::rejection::{JsonRejection, PathRejection};
 use axum::extract::{Path, State};
@@ -27,27 +28,31 @@ pub struct CreateProjectResponseBody {
 
 #[derive(Debug)]
 pub enum CreateProjectErrorResponse {
+    UnAuthorized,
     DbError(DbError),
 }
 
 impl IntoResponse for CreateProjectErrorResponse {
     fn into_response(self) -> Response {
         match self {
+            CreateProjectErrorResponse::UnAuthorized => {
+                UNAUTHORIZED_ERROR_RESPONSE.clone().into_response()
+            }
             CreateProjectErrorResponse::DbError(db_error) => db_error.into_response(),
         }
     }
 }
 
-/// Creates a new doc
+/// Creates a new project
 ///
-/// TODO: add docs
 #[tracing::instrument(skip(web_service))]
 pub async fn post<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
     AuthBearer(token): AuthBearer,
     body_or_error: Result<Json<CreateProject>, JsonRejection>,
 ) -> Result<(StatusCode, Json<CreateProjectResponseBody>), CreateProjectErrorResponse> {
-    let access_token = AccessToken::from_token(token).expect("TODO");
+    let access_token =
+        AccessToken::from_token(token).map_err(|_| CreateProjectErrorResponse::UnAuthorized)?;
     let user_info = access_token.get_user();
 
     let request = body_or_error.expect("TODO");

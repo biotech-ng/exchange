@@ -7,7 +7,6 @@ use dotenvy::dotenv;
 use opentelemetry::sdk;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
-mod errors;
 mod models;
 mod utils;
 mod web;

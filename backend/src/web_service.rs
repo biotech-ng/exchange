@@ -11,7 +11,6 @@ use axum_tracing_opentelemetry::{find_current_trace_id, opentelemetry_tracing_la
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
-// TODO check how it is serialized
 pub enum ErrorCode {
     AlreadyRegistered,
 }
@@ -74,6 +73,7 @@ async fn propagate_b3_headers<B>(req: Request<B>, next: Next<B>) -> Result<Respo
 pub mod tests {
     use crate::models::project::PgProjectDb;
     use crate::models::user::PgUserDb;
+    use crate::utils::modify_builder::ModifyBuilder;
     use axum::http::request::Builder;
     use axum::{
         body::Bytes,
@@ -82,7 +82,6 @@ pub mod tests {
     use http_body::combinators::UnsyncBoxBody;
     use serde::{de::DeserializeOwned, Serialize};
     use std::fmt::Display;
-    // use sqlx::encode::IsNull::No;
     use tower::ServiceExt;
 
     use super::*;
@@ -110,21 +109,7 @@ pub mod tests {
             .expect("failed to send oneshot request")
     }
 
-    trait Modify {
-        fn modify<D, F>(self, data: Option<D>, f: F) -> Self
-        where
-            F: Fn(Self, D) -> Self,
-            Self: Sized,
-        {
-            if let Some(data) = data {
-                f(self, data)
-            } else {
-                self
-            }
-        }
-    }
-
-    impl Modify for Builder {}
+    impl ModifyBuilder for Builder {}
 
     pub async fn get_with_auth_header(
         router: &Router,

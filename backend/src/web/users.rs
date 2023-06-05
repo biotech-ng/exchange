@@ -1,4 +1,4 @@
-use crate::errors::errors::DbError;
+use crate::models::errors::DbError;
 use crate::models::project::ProjectDb;
 use crate::models::user::{OwnedUser, UserDb};
 use crate::utils::salted_hashes::{
@@ -31,7 +31,7 @@ pub struct RegisterUserRequestBody {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterUserResponseBody {
-    data: RegisterUserData,
+    user_id: Uuid,
 }
 
 #[derive(Debug)]
@@ -108,7 +108,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
                 Ok((
                     StatusCode::ACCEPTED,
                     headers,
-                    Json(RegisterUserResponseBody { data: body.data }),
+                    Json(RegisterUserResponseBody { user_id: user.id }),
                 ))
             } else {
                 Err(RegisterUserErrorResponse::AlreadyRegistered)
@@ -123,7 +123,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
             let token_response = AccessTokenResponse::new(UserInfo {
                 first_name: body.data.first_name.clone(),
                 last_name: body.data.last_name.clone(),
-                user_id: user_id.clone(),
+                user_id,
             })
             .expect("TODO");
 
@@ -154,7 +154,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
             Ok((
                 StatusCode::CREATED,
                 headers,
-                Json(RegisterUserResponseBody { data: body.data }),
+                Json(RegisterUserResponseBody { user_id }),
             ))
         }
         Err(db_error) => Err(RegisterUserErrorResponse::DbError(db_error)),
@@ -173,7 +173,9 @@ pub struct LoginUserDataBody {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct LoginUserResponseBody {}
+pub struct LoginUserResponseBody {
+    user_id: Uuid,
+}
 
 #[derive(Debug)]
 pub enum LoginUserErrorResponse {
@@ -237,7 +239,7 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
                 Ok((
                     StatusCode::ACCEPTED,
                     headers,
-                    Json(LoginUserResponseBody {}),
+                    Json(LoginUserResponseBody { user_id: user.id }),
                 ))
             } else {
                 Err(LoginUserErrorResponse::InvalidPassword)
@@ -337,17 +339,14 @@ pub mod tests {
         let access_token = get_auth_header_for_name(&response);
 
         let response_body = deserialize_response_body::<RegisterUserResponseBody>(response).await;
-        assert_eq!(response_body.data.first_name, request.first_name);
-        assert_eq!(response_body.data.last_name, request.last_name);
 
         // Token ok
         let parsed_access_token = AccessToken::from_token(access_token).expect("valid token");
+        let user_info = parsed_access_token.get_user();
 
-        assert_eq!(
-            parsed_access_token.get_user().first_name,
-            request.first_name
-        );
-        assert_eq!(parsed_access_token.get_user().last_name, request.last_name);
+        assert_eq!(response_body.user_id, user_info.user_id);
+        assert_eq!(user_info.first_name, request.first_name);
+        assert_eq!(user_info.last_name, request.last_name);
 
         // Test created user
         let pool = crate::pg_pool()
@@ -400,17 +399,14 @@ pub mod tests {
         let access_token = get_auth_header_for_name(&response);
 
         let response_body = deserialize_response_body::<RegisterUserResponseBody>(response).await;
-        assert_eq!(response_body.data.first_name, request.first_name);
-        assert_eq!(response_body.data.last_name, request.last_name);
 
         // Token ok
         let parsed_access_token = AccessToken::from_token(access_token).expect("valid token");
+        let user_info = parsed_access_token.get_user();
 
-        assert_eq!(
-            parsed_access_token.get_user().first_name,
-            request.first_name
-        );
-        assert_eq!(parsed_access_token.get_user().last_name, request.last_name);
+        assert_eq!(response_body.user_id, user_info.user_id);
+        assert_eq!(user_info.first_name, request.first_name);
+        assert_eq!(user_info.last_name, request.last_name);
 
         // Test created user
         let pool = crate::pg_pool()

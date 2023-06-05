@@ -1,4 +1,4 @@
-use crate::errors::errors::DbError;
+use crate::models::errors::DbError;
 use crate::web_service::ErrorResponseBody;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -26,6 +26,13 @@ lazy_static! {
         Json(ErrorResponseBody {
             code: None,
             error: INTERNAL_SERVER_ERROR_MSG.into(),
+        }),
+    );
+    pub static ref UNAUTHORIZED_ERROR_RESPONSE: ErrorResponseType = (
+        StatusCode::UNAUTHORIZED,
+        Json(ErrorResponseBody {
+            code: None,
+            error: UNAUTHORIZED_ERROR_MSG.into(),
         }),
     );
     pub static ref STATUS_CODE_430: StatusCode =

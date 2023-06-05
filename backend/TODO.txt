@@ -1,4 +1,2 @@
 
-1. Apply jagger
-2. Add login
-3. Add project
+1. Apply swagger

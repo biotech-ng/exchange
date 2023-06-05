@@ -102,11 +102,6 @@ impl From<Project> for ProjectResponseData {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct ProjectResponseBody {
-    project: ProjectResponseData,
-}
-
 #[derive(Debug)]
 pub enum GetProjectErrorResponse {
     DbError(DbError),
@@ -126,13 +121,11 @@ impl IntoResponse for GetProjectErrorResponse {
 
 /// Creates a new doc
 ///
-/// TODO: add docs
-/// TODO: Change error type
 #[tracing::instrument(skip(web_service))]
 pub async fn get<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
     project_id_or_error: Result<Path<Uuid>, PathRejection>,
-) -> Result<(StatusCode, Json<ProjectResponseBody>), GetProjectErrorResponse> {
+) -> Result<(StatusCode, Json<ProjectResponseData>), GetProjectErrorResponse> {
     let project_id = project_id_or_error
         .map_err(|x| x.to_string())
         .map_err(GetProjectErrorResponse::InvalidInputDataFormat)?;
@@ -145,15 +138,13 @@ pub async fn get<UDB: UserDb, PDB: ProjectDb>(
 
     Ok((
         StatusCode::CREATED,
-        Json(ProjectResponseBody {
-            project: project.into(),
-        }),
+        Json(project.into()),
     ))
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::web::projects::{CreateProject, CreateProjectResponseBody, ProjectResponseBody};
+    use crate::web::projects::{CreateProject, CreateProjectResponseBody, ProjectResponseData};
     use crate::web::users::tests::{
         create_test_router, get_auth_header_for_name, register_new_user,
     };
@@ -206,10 +197,10 @@ mod tests {
         assert_eq!(auth_tokens, token);
 
         // TODO fix response date format
-        let project_response = deserialize_response_body::<ProjectResponseBody>(response).await;
-        assert_eq!(project_response.project.name, create_project_request.name);
+        let project_response = deserialize_response_body::<ProjectResponseData>(response).await;
+        assert_eq!(project_response.name, create_project_request.name);
         assert_eq!(
-            project_response.project.description,
+            project_response.description,
             create_project_request.description
         );
     }

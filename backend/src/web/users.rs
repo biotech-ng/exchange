@@ -4,14 +4,13 @@ use crate::models::user::{OwnedUser, UserDb};
 use crate::utils::salted_hashes::{
     generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
 };
-use crate::utils::tokens::{AccessTokenResponse, UserInfo};
+use crate::utils::tokens::{AccessTokenResponse, CreateAccessTokenError, UserInfo};
 use crate::web::authentication::AuthHeaders;
 use crate::web_service::{ErrorCode, ErrorResponseBody, WebService};
 use axum::extract::rejection::JsonRejection;
 use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::StatusCode, Json};
-use base64::DecodeError;
 use database::users::User;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -58,9 +57,9 @@ impl IntoResponse for RegisterUserErrorResponse {
 }
 
 enum LoginError {
-    DecodeTokenError(DecodeError),
     WrongPassword,
     DbError(DbError),
+    CreateAccessTokenError(CreateAccessTokenError),
 }
 
 async fn login_user(
@@ -69,7 +68,7 @@ async fn login_user(
     user: &User,
 ) -> Result<(StatusCode, HeaderMap, Json<LoginUserResponseBody>), LoginError> {
     let input_hash = generate_b64_hash_for_text_and_salt(password, &user.password_salt)
-        .map_err(LoginError::DecodeTokenError)?;
+        .map_err(|x| LoginError::CreateAccessTokenError(CreateAccessTokenError::DecodeError(x)))?;
     let existing_hash = &user.password_sha512;
     if existing_hash != &input_hash {
         return Err(LoginError::WrongPassword);
@@ -80,14 +79,16 @@ async fn login_user(
         first_name: user.first_name.clone(),
         last_name: user.last_name.clone(),
     })
-    .expect("TODO");
+    .map_err(LoginError::CreateAccessTokenError)?;
 
-    // TODO handle not found for access_token_seq_num
-    user_db
+    let tokens_updated = user_db
         .update_user_token(&user.id, &token_response.token, &user.access_token)
         .await
         .map_err(LoginError::DbError)?;
-    // TODO test update_result
+
+    if tokens_updated == 0 {
+        // TODO ???
+    }
 
     let mut headers = HeaderMap::new();
     headers.add_auth_headers(token_response);

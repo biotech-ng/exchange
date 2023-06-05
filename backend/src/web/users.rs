@@ -4,7 +4,7 @@ use crate::models::user::{OwnedUser, UserDb};
 use crate::utils::salted_hashes::{
     generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
 };
-use crate::utils::tokens::{AccessTokenResponse, CreateAccessTokenError, UserInfo};
+use crate::utils::tokens::{AccessToken, AccessTokenResponse, CreateAccessTokenError, UserInfo};
 use crate::web::authentication::AuthHeaders;
 use crate::web_service::{ErrorCode, ErrorResponseBody, WebService};
 use axum::extract::rejection::JsonRejection;
@@ -60,6 +60,7 @@ enum LoginError {
     WrongPassword,
     DbError(DbError),
     CreateAccessTokenError(CreateAccessTokenError),
+    InvalidTokenFormatInDb,
 }
 
 async fn login_user(
@@ -86,9 +87,22 @@ async fn login_user(
         .await
         .map_err(LoginError::DbError)?;
 
-    if tokens_updated == 0 {
-        // TODO ???
-    }
+    let token_response = if tokens_updated == 0 {
+        // In case of token refresh race condition, return token from a database
+        let token = user_db
+            .get_access_token(&user.id)
+            .await
+            .map_err(LoginError::DbError)?;
+        let access_token = AccessToken::from_token(token.clone())
+            .map_err(|_| LoginError::InvalidTokenFormatInDb)?;
+        AccessTokenResponse {
+            token,
+            expires_at: *access_token.get_expires_at(),
+            refresh_at: *access_token.get_refresh_at(),
+        }
+    } else {
+        token_response
+    };
 
     let mut headers = HeaderMap::new();
     headers.add_auth_headers(token_response);

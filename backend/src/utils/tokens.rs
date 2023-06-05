@@ -254,7 +254,8 @@ pub mod tests {
             refresh_at,
         };
 
-        let token_response: AccessTokenResponse = digest_access_token.try_into().expect("valid token");
+        let token_response: AccessTokenResponse =
+            digest_access_token.try_into().expect("valid token");
 
         let token = token_response.token;
 

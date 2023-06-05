@@ -128,13 +128,15 @@ pub async fn get<UDB: UserDb, PDB: ProjectDb>(
 
 #[cfg(test)]
 mod tests {
-    use uuid::Uuid;
     use crate::web::projects::{CreateProject, CreateProjectResponseBody, ProjectResponseBody};
     use crate::web::users::tests::{
         create_test_router, get_auth_header_for_name, register_new_user,
     };
-    use crate::web_service::tests::{deserialize_response_body, get, get_with_auth_header, post_with_auth_header};
+    use crate::web_service::tests::{
+        deserialize_response_body, get, get_with_auth_header, post_with_auth_header,
+    };
     use database::utils::random_samples::RandomSample;
+    use uuid::Uuid;
 
     async fn create_project() -> (CreateProject, CreateProjectResponseBody, String) {
         let (_, response) = register_new_user(None).await;
@@ -178,6 +180,7 @@ mod tests {
         let auth_tokens = get_auth_header_for_name(&response);
         assert_eq!(auth_tokens, token);
 
+        // TODO fix response date format
         let project_response = deserialize_response_body::<ProjectResponseBody>(response).await;
         assert_eq!(project_response.project.name, create_project_request.name);
         assert_eq!(

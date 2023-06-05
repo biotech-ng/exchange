@@ -136,6 +136,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
     match user_or_error {
         Ok(user) => login_user(&body.data.password, &web_service.user_db, &user)
             .await
+            // TODO return more accurate error
             .map_err(|_| RegisterUserErrorResponse::AlreadyRegistered),
         Err(DbError::NotFoundError) => {
             let (password_sha512, password_salt) =
@@ -248,6 +249,7 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
     match user_or_error {
         Ok(user) => login_user(&body.data.password, &web_service.user_db, &user)
             .await
+            // TODO return more accurate error
             .map_err(|_| LoginUserErrorResponse::InvalidPassword),
         Err(DbError::NotFoundError) => Err(LoginUserErrorResponse::NotFound),
         Err(db_error) => Err(LoginUserErrorResponse::DbError(db_error)),

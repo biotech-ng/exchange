@@ -136,10 +136,7 @@ pub async fn get<UDB: UserDb, PDB: ProjectDb>(
         .await
         .map_err(GetProjectErrorResponse::DbError)?;
 
-    Ok((
-        StatusCode::CREATED,
-        Json(project.into()),
-    ))
+    Ok((StatusCode::CREATED, Json(project.into())))
 }
 
 #[cfg(test)]

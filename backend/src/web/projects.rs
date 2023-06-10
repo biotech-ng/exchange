@@ -2,7 +2,7 @@ use crate::models::errors::DbError;
 use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
 use crate::utils::tokens::AccessToken;
-use crate::web::errors::UNAUTHORIZED_ERROR_RESPONSE;
+use crate::web::errors::{create_invalid_response, UNAUTHORIZED_ERROR_RESPONSE};
 use crate::web_service::WebService;
 use axum::extract::rejection::{JsonRejection, PathRejection};
 use axum::extract::{Path, State};
@@ -30,6 +30,7 @@ pub struct CreateProjectResponseBody {
 pub enum CreateProjectErrorResponse {
     UnAuthorized,
     DbError(DbError),
+    InvalidInputDataFormat(String),
 }
 
 impl IntoResponse for CreateProjectErrorResponse {
@@ -39,6 +40,9 @@ impl IntoResponse for CreateProjectErrorResponse {
                 UNAUTHORIZED_ERROR_RESPONSE.clone().into_response()
             }
             CreateProjectErrorResponse::DbError(db_error) => db_error.into_response(),
+            CreateProjectErrorResponse::InvalidInputDataFormat(error) => {
+                create_invalid_response(error).into_response()
+            }
         }
     }
 }
@@ -55,7 +59,9 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
         AccessToken::from_token(token).map_err(|_| CreateProjectErrorResponse::UnAuthorized)?;
     let user_info = access_token.get_user();
 
-    let request = body_or_error.expect("TODO");
+    let request = body_or_error
+        .map_err(|x| x.to_string())
+        .map_err(CreateProjectErrorResponse::InvalidInputDataFormat)?;
 
     let user_input = ProjectInput {
         name: request.name.clone(),
@@ -96,46 +102,54 @@ impl From<Project> for ProjectResponseData {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct ProjectResponseBody {
-    project: ProjectResponseData,
+#[derive(Debug)]
+pub enum GetProjectErrorResponse {
+    DbError(DbError),
+    InvalidInputDataFormat(String),
+}
+
+impl IntoResponse for GetProjectErrorResponse {
+    fn into_response(self) -> Response {
+        match self {
+            GetProjectErrorResponse::DbError(db_error) => db_error.into_response(),
+            GetProjectErrorResponse::InvalidInputDataFormat(error) => {
+                create_invalid_response(error).into_response()
+            }
+        }
+    }
 }
 
 /// Creates a new doc
 ///
-/// TODO: add docs
-/// TODO: Change error type
 #[tracing::instrument(skip(web_service))]
 pub async fn get<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
     project_id_or_error: Result<Path<Uuid>, PathRejection>,
-) -> Result<(StatusCode, Json<ProjectResponseBody>), CreateProjectErrorResponse> {
-    let project_id = project_id_or_error.expect("TODO");
+) -> Result<(StatusCode, Json<ProjectResponseData>), GetProjectErrorResponse> {
+    let project_id = project_id_or_error
+        .map_err(|x| x.to_string())
+        .map_err(GetProjectErrorResponse::InvalidInputDataFormat)?;
 
     let project = web_service
         .project_db
         .get_project_by_id(&project_id)
         .await
-        .expect("TODO");
+        .map_err(GetProjectErrorResponse::DbError)?;
 
-    Ok((
-        StatusCode::CREATED,
-        Json(ProjectResponseBody {
-            project: project.into(),
-        }),
-    ))
+    Ok((StatusCode::CREATED, Json(project.into())))
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::web::projects::{CreateProject, CreateProjectResponseBody, ProjectResponseBody};
+    use crate::web::projects::{CreateProject, CreateProjectResponseBody, ProjectResponseData};
     use crate::web::users::tests::{
         create_test_router, get_auth_header_for_name, register_new_user,
     };
     use crate::web_service::tests::{
-        deserialize_response_body, get_with_auth_header, post_with_auth_header,
+        deserialize_response_body, get, get_with_auth_header, post_with_auth_header,
     };
     use database::utils::random_samples::RandomSample;
+    use uuid::Uuid;
 
     async fn create_project() -> (CreateProject, CreateProjectResponseBody, String) {
         let (_, response) = register_new_user(None).await;
@@ -179,11 +193,21 @@ mod tests {
         let auth_tokens = get_auth_header_for_name(&response);
         assert_eq!(auth_tokens, token);
 
-        let project_response = deserialize_response_body::<ProjectResponseBody>(response).await;
-        assert_eq!(project_response.project.name, create_project_request.name);
+        // TODO fix response date format
+        let project_response = deserialize_response_body::<ProjectResponseData>(response).await;
+        assert_eq!(project_response.name, create_project_request.name);
         assert_eq!(
-            project_response.project.description,
+            project_response.description,
             create_project_request.description
         );
+    }
+
+    #[tokio::test]
+    async fn should_return_unauthorized_error_when_no_auth_token_is_provided() {
+        let router = create_test_router().await;
+
+        let uri = std::format!("/api/project/{}", Uuid::new_v4());
+        let response = get(&router, uri).await;
+        assert_eq!(response.status(), 401);
     }
 }

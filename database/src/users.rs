@@ -185,20 +185,14 @@ pub mod tests {
     // TODO generate normal password
     pub fn create_random_user_inputs() -> TestUserInputs {
         let user_id = Uuid::new_v4();
-        let alias = Some(format!("vova:{}", Uuid::new_v4()));
+        let alias = Some(format!("vova:{}", String::new_random(22)));
         let first_name = Some("volodymyr".to_owned());
         let last_name = Some("gorbenko".to_owned());
         let email = format!("em:{}", Uuid::new_v4());
         let password_salt = String::new_random(22);
-        let password_sha512 = format!("ph:{}", Uuid::new_v4());
+        let password_sha512 = format!("ph:{}", String::new_random(22));
         let access_token = String::new_random(1025);
-        let phone_number = Some(
-            thread_rng()
-                .sample_iter(&Alphanumeric)
-                .take(15)
-                .map(char::from)
-                .collect(),
-        );
+        let phone_number = Some(String::new_random(15));
         let language_code = "ru-ru";
         let avatar = Some("https://some_image.png");
         let country_code = Some("SW");

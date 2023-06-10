@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub enum ErrorCode {
     AlreadyRegistered,
+    InvalidInput,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -125,6 +126,13 @@ pub mod tests {
             .body(hyper::Body::empty())
             .expect("failed to build GET request");
         send_request(router, request).await
+    }
+
+    pub async fn get(
+        router: &Router,
+        uri: impl AsRef<str>,
+    ) -> hyper::Response<UnsyncBoxBody<Bytes, axum::Error>> {
+        get_with_auth_header(router, uri, Option::<&str>::None).await
     }
 
     pub async fn post_with_auth_header(

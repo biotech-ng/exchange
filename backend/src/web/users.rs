@@ -4,7 +4,7 @@ use crate::models::user::{OwnedUser, UserDb};
 use crate::utils::salted_hashes::{
     generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
 };
-use crate::utils::tokens::{AccessTokenResponse, UserInfo};
+use crate::utils::tokens::{AccessToken, AccessTokenResponse, CreateAccessTokenError, UserInfo};
 use crate::web::authentication::AuthHeaders;
 use crate::web_service::{ErrorCode, ErrorResponseBody, WebService};
 use axum::extract::rejection::JsonRejection;
@@ -56,64 +56,83 @@ impl IntoResponse for RegisterUserErrorResponse {
     }
 }
 
-fn login_user(password: impl AsRef<str>, user: &User) -> Option<AccessTokenResponse> {
-    let input_hash =
-        generate_b64_hash_for_text_and_salt(password, &user.password_salt).expect("TODO");
+enum LoginError {
+    WrongPassword,
+    DbError(DbError),
+    CreateAccessTokenError(CreateAccessTokenError),
+    InvalidTokenFormatInDb,
+}
+
+async fn login_user(
+    password: impl AsRef<str>,
+    user_db: &impl UserDb,
+    user: &User,
+) -> Result<(StatusCode, HeaderMap, Json<LoginUserResponseBody>), LoginError> {
+    let input_hash = generate_b64_hash_for_text_and_salt(password, &user.password_salt)
+        .map_err(|x| LoginError::CreateAccessTokenError(CreateAccessTokenError::DecodeError(x)))?;
     let existing_hash = &user.password_sha512;
     if existing_hash != &input_hash {
-        return None;
+        return Err(LoginError::WrongPassword);
     }
 
-    Some(
-        AccessTokenResponse::new(UserInfo {
-            user_id: user.id,
-            first_name: user.first_name.clone(),
-            last_name: user.last_name.clone(),
-        })
-        .expect("TODO"),
-    )
+    let token_response = AccessTokenResponse::new(UserInfo {
+        user_id: user.id,
+        first_name: user.first_name.clone(),
+        last_name: user.last_name.clone(),
+    })
+    .map_err(LoginError::CreateAccessTokenError)?;
+
+    let tokens_updated = user_db
+        .update_user_token(&user.id, &token_response.token, &user.access_token)
+        .await
+        .map_err(LoginError::DbError)?;
+
+    let token_response = if tokens_updated == 0 {
+        // In case of token refresh race condition, return token from a database
+        let token = user_db
+            .get_access_token(&user.id)
+            .await
+            .map_err(LoginError::DbError)?;
+        let access_token = AccessToken::from_token(token.clone())
+            .map_err(|_| LoginError::InvalidTokenFormatInDb)?;
+        AccessTokenResponse {
+            token,
+            expires_at: *access_token.get_expires_at(),
+            refresh_at: *access_token.get_refresh_at(),
+        }
+    } else {
+        token_response
+    };
+
+    let mut headers = HeaderMap::new();
+    headers.add_auth_headers(token_response);
+
+    Ok((
+        StatusCode::ACCEPTED,
+        headers,
+        Json(LoginUserResponseBody { user_id: user.id }),
+    ))
 }
 
 /// Registers a new user
 ///
-/// TODO: add docs
-// 1. Validate input, each field, format and length
-// 2. create salt
-// 3. encode password
-// 4. prepare tokens response
+// TODO: Validate input, each field, format and length
 #[tracing::instrument(skip(web_service))]
 pub async fn post<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
     body_or_error: Result<Json<RegisterUserRequestBody>, JsonRejection>,
-) -> Result<(StatusCode, HeaderMap, Json<RegisterUserResponseBody>), RegisterUserErrorResponse> {
+) -> Result<(StatusCode, HeaderMap, Json<LoginUserResponseBody>), RegisterUserErrorResponse> {
     let Json(body) = body_or_error.unwrap(); // TODO validate response
 
-    // TODO: don't fetch whole user
     let user_or_error = web_service
         .user_db
         .get_user_by_email(&body.data.email)
         .await;
     match user_or_error {
-        Ok(user) => {
-            if let Some(token_response) = login_user(&body.data.password, &user) {
-                web_service
-                    .user_db
-                    .update_user_token(&user.id, &token_response.token, &user.access_token)
-                    .await
-                    .map_err(RegisterUserErrorResponse::DbError)?;
-
-                let mut headers = HeaderMap::new();
-                headers.add_auth_headers(token_response);
-
-                Ok((
-                    StatusCode::ACCEPTED,
-                    headers,
-                    Json(RegisterUserResponseBody { user_id: user.id }),
-                ))
-            } else {
-                Err(RegisterUserErrorResponse::AlreadyRegistered)
-            }
-        }
+        Ok(user) => login_user(&body.data.password, &web_service.user_db, &user)
+            .await
+            // TODO return more accurate error
+            .map_err(|_| RegisterUserErrorResponse::AlreadyRegistered),
         Err(DbError::NotFoundError) => {
             let (password_sha512, password_salt) =
                 generate_hash_and_salt_for_text(&body.data.password);
@@ -154,7 +173,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
             Ok((
                 StatusCode::CREATED,
                 headers,
-                Json(RegisterUserResponseBody { user_id }),
+                Json(LoginUserResponseBody { user_id }),
             ))
         }
         Err(db_error) => Err(RegisterUserErrorResponse::DbError(db_error)),
@@ -210,7 +229,6 @@ impl IntoResponse for LoginUserErrorResponse {
 
 /// Login existing user
 ///
-/// TODO: add docs
 #[tracing::instrument(skip(web_service))]
 pub async fn login<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
@@ -223,28 +241,10 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
         .get_user_by_email(&body.data.email)
         .await;
     match user_or_error {
-        Ok(user) => {
-            if let Some(token_response) = login_user(&body.data.password, &user) {
-                // TODO handle not found for access_token_seq_num
-                web_service
-                    .user_db
-                    .update_user_token(&user.id, &token_response.token, &user.access_token)
-                    .await
-                    .map_err(LoginUserErrorResponse::DbError)?;
-                // TODO test update_result
-
-                let mut headers = HeaderMap::new();
-                headers.add_auth_headers(token_response);
-
-                Ok((
-                    StatusCode::ACCEPTED,
-                    headers,
-                    Json(LoginUserResponseBody { user_id: user.id }),
-                ))
-            } else {
-                Err(LoginUserErrorResponse::InvalidPassword)
-            }
-        }
+        Ok(user) => login_user(&body.data.password, &web_service.user_db, &user)
+            .await
+            // TODO return more accurate error
+            .map_err(|_| LoginUserErrorResponse::InvalidPassword),
         Err(DbError::NotFoundError) => Err(LoginUserErrorResponse::NotFound),
         Err(db_error) => Err(LoginUserErrorResponse::DbError(db_error)),
     }

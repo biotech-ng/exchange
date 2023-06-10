@@ -249,12 +249,13 @@ pub mod tests {
             digest: String::new_random(88),
             token: serde_json::to_string(&access_token)
                 .map_err(CreateAccessTokenError::JsonError)
-                .expect("TODO: valid access token"),
+                .expect("valid access token"),
             expires_at,
             refresh_at,
         };
 
-        let token_response: AccessTokenResponse = digest_access_token.try_into().expect("TODO");
+        let token_response: AccessTokenResponse =
+            digest_access_token.try_into().expect("valid token");
 
         let token = token_response.token;
 

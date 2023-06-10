@@ -1,5 +1,5 @@
 use crate::models::errors::DbError;
-use crate::web_service::ErrorResponseBody;
+use crate::web_service::{ErrorCode, ErrorResponseBody};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -40,6 +40,16 @@ lazy_static! {
             debug_assert!(false, "Can not create StatusCode for 430, error: {}", error);
             StatusCode::BAD_REQUEST
         });
+}
+
+pub fn create_invalid_response(error: String) -> ErrorResponseType {
+    (
+        StatusCode::BAD_REQUEST,
+        Json(ErrorResponseBody {
+            code: Some(ErrorCode::InvalidInput),
+            error,
+        }),
+    )
 }
 
 impl IntoResponse for DbError {

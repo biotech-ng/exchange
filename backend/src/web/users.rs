@@ -6,7 +6,7 @@ use crate::utils::salted_hashes::{
 };
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, CreateAccessTokenError, UserInfo};
 use crate::web::authentication::{AddHeaderError, AuthHeaders};
-use crate::web::errors::{create_bad_request_error, create_can_not_add_header_error};
+use crate::web::errors::{create_bad_request_error, create_internal_server_error};
 use crate::web_service::{ErrorCode, ErrorResponseBody, WebService};
 use axum::extract::rejection::JsonRejection;
 use axum::http::HeaderMap;
@@ -41,6 +41,7 @@ pub enum RegisterUserErrorResponse {
     AlreadyRegistered,
     AddHeaderError(AddHeaderError),
     JsonRejection(JsonRejection),
+    CreateAccessTokenError(CreateAccessTokenError),
 }
 
 impl IntoResponse for RegisterUserErrorResponse {
@@ -56,10 +57,13 @@ impl IntoResponse for RegisterUserErrorResponse {
             )
                 .into_response(),
             RegisterUserErrorResponse::AddHeaderError(error) => {
-                create_can_not_add_header_error(error).into_response()
-            }
+                create_internal_server_error(std::format!("Add header error: {:?}", error)).into_response()
+            },
             RegisterUserErrorResponse::JsonRejection(error) => {
                 create_bad_request_error(error.to_string()).into_response()
+            },
+            RegisterUserErrorResponse::CreateAccessTokenError(error) => {
+                create_internal_server_error(std::format!("Can not create an access token: {:?}", error)).into_response()
             }
         }
     }
@@ -156,7 +160,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
                 last_name: body.data.last_name.clone(),
                 user_id,
             })
-            .expect("TODO");
+            .map_err(RegisterUserErrorResponse::CreateAccessTokenError)?;
 
             let user = OwnedUser {
                 user_id,

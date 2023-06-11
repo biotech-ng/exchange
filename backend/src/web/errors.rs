@@ -1,5 +1,4 @@
 use crate::models::errors::DbError;
-use crate::web::authentication::AddHeaderError;
 use crate::web_service::{ErrorCode, ErrorResponseBody};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -53,13 +52,10 @@ pub fn create_invalid_response(error: String) -> ErrorResponseType {
     )
 }
 
-pub fn create_can_not_add_header_error(error: AddHeaderError) -> ErrorResponseType {
+pub fn create_internal_server_error(error: String) -> ErrorResponseType {
     (
         StatusCode::INTERNAL_SERVER_ERROR,
-        Json(ErrorResponseBody {
-            code: None,
-            error: std::format!("Add header error: {:?}", error),
-        }),
+        Json(ErrorResponseBody { code: None, error }),
     )
 }
 

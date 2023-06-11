@@ -2,10 +2,7 @@ use crate::models::errors::DbError;
 use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, DigestAccessToken, UserInfo};
-use crate::web::errors::{
-    create_can_not_add_header_error, INTERNAL_SERVER_ERROR_RESPONSE,
-    INVALID_TOKEN_FORMAT_ERROR_MSG, UNAUTHORIZED_ERROR_RESPONSE,
-};
+use crate::web::errors::{create_internal_server_error, INTERNAL_SERVER_ERROR_RESPONSE, INVALID_TOKEN_FORMAT_ERROR_MSG, UNAUTHORIZED_ERROR_RESPONSE};
 use crate::web::formats::DATE_TIME_FORMAT;
 use crate::web_service::{ErrorResponseBody, WebService};
 use axum::extract::{FromRequestParts, State};
@@ -176,7 +173,7 @@ pub async fn check_and_refresh_auth_token<B, UDB: UserDb, PDB: ProjectDb>(
                 response
                     .headers_mut()
                     .add_auth_headers(token_info)
-                    .map_err(create_can_not_add_header_error)
+                    .map_err(|error| create_internal_server_error(std::format!("Add header error: {:?}", error)))
                     .map_err(|error| error.into_response())?;
 
                 Ok(response)

@@ -193,7 +193,6 @@ mod tests {
         let auth_tokens = get_auth_header_for_name(&response);
         assert_eq!(auth_tokens, token);
 
-        // TODO fix response date format
         let project_response = deserialize_response_body::<ProjectResponseData>(response).await;
         assert_eq!(project_response.name, create_project_request.name);
         assert_eq!(

@@ -3,7 +3,7 @@ use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
 use crate::utils::tokens::AccessToken;
 use crate::web::errors::{create_invalid_response, UNAUTHORIZED_ERROR_RESPONSE};
-use crate::web::formatts::{date_as_string, string_as_date};
+use crate::web::formatts::JsonDateTime;
 use crate::web_service::WebService;
 use axum::extract::rejection::{JsonRejection, PathRejection};
 use axum::extract::{Path, State};
@@ -13,7 +13,6 @@ use axum::Json;
 use axum_auth::AuthBearer;
 use database::projects::{Project, ProjectInput};
 use serde::{Deserialize, Serialize};
-use time::PrimitiveDateTime;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -87,10 +86,8 @@ pub struct ProjectResponseData {
     name: String,
     description: String,
     user_id: Uuid,
-    #[serde(serialize_with = "date_as_string", deserialize_with = "string_as_date")]
-    created_at: PrimitiveDateTime,
-    #[serde(serialize_with = "date_as_string", deserialize_with = "string_as_date")]
-    updated_at: PrimitiveDateTime,
+    created_at: JsonDateTime,
+    updated_at: JsonDateTime,
 }
 
 impl From<Project> for ProjectResponseData {
@@ -99,8 +96,8 @@ impl From<Project> for ProjectResponseData {
             name: value.name,
             description: value.description,
             user_id: value.user_id,
-            created_at: value.created_at,
-            updated_at: value.updated_at,
+            created_at: value.created_at.into(),
+            updated_at: value.updated_at.into(),
         }
     }
 }

@@ -5,7 +5,8 @@ use crate::utils::salted_hashes::{
     generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
 };
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, CreateAccessTokenError, UserInfo};
-use crate::web::authentication::AuthHeaders;
+use crate::web::authentication::{AddHeaderError, AuthHeaders};
+use crate::web::errors::{create_bad_request_error, create_internal_server_error};
 use crate::web_service::{ErrorCode, ErrorResponseBody, WebService};
 use axum::extract::rejection::JsonRejection;
 use axum::http::HeaderMap;
@@ -38,6 +39,9 @@ pub struct RegisterUserResponseBody {
 pub enum RegisterUserErrorResponse {
     DbError(DbError),
     AlreadyRegistered,
+    AddHeaderError(AddHeaderError),
+    JsonRejection(JsonRejection),
+    CreateAccessTokenError(CreateAccessTokenError),
 }
 
 impl IntoResponse for RegisterUserErrorResponse {
@@ -52,6 +56,20 @@ impl IntoResponse for RegisterUserErrorResponse {
                 }),
             )
                 .into_response(),
+            RegisterUserErrorResponse::AddHeaderError(error) => {
+                create_internal_server_error(std::format!("Add header error: {:?}", error))
+                    .into_response()
+            }
+            RegisterUserErrorResponse::JsonRejection(error) => {
+                create_bad_request_error(error.to_string()).into_response()
+            }
+            RegisterUserErrorResponse::CreateAccessTokenError(error) => {
+                create_internal_server_error(std::format!(
+                    "Can not create an access token: {:?}",
+                    error
+                ))
+                .into_response()
+            }
         }
     }
 }
@@ -61,6 +79,7 @@ enum LoginError {
     DbError(DbError),
     CreateAccessTokenError(CreateAccessTokenError),
     InvalidTokenFormatInDb,
+    AddHeaderError(AddHeaderError),
 }
 
 async fn login_user(
@@ -105,7 +124,9 @@ async fn login_user(
     };
 
     let mut headers = HeaderMap::new();
-    headers.add_auth_headers(token_response);
+    headers
+        .add_auth_headers(token_response)
+        .map_err(LoginError::AddHeaderError)?;
 
     Ok((
         StatusCode::ACCEPTED,
@@ -122,7 +143,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
     body_or_error: Result<Json<RegisterUserRequestBody>, JsonRejection>,
 ) -> Result<(StatusCode, HeaderMap, Json<LoginUserResponseBody>), RegisterUserErrorResponse> {
-    let Json(body) = body_or_error.unwrap(); // TODO validate response
+    let Json(body) = body_or_error.map_err(RegisterUserErrorResponse::JsonRejection)?;
 
     let user_or_error = web_service
         .user_db
@@ -144,7 +165,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
                 last_name: body.data.last_name.clone(),
                 user_id,
             })
-            .expect("TODO");
+            .map_err(RegisterUserErrorResponse::CreateAccessTokenError)?;
 
             let user = OwnedUser {
                 user_id,
@@ -168,7 +189,9 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
                 .map_err(RegisterUserErrorResponse::DbError)?;
 
             let mut headers = HeaderMap::new();
-            headers.add_auth_headers(token_response);
+            headers
+                .add_auth_headers(token_response)
+                .map_err(RegisterUserErrorResponse::AddHeaderError)?;
 
             Ok((
                 StatusCode::CREATED,
@@ -201,6 +224,7 @@ pub enum LoginUserErrorResponse {
     DbError(DbError),
     NotFound,
     InvalidPassword,
+    JsonRejection(JsonRejection),
 }
 
 impl IntoResponse for LoginUserErrorResponse {
@@ -223,6 +247,9 @@ impl IntoResponse for LoginUserErrorResponse {
                 }),
             )
                 .into_response(),
+            LoginUserErrorResponse::JsonRejection(error) => {
+                create_bad_request_error(error.to_string()).into_response()
+            }
         }
     }
 }
@@ -234,7 +261,7 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
     body_or_error: Result<Json<LoginUserDataBody>, JsonRejection>,
 ) -> Result<(StatusCode, HeaderMap, Json<LoginUserResponseBody>), LoginUserErrorResponse> {
-    let Json(body) = body_or_error.unwrap(); // TODO validate response
+    let Json(body) = body_or_error.map_err(LoginUserErrorResponse::JsonRejection)?;
 
     let user_or_error = web_service
         .user_db

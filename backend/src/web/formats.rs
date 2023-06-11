@@ -4,7 +4,7 @@ use time::format_description::FormatItem;
 use time::macros::format_description;
 use time::PrimitiveDateTime;
 
-const DATE_TIME_FORMAT: &[FormatItem<'static>] =
+pub const DATE_TIME_FORMAT: &[FormatItem<'static>] =
     format_description!("[year]-[month]-[day] [hour]:[minute]:[second]");
 
 fn serialize_date<S>(v: &PrimitiveDateTime, serializer: S) -> Result<S::Ok, S::Error>

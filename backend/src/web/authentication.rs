@@ -3,10 +3,13 @@ use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, DigestAccessToken, UserInfo};
 use crate::web::errors::{
-    INTERNAL_SERVER_ERROR_RESPONSE, INVALID_TOKEN_FORMAT_ERROR_MSG, UNAUTHORIZED_ERROR_RESPONSE,
+    create_internal_server_error, INTERNAL_SERVER_ERROR_RESPONSE, INVALID_TOKEN_FORMAT_ERROR_MSG,
+    UNAUTHORIZED_ERROR_RESPONSE,
 };
+use crate::web::formats::DATE_TIME_FORMAT;
 use crate::web_service::{ErrorResponseBody, WebService};
 use axum::extract::{FromRequestParts, State};
+use axum::http::header::InvalidHeaderValue;
 use axum::http::{HeaderMap, HeaderValue, Request};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
@@ -14,6 +17,7 @@ use axum::Json;
 use axum_auth::AuthBearer;
 use hyper::StatusCode;
 use std::ops::Add;
+use time::error::Format;
 use time::{Duration, OffsetDateTime, PrimitiveDateTime};
 
 #[derive(Debug)]
@@ -25,25 +29,31 @@ pub enum AuthenticationError {
     Unauthorised,
 }
 
+#[derive(Debug)]
+pub enum AddHeaderError {
+    InvalidHeaderValue(InvalidHeaderValue),
+    Format(Format),
+}
+
 pub trait AuthHeaders {
-    fn add_auth_headers(&mut self, token: AccessTokenResponse);
+    fn add_auth_headers(&mut self, token: AccessTokenResponse) -> Result<(), AddHeaderError>;
+}
+
+fn date_to_header(date: PrimitiveDateTime) -> Result<HeaderValue, AddHeaderError> {
+    date.format(DATE_TIME_FORMAT)
+        .map_err(AddHeaderError::Format)
+        .and_then(|date| HeaderValue::try_from(date).map_err(AddHeaderError::InvalidHeaderValue))
 }
 
 impl AuthHeaders for HeaderMap {
-    fn add_auth_headers(&mut self, token: AccessTokenResponse) {
+    fn add_auth_headers(&mut self, token: AccessTokenResponse) -> Result<(), AddHeaderError> {
         self.insert(
             "x-auth-token",
-            HeaderValue::try_from(token.token).expect("TODO"),
+            HeaderValue::try_from(token.token).map_err(AddHeaderError::InvalidHeaderValue)?,
         );
-        // TODO choose better serialization format
-        self.insert(
-            "x-auth-token-expires-at",
-            HeaderValue::try_from(token.expires_at.to_string()).expect("TODO"),
-        );
-        self.insert(
-            "x-auth-token-refresh-at",
-            HeaderValue::try_from(token.refresh_at.to_string()).expect("TODO"),
-        );
+        self.insert("x-auth-token-expires-at", date_to_header(token.expires_at)?);
+        self.insert("x-auth-token-refresh-at", date_to_header(token.refresh_at)?);
+        Ok(())
     }
 }
 
@@ -163,7 +173,14 @@ pub async fn check_and_refresh_auth_token<B, UDB: UserDb, PDB: ProjectDb>(
                 let req = Request::from_parts(parts, body);
 
                 let mut response = next.run(req).await;
-                response.headers_mut().add_auth_headers(token_info);
+                response
+                    .headers_mut()
+                    .add_auth_headers(token_info)
+                    .map_err(|error| {
+                        create_internal_server_error(std::format!("Add header error: {:?}", error))
+                    })
+                    .map_err(|error| error.into_response())?;
+
                 Ok(response)
             }
             Err(AuthenticationError::Unauthorised) => {

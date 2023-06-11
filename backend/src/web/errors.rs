@@ -52,6 +52,20 @@ pub fn create_invalid_response(error: String) -> ErrorResponseType {
     )
 }
 
+pub fn create_internal_server_error(error: String) -> ErrorResponseType {
+    (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Json(ErrorResponseBody { code: None, error }),
+    )
+}
+
+pub fn create_bad_request_error(error: String) -> ErrorResponseType {
+    (
+        StatusCode::BAD_REQUEST,
+        Json(ErrorResponseBody { code: None, error }),
+    )
+}
+
 impl IntoResponse for DbError {
     fn into_response(self) -> Response {
         let result = match self {

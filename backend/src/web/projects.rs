@@ -3,6 +3,7 @@ use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
 use crate::utils::tokens::AccessToken;
 use crate::web::errors::{create_invalid_response, UNAUTHORIZED_ERROR_RESPONSE};
+use crate::web::formatts::{date_as_string, string_as_date};
 use crate::web_service::WebService;
 use axum::extract::rejection::{JsonRejection, PathRejection};
 use axum::extract::{Path, State};
@@ -86,7 +87,9 @@ pub struct ProjectResponseData {
     name: String,
     description: String,
     user_id: Uuid,
+    #[serde(serialize_with = "date_as_string", deserialize_with = "string_as_date")]
     created_at: PrimitiveDateTime,
+    #[serde(serialize_with = "date_as_string", deserialize_with = "string_as_date")]
     updated_at: PrimitiveDateTime,
 }
 

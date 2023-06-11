@@ -6,7 +6,7 @@ use crate::utils::salted_hashes::{
 };
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, CreateAccessTokenError, UserInfo};
 use crate::web::authentication::{AddHeaderError, AuthHeaders};
-use crate::web::errors::create_can_not_add_header_error;
+use crate::web::errors::{create_bad_request_error, create_can_not_add_header_error};
 use crate::web_service::{ErrorCode, ErrorResponseBody, WebService};
 use axum::extract::rejection::JsonRejection;
 use axum::http::HeaderMap;
@@ -40,6 +40,7 @@ pub enum RegisterUserErrorResponse {
     DbError(DbError),
     AlreadyRegistered,
     AddHeaderError(AddHeaderError),
+    JsonRejection(JsonRejection),
 }
 
 impl IntoResponse for RegisterUserErrorResponse {
@@ -56,6 +57,9 @@ impl IntoResponse for RegisterUserErrorResponse {
                 .into_response(),
             RegisterUserErrorResponse::AddHeaderError(error) => {
                 create_can_not_add_header_error(error).into_response()
+            }
+            RegisterUserErrorResponse::JsonRejection(error) => {
+                create_bad_request_error(error.to_string()).into_response()
             }
         }
     }
@@ -130,7 +134,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
     body_or_error: Result<Json<RegisterUserRequestBody>, JsonRejection>,
 ) -> Result<(StatusCode, HeaderMap, Json<LoginUserResponseBody>), RegisterUserErrorResponse> {
-    let Json(body) = body_or_error.unwrap(); // TODO validate response
+    let Json(body) = body_or_error.map_err(RegisterUserErrorResponse::JsonRejection)?;
 
     let user_or_error = web_service
         .user_db

@@ -293,9 +293,9 @@ pub mod tests {
         let router = create_test_router().await;
 
         let email = Uuid::new_v4().to_string();
-        let password = std::format!("password:{:?}", Uuid::new_v4().to_string());
-        let first_name = std::format!("fn:{:?}", Uuid::new_v4().to_string());
-        let last_name = std::format!("ln:{:?}", Uuid::new_v4().to_string());
+        let password = std::format!("password:{:?}", String::new_random(124));
+        let first_name = std::format!("fn:{:?}", String::new_random(124));
+        let last_name = std::format!("ln:{:?}", String::new_random(124));
         let language_code = "ru-ru".to_owned();
 
         let uri = "/api/user";
@@ -368,7 +368,7 @@ pub mod tests {
     async fn should_reject_registration_with_same_email_but_different_password() {
         let (user_fields, _) = register_new_user(None).await;
 
-        let password = std::format!("password:{:?}", Uuid::new_v4().to_string());
+        let password = std::format!("password:{:?}", String::new_random(124));
 
         let user_fields = RegisterUserData {
             password,
@@ -442,7 +442,7 @@ pub mod tests {
     #[tokio::test]
     async fn login_should_fail_for_non_existing_email() {
         let email = Uuid::new_v4().to_string();
-        let password = std::format!("password:{:?}", Uuid::new_v4().to_string());
+        let password = std::format!("password:{:?}", String::new_random(124));
 
         let response = login_with_email_and_password(email, password).await;
 
@@ -463,7 +463,7 @@ pub mod tests {
         assert_eq!(response.status(), 201);
 
         let email = request.email;
-        let password = std::format!("password:{:?}", Uuid::new_v4().to_string());
+        let password = std::format!("password:{:?}", String::new_random(124));
 
         let response = login_with_email_and_password(email, password).await;
 

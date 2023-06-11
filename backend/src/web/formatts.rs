@@ -7,7 +7,7 @@ use time::PrimitiveDateTime;
 const DATE_TIME_FORMAT: &[FormatItem<'static>] =
     format_description!("[year]-[month]-[day] [hour]:[minute]:[second]");
 
-pub fn serialize_date<S>(v: &PrimitiveDateTime, serializer: S) -> Result<S::Ok, S::Error>
+fn serialize_date<S>(v: &PrimitiveDateTime, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
@@ -18,7 +18,7 @@ where
     serializer.serialize_str(str.as_str())
 }
 
-pub fn deserialize_date<'de, D>(deserializer: D) -> Result<PrimitiveDateTime, D::Error>
+fn deserialize_date<'de, D>(deserializer: D) -> Result<PrimitiveDateTime, D::Error>
 where
     D: Deserializer<'de>,
 {

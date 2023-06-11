@@ -3,7 +3,7 @@ use crate::models::project::ProjectDb;
 use crate::models::user::UserDb;
 use crate::utils::tokens::AccessToken;
 use crate::web::errors::{create_invalid_response, UNAUTHORIZED_ERROR_RESPONSE};
-use crate::web::formatts::JsonDateTime;
+use crate::web::formats::JsonDateTime;
 use crate::web_service::WebService;
 use axum::extract::rejection::{JsonRejection, PathRejection};
 use axum::extract::{Path, State};

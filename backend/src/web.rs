@@ -1,5 +1,5 @@
 pub mod authentication;
 pub mod errors;
-mod formatts;
+mod formats;
 pub mod projects;
 pub mod users;

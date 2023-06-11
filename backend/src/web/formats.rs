@@ -11,8 +11,7 @@ fn serialize_date<S>(v: &PrimitiveDateTime, serializer: S) -> Result<S::Ok, S::E
 where
     S: Serializer,
 {
-    v
-        .format(DATE_TIME_FORMAT)
+    v.format(DATE_TIME_FORMAT)
         .map_err(|err| Error::custom(std::format!("failed to serialize date: {err}")))
         .and_then(|str| serializer.serialize_str(str.as_str()))
 }

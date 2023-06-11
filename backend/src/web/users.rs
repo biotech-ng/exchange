@@ -224,6 +224,7 @@ pub enum LoginUserErrorResponse {
     DbError(DbError),
     NotFound,
     InvalidPassword,
+    JsonRejection(JsonRejection),
 }
 
 impl IntoResponse for LoginUserErrorResponse {
@@ -246,6 +247,9 @@ impl IntoResponse for LoginUserErrorResponse {
                 }),
             )
                 .into_response(),
+            LoginUserErrorResponse::JsonRejection(error) => {
+                create_bad_request_error(error.to_string()).into_response()
+            }
         }
     }
 }
@@ -257,7 +261,7 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
     State(web_service): State<WebService<UDB, PDB>>,
     body_or_error: Result<Json<LoginUserDataBody>, JsonRejection>,
 ) -> Result<(StatusCode, HeaderMap, Json<LoginUserResponseBody>), LoginUserErrorResponse> {
-    let Json(body) = body_or_error.unwrap(); // TODO validate response
+    let Json(body) = body_or_error.map_err(LoginUserErrorResponse::JsonRejection)?;
 
     let user_or_error = web_service
         .user_db

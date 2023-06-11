@@ -5,7 +5,8 @@ use crate::utils::salted_hashes::{
     generate_b64_hash_for_text_and_salt, generate_hash_and_salt_for_text,
 };
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, CreateAccessTokenError, UserInfo};
-use crate::web::authentication::AuthHeaders;
+use crate::web::authentication::{AddHeaderError, AuthHeaders};
+use crate::web::errors::create_can_not_add_header_error;
 use crate::web_service::{ErrorCode, ErrorResponseBody, WebService};
 use axum::extract::rejection::JsonRejection;
 use axum::http::HeaderMap;
@@ -38,6 +39,7 @@ pub struct RegisterUserResponseBody {
 pub enum RegisterUserErrorResponse {
     DbError(DbError),
     AlreadyRegistered,
+    AddHeaderError(AddHeaderError),
 }
 
 impl IntoResponse for RegisterUserErrorResponse {
@@ -52,6 +54,9 @@ impl IntoResponse for RegisterUserErrorResponse {
                 }),
             )
                 .into_response(),
+            RegisterUserErrorResponse::AddHeaderError(error) => {
+                create_can_not_add_header_error(error).into_response()
+            }
         }
     }
 }
@@ -61,6 +66,7 @@ enum LoginError {
     DbError(DbError),
     CreateAccessTokenError(CreateAccessTokenError),
     InvalidTokenFormatInDb,
+    AddHeaderError(AddHeaderError),
 }
 
 async fn login_user(
@@ -105,7 +111,9 @@ async fn login_user(
     };
 
     let mut headers = HeaderMap::new();
-    headers.add_auth_headers(token_response);
+    headers
+        .add_auth_headers(token_response)
+        .map_err(LoginError::AddHeaderError)?;
 
     Ok((
         StatusCode::ACCEPTED,
@@ -168,7 +176,9 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
                 .map_err(RegisterUserErrorResponse::DbError)?;
 
             let mut headers = HeaderMap::new();
-            headers.add_auth_headers(token_response);
+            headers
+                .add_auth_headers(token_response)
+                .map_err(RegisterUserErrorResponse::AddHeaderError)?;
 
             Ok((
                 StatusCode::CREATED,

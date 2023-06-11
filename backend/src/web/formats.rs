@@ -1,17 +1,15 @@
 use serde::ser::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use time::format_description::FormatItem;
-use time::macros::format_description;
-use time::PrimitiveDateTime;
+use time::format_description::well_known::Iso8601;
+use time::{OffsetDateTime, PrimitiveDateTime};
 
-pub const DATE_TIME_FORMAT: &[FormatItem<'static>] =
-    format_description!("[year]-[month]-[day] [hour]:[minute]:[second]");
+pub const DATE_TIME_FORMAT: Iso8601 = Iso8601::DEFAULT;
 
-fn serialize_date<S>(v: &PrimitiveDateTime, serializer: S) -> Result<S::Ok, S::Error>
+fn serialize_date<S>(v: &OffsetDateTime, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    v.format(DATE_TIME_FORMAT)
+    v.format(&DATE_TIME_FORMAT)
         .map_err(|err| Error::custom(std::format!("failed to serialize date: {err}")))
         .and_then(|str| serializer.serialize_str(str.as_str()))
 }
@@ -30,12 +28,14 @@ where
 
 #[derive(Debug)]
 pub struct JsonDateTime {
-    value: PrimitiveDateTime,
+    value: OffsetDateTime,
 }
 
 impl From<PrimitiveDateTime> for JsonDateTime {
     fn from(value: PrimitiveDateTime) -> Self {
-        JsonDateTime { value }
+        JsonDateTime {
+            value: value.assume_utc(),
+        }
     }
 }
 
@@ -44,7 +44,7 @@ impl<'de> Deserialize<'de> for JsonDateTime {
     where
         D: Deserializer<'de>,
     {
-        deserialize_date(deserializer).map(|x| JsonDateTime { value: x })
+        deserialize_date(deserializer).map(Into::into)
     }
 }
 
@@ -54,5 +54,22 @@ impl Serialize for JsonDateTime {
         S: Serializer,
     {
         serialize_date(&self.value, serializer)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use time::OffsetDateTime;
+
+    #[test]
+    fn test_serialize_deserialize_date() {
+        let now = OffsetDateTime::now_utc();
+        let serialized = now.format(&DATE_TIME_FORMAT).expect("valid format");
+
+        let deserialized_now =
+            OffsetDateTime::parse(serialized.as_str(), &DATE_TIME_FORMAT).expect("valid date");
+
+        assert_eq!(deserialized_now, now);
     }
 }

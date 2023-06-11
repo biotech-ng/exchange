@@ -18,7 +18,7 @@ use axum_auth::AuthBearer;
 use hyper::StatusCode;
 use std::ops::Add;
 use time::error::Format;
-use time::{Duration, OffsetDateTime, PrimitiveDateTime};
+use time::{Duration, OffsetDateTime};
 
 #[derive(Debug)]
 pub enum AuthenticationError {
@@ -39,9 +39,10 @@ pub trait AuthHeaders {
     fn add_auth_headers(&mut self, token: AccessTokenResponse) -> Result<(), AddHeaderError>;
 }
 
-fn date_to_header(date: PrimitiveDateTime) -> Result<HeaderValue, AddHeaderError> {
-    date.format(DATE_TIME_FORMAT)
-        .map_err(AddHeaderError::Format)
+fn date_to_header(date: OffsetDateTime) -> Result<HeaderValue, AddHeaderError> {
+    let str = date.format(&DATE_TIME_FORMAT);
+
+    str.map_err(AddHeaderError::Format)
         .and_then(|date| HeaderValue::try_from(date).map_err(AddHeaderError::InvalidHeaderValue))
 }
 
@@ -66,7 +67,6 @@ async fn authenticate_with_token(
     let user_info = access_token.get_user().clone();
 
     let now = OffsetDateTime::now_utc();
-    let now = PrimitiveDateTime::new(now.date(), now.time());
 
     // When token is fresh
     if access_token.get_expires_at() > &now {
@@ -87,10 +87,6 @@ async fn authenticate_with_token(
         // In case of token refresh race condition, check a previous token
         if let Some(previous_access_token) = user.previous_access_token {
             let two_minutes_before_now = now.add(-Duration::minutes(1));
-            let two_minutes_before_now = PrimitiveDateTime::new(
-                two_minutes_before_now.date(),
-                two_minutes_before_now.time(),
-            );
 
             if previous_access_token == token.as_ref()
                 && access_token.get_expires_at() > &two_minutes_before_now

@@ -4,7 +4,7 @@ use base64::{DecodeError, Engine};
 use serde::{Deserialize, Serialize};
 use std::ops::Add;
 use std::string::FromUtf8Error;
-use time::{Duration, OffsetDateTime, PrimitiveDateTime};
+use time::{Duration, OffsetDateTime};
 use uuid::Uuid;
 
 const BASE_64: GeneralPurpose = general_purpose::STANDARD;
@@ -34,8 +34,8 @@ pub struct UserInfo {
 #[derive(Debug, Clone)]
 pub struct AccessTokenResponse {
     pub token: String,
-    pub expires_at: PrimitiveDateTime,
-    pub refresh_at: PrimitiveDateTime,
+    pub expires_at: OffsetDateTime,
+    pub refresh_at: OffsetDateTime,
 }
 
 impl AccessTokenResponse {
@@ -65,8 +65,8 @@ impl TryFrom<DigestAccessToken> for AccessTokenResponse {
 #[derive(Serialize, Deserialize)]
 pub struct AccessToken {
     user: UserInfo,
-    expires_at: PrimitiveDateTime,
-    refresh_at: PrimitiveDateTime,
+    expires_at: OffsetDateTime,
+    refresh_at: OffsetDateTime,
 }
 
 impl AccessToken {
@@ -82,10 +82,8 @@ impl AccessToken {
 
     fn new_with_user_and_duration(user: UserInfo, duration: Duration) -> Self {
         let expires_at = OffsetDateTime::now_utc().add(duration);
-        let expires_at = PrimitiveDateTime::new(expires_at.date(), expires_at.time());
 
         let refresh_at: OffsetDateTime = OffsetDateTime::now_utc().add(duration * 2);
-        let refresh_at = PrimitiveDateTime::new(refresh_at.date(), refresh_at.time());
 
         Self {
             user,
@@ -130,11 +128,11 @@ impl AccessToken {
         &self.user
     }
 
-    pub fn get_expires_at(&self) -> &PrimitiveDateTime {
+    pub fn get_expires_at(&self) -> &OffsetDateTime {
         &self.expires_at
     }
 
-    pub fn get_refresh_at(&self) -> &PrimitiveDateTime {
+    pub fn get_refresh_at(&self) -> &OffsetDateTime {
         &self.refresh_at
     }
 }
@@ -143,8 +141,8 @@ impl AccessToken {
 pub struct DigestAccessToken {
     digest: String,
     token: String,
-    expires_at: PrimitiveDateTime,
-    refresh_at: PrimitiveDateTime,
+    expires_at: OffsetDateTime,
+    refresh_at: OffsetDateTime,
 }
 
 impl TryFrom<AccessToken> for DigestAccessToken {
@@ -196,11 +194,9 @@ pub mod tests {
     pub fn make_expired_token(user: UserInfo, minus_duration: Duration) -> AccessTokenResponse {
         // past
         let expires_at = OffsetDateTime::now_utc().add(-minus_duration);
-        let expires_at = PrimitiveDateTime::new(expires_at.date(), expires_at.time());
 
         // distant future
         let refresh_at: OffsetDateTime = OffsetDateTime::now_utc().add(Duration::days(1000));
-        let refresh_at = PrimitiveDateTime::new(refresh_at.date(), refresh_at.time());
 
         let access_token = AccessToken {
             user,

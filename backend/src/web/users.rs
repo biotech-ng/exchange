@@ -57,13 +57,18 @@ impl IntoResponse for RegisterUserErrorResponse {
             )
                 .into_response(),
             RegisterUserErrorResponse::AddHeaderError(error) => {
-                create_internal_server_error(std::format!("Add header error: {:?}", error)).into_response()
-            },
+                create_internal_server_error(std::format!("Add header error: {:?}", error))
+                    .into_response()
+            }
             RegisterUserErrorResponse::JsonRejection(error) => {
                 create_bad_request_error(error.to_string()).into_response()
-            },
+            }
             RegisterUserErrorResponse::CreateAccessTokenError(error) => {
-                create_internal_server_error(std::format!("Can not create an access token: {:?}", error)).into_response()
+                create_internal_server_error(std::format!(
+                    "Can not create an access token: {:?}",
+                    error
+                ))
+                .into_response()
             }
         }
     }

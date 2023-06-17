@@ -15,6 +15,7 @@ use axum::{extract::State, http::StatusCode, Json};
 use database::users::User;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use email_address::*;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterUserData {
@@ -37,6 +38,7 @@ pub struct RegisterUserResponseBody {
 
 #[derive(Debug)]
 pub enum RegisterUserErrorResponse {
+    InvalidEmailFormat,
     DbError(DbError),
     AlreadyRegistered,
     AddHeaderError(AddHeaderError),
@@ -53,6 +55,14 @@ impl IntoResponse for RegisterUserErrorResponse {
                 Json(ErrorResponseBody {
                     code: Some(ErrorCode::AlreadyRegistered),
                     error: "user for given email already exists".to_owned(),
+                }),
+            )
+                .into_response(),
+            RegisterUserErrorResponse::InvalidEmailFormat => (
+                StatusCode::NOT_ACCEPTABLE,
+                Json(ErrorResponseBody {
+                    code: Some(ErrorCode::InvalidEmailFormat),
+                    error: "your email isn`t valid".to_owned(),
                 }),
             )
                 .into_response(),
@@ -167,6 +177,10 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
             })
             .map_err(RegisterUserErrorResponse::CreateAccessTokenError)?;
 
+            if EmailAddress::is_valid(&body.data.email.clone()) == false {
+                return Err(RegisterUserErrorResponse::InvalidEmailFormat);
+            }
+
             let user = OwnedUser {
                 user_id,
                 alias: None,
@@ -276,6 +290,7 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
         Err(db_error) => Err(LoginUserErrorResponse::DbError(db_error)),
     }
 }
+
 
 #[cfg(test)]
 pub mod tests {

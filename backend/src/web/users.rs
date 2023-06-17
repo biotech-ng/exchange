@@ -13,9 +13,9 @@ use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::StatusCode, Json};
 use database::users::User;
+use email_address::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use email_address::*;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterUserData {
@@ -177,7 +177,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
             })
             .map_err(RegisterUserErrorResponse::CreateAccessTokenError)?;
 
-            if EmailAddress::is_valid(&body.data.email.clone()) == false {
+            if EmailAddress::is_valid(&body.data.email) == false {
                 return Err(RegisterUserErrorResponse::InvalidEmailFormat);
             }
 
@@ -290,7 +290,6 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
         Err(db_error) => Err(LoginUserErrorResponse::DbError(db_error)),
     }
 }
-
 
 #[cfg(test)]
 pub mod tests {

@@ -13,7 +13,7 @@ use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::StatusCode, Json};
 use database::users::User;
-use email_address::*;
+use email_address::EmailAddress;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -155,6 +155,10 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
 ) -> Result<(StatusCode, HeaderMap, Json<LoginUserResponseBody>), RegisterUserErrorResponse> {
     let Json(body) = body_or_error.map_err(RegisterUserErrorResponse::JsonRejection)?;
 
+    if EmailAddress::is_valid(&body.data.email) == false {
+        return Err(RegisterUserErrorResponse::InvalidEmailFormat);
+    }
+
     let user_or_error = web_service
         .user_db
         .get_user_by_email(&body.data.email)
@@ -176,10 +180,6 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
                 user_id,
             })
             .map_err(RegisterUserErrorResponse::CreateAccessTokenError)?;
-
-            if EmailAddress::is_valid(&body.data.email) == false {
-                return Err(RegisterUserErrorResponse::InvalidEmailFormat);
-            }
 
             let user = OwnedUser {
                 user_id,

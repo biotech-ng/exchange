@@ -446,13 +446,12 @@ pub mod tests {
 
         let error_response_body = deserialize_response_body::<ErrorResponseBody>(response).await;
 
+        assert_eq!(error_response_body.error, "your email isn`t valid");
         assert_eq!(
-            error_response_body.error,
-            "your email isn`t valid"
+            error_response_body.code,
+            Some(ErrorCode::InvalidEmailFormat)
         );
-        assert_eq!(error_response_body.code, Some(ErrorCode::InvalidEmailFormat));
     }
-
 
     #[tokio::test]
     async fn should_login_when_registering_with_same_email_and_password() {

@@ -155,7 +155,7 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
 ) -> Result<(StatusCode, HeaderMap, Json<LoginUserResponseBody>), RegisterUserErrorResponse> {
     let Json(body) = body_or_error.map_err(RegisterUserErrorResponse::JsonRejection)?;
 
-    if EmailAddress::is_valid(&body.data.email) == false {
+    if !EmailAddress::is_valid(&body.data.email){
         return Err(RegisterUserErrorResponse::InvalidEmailFormat);
     }
 

@@ -333,7 +333,7 @@ pub mod tests {
     ) {
         let router = create_test_router().await;
 
-        let email = Uuid::new_v4().to_string();
+        let email = std::format!("{:?}@test.test", String::new_random(32));
         let password = std::format!("password:{:?}", String::new_random(124));
         let first_name = std::format!("fn:{:?}", String::new_random(124));
         let last_name = std::format!("ln:{:?}", String::new_random(124));
@@ -428,6 +428,31 @@ pub mod tests {
         );
         assert_eq!(error_response_body.code, Some(ErrorCode::AlreadyRegistered));
     }
+
+    #[tokio::test]
+    async fn should_reject_registration_with_wrong_email() {
+        let (user_fields, _) = register_new_user(None).await;
+
+        let email = std::format!("{:?}", String::new_random(40));
+
+        let user_fields = RegisterUserData {
+            email,
+            ..user_fields
+        };
+
+        let (_, response) = register_new_user(Some(user_fields)).await;
+
+        assert_eq!(response.status(), 406);
+
+        let error_response_body = deserialize_response_body::<ErrorResponseBody>(response).await;
+
+        assert_eq!(
+            error_response_body.error,
+            "your email isn`t valid"
+        );
+        assert_eq!(error_response_body.code, Some(ErrorCode::InvalidEmailFormat));
+    }
+
 
     #[tokio::test]
     async fn should_login_when_registering_with_same_email_and_password() {

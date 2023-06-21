@@ -441,7 +441,7 @@ pub mod tests {
     }
 
     #[tokio::test]
-    async fn should_reject_registration_with_wrong_email() {
+    async fn should_reject_registration_with_wrong_email_format() {
         let (user_fields, _) = register_new_user(None).await;
 
         let email = std::format!("{:?}", String::new_random(40));

@@ -221,6 +221,7 @@ pub struct LoginUserResponseBody {
 
 #[derive(Debug)]
 pub enum LoginUserErrorResponse {
+    InvalidEmailFormat,
     DbError(DbError),
     NotFound,
     InvalidPassword,
@@ -236,6 +237,14 @@ impl IntoResponse for LoginUserErrorResponse {
                 Json(ErrorResponseBody {
                     code: None,
                     error: "user for a given email is not registered".to_owned(),
+                }),
+            )
+                .into_response(),
+            LoginUserErrorResponse::InvalidEmailFormat => (
+                StatusCode::NOT_ACCEPTABLE,
+                Json(ErrorResponseBody {
+                    code: Some(ErrorCode::InvalidEmailFormat),
+                    error: "your email isn`t valid".to_owned(),
                 }),
             )
                 .into_response(),
@@ -263,6 +272,9 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
 ) -> Result<(StatusCode, HeaderMap, Json<LoginUserResponseBody>), LoginUserErrorResponse> {
     let Json(body) = body_or_error.map_err(LoginUserErrorResponse::JsonRejection)?;
 
+    if !EmailAddress::is_valid(&body.data.email) {
+        return Err(LoginUserErrorResponse::InvalidEmailFormat);
+    }
     let user_or_error = web_service
         .user_db
         .get_user_by_email(&body.data.email)
@@ -294,7 +306,6 @@ pub mod tests {
     use axum::Router;
     use database::utils::random_samples::RandomSample;
     use http_body::combinators::UnsyncBoxBody;
-    use uuid::Uuid;
 
     pub async fn create_test_router() -> Router {
         WebService::new_test().await.into_router()
@@ -416,6 +427,33 @@ pub mod tests {
     }
 
     #[tokio::test]
+<<<<<<< Updated upstream
+=======
+    async fn should_reject_registration_with_wrong_email_format() {
+        let (user_fields, _) = register_new_user(None).await;
+
+        let email = std::format!("{:?}", String::new_random(40));
+
+        let user_fields = RegisterUserData {
+            email,
+            ..user_fields
+        };
+
+        let (_, response) = register_new_user(Some(user_fields)).await;
+
+        assert_eq!(response.status(), 406);
+
+        let error_response_body = deserialize_response_body::<ErrorResponseBody>(response).await;
+
+        assert_eq!(error_response_body.error, "your email isn`t valid");
+        assert_eq!(
+            error_response_body.code,
+            Some(ErrorCode::InvalidEmailFormat)
+        );
+    }
+
+    #[tokio::test]
+>>>>>>> Stashed changes
     async fn should_login_when_registering_with_same_email_and_password() {
         let (request, _) = register_new_user(None).await;
 
@@ -468,7 +506,7 @@ pub mod tests {
 
     #[tokio::test]
     async fn login_should_fail_for_non_existing_email() {
-        let email = Uuid::new_v4().to_string();
+        let email = std::format!("{:?}@test.test", String::new_random(32));
         let password = std::format!("password:{:?}", String::new_random(124));
 
         let response = login_with_email_and_password(email, password).await;
@@ -480,6 +518,24 @@ pub mod tests {
         assert_eq!(
             response_body.error,
             "user for a given email is not registered"
+        );
+    }
+
+    #[tokio::test]
+    async fn login_should_fail_for_wrong_email_format() {
+        let email = std::format!("{:?}", String::new_random(32));
+        let password = std::format!("password:{:?}", String::new_random(124));
+
+        let response = login_with_email_and_password(email, password).await;
+
+        assert_eq!(response.status(), 406);
+
+        let error_response_body = deserialize_response_body::<ErrorResponseBody>(response).await;
+
+        assert_eq!(error_response_body.error, "your email isn`t valid");
+        assert_eq!(
+            error_response_body.code,
+            Some(ErrorCode::InvalidEmailFormat)
         );
     }
 

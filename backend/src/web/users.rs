@@ -6,6 +6,7 @@ use crate::utils::salted_hashes::{
 };
 use crate::utils::tokens::{AccessToken, AccessTokenResponse, CreateAccessTokenError, UserInfo};
 use crate::web::authentication::{AddHeaderError, AuthHeaders};
+use crate::web::errors;
 use crate::web::errors::{create_bad_request_error, create_internal_server_error};
 use crate::web_service::{ErrorCode, ErrorResponseBody, WebService};
 use axum::extract::rejection::JsonRejection;
@@ -17,7 +18,6 @@ use email_address::EmailAddress;
 use errors::INVALID_MAIL_MSG;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::web::errors;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterUserData {

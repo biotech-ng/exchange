@@ -427,8 +427,6 @@ pub mod tests {
     }
 
     #[tokio::test]
-<<<<<<< Updated upstream
-=======
     async fn should_reject_registration_with_wrong_email_format() {
         let (user_fields, _) = register_new_user(None).await;
 
@@ -453,7 +451,6 @@ pub mod tests {
     }
 
     #[tokio::test]
->>>>>>> Stashed changes
     async fn should_login_when_registering_with_same_email_and_password() {
         let (request, _) = register_new_user(None).await;
 

@@ -165,8 +165,6 @@ pub mod tests {
     use super::*;
     use crate::pg_pool;
     use crate::utils::random_samples::RandomSample;
-    use rand::distributions::Alphanumeric;
-    use rand::{thread_rng, Rng};
 
     type TestUserInputs = UserInput<
         String,
@@ -188,7 +186,7 @@ pub mod tests {
         let alias = Some(format!("vova:{}", String::new_random(22)));
         let first_name = Some("volodymyr".to_owned());
         let last_name = Some("gorbenko".to_owned());
-        let email = format!("em:{}", Uuid::new_v4());
+        let email = format!("em:{:?}@test.test", String::new_random(32));
         let password_salt = String::new_random(22);
         let password_sha512 = format!("ph:{}", String::new_random(22));
         let access_token = String::new_random(1025);

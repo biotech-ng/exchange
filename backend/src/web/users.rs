@@ -38,10 +38,10 @@ pub struct RegisterUserResponseBody {
 
 #[derive(Debug)]
 pub enum RegisterUserErrorResponse {
-    InvalidEmailFormat,
     DbError(DbError),
     AlreadyRegistered,
     AddHeaderError(AddHeaderError),
+    InvalidEmailFormat,
     JsonRejection(JsonRejection),
     CreateAccessTokenError(CreateAccessTokenError),
 }
@@ -235,9 +235,9 @@ pub struct LoginUserResponseBody {
 
 #[derive(Debug)]
 pub enum LoginUserErrorResponse {
-    InvalidEmailFormat,
     DbError(DbError),
     NotFound,
+    InvalidEmailFormat,
     InvalidPassword,
     JsonRejection(JsonRejection),
 }

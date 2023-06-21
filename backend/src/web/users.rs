@@ -13,6 +13,7 @@ use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::StatusCode, Json};
 use database::users::User;
+use email_address::EmailAddress;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -37,6 +38,7 @@ pub struct RegisterUserResponseBody {
 
 #[derive(Debug)]
 pub enum RegisterUserErrorResponse {
+    InvalidEmailFormat,
     DbError(DbError),
     AlreadyRegistered,
     AddHeaderError(AddHeaderError),
@@ -53,6 +55,14 @@ impl IntoResponse for RegisterUserErrorResponse {
                 Json(ErrorResponseBody {
                     code: Some(ErrorCode::AlreadyRegistered),
                     error: "user for given email already exists".to_owned(),
+                }),
+            )
+                .into_response(),
+            RegisterUserErrorResponse::InvalidEmailFormat => (
+                StatusCode::NOT_ACCEPTABLE,
+                Json(ErrorResponseBody {
+                    code: Some(ErrorCode::InvalidEmailFormat),
+                    error: "your email isn`t valid".to_owned(),
                 }),
             )
                 .into_response(),
@@ -144,6 +154,10 @@ pub async fn post<UDB: UserDb, PDB: ProjectDb>(
     body_or_error: Result<Json<RegisterUserRequestBody>, JsonRejection>,
 ) -> Result<(StatusCode, HeaderMap, Json<LoginUserResponseBody>), RegisterUserErrorResponse> {
     let Json(body) = body_or_error.map_err(RegisterUserErrorResponse::JsonRejection)?;
+
+    if !EmailAddress::is_valid(&body.data.email) {
+        return Err(RegisterUserErrorResponse::InvalidEmailFormat);
+    }
 
     let user_or_error = web_service
         .user_db
@@ -330,7 +344,7 @@ pub mod tests {
     ) {
         let router = create_test_router().await;
 
-        let email = Uuid::new_v4().to_string();
+        let email = std::format!("{:?}@test.test", String::new_random(32));
         let password = std::format!("password:{:?}", String::new_random(124));
         let first_name = std::format!("fn:{:?}", String::new_random(124));
         let last_name = std::format!("ln:{:?}", String::new_random(124));
@@ -427,7 +441,7 @@ pub mod tests {
     }
 
     #[tokio::test]
-    async fn should_reject_registration_with_wrong_email_format() {
+    async fn should_reject_registration_with_wrong_email() {
         let (user_fields, _) = register_new_user(None).await;
 
         let email = std::format!("{:?}", String::new_random(40));

@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub enum ErrorCode {
+    InvalidEmailFormat,
     AlreadyRegistered,
     InvalidInput,
 }

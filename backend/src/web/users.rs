@@ -14,8 +14,10 @@ use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::StatusCode, Json};
 use database::users::User;
 use email_address::EmailAddress;
+use errors::INVALID_MAIL_MSG;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use crate::web::errors;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterUserData {
@@ -62,7 +64,7 @@ impl IntoResponse for RegisterUserErrorResponse {
                 StatusCode::NOT_ACCEPTABLE,
                 Json(ErrorResponseBody {
                     code: Some(ErrorCode::InvalidEmailFormat),
-                    error: "your email isn`t valid".to_owned(),
+                    error: INVALID_MAIL_MSG.into(),
                 }),
             )
                 .into_response(),
@@ -258,7 +260,7 @@ impl IntoResponse for LoginUserErrorResponse {
                 StatusCode::NOT_ACCEPTABLE,
                 Json(ErrorResponseBody {
                     code: Some(ErrorCode::InvalidEmailFormat),
-                    error: "your email isn`t valid".to_owned(),
+                    error: INVALID_MAIL_MSG.into(),
                 }),
             )
                 .into_response(),
@@ -289,6 +291,7 @@ pub async fn login<UDB: UserDb, PDB: ProjectDb>(
     if !EmailAddress::is_valid(&body.data.email) {
         return Err(LoginUserErrorResponse::InvalidEmailFormat);
     }
+
     let user_or_error = web_service
         .user_db
         .get_user_by_email(&body.data.email)

@@ -5,6 +5,7 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use lazy_static::lazy_static;
 
+pub const INVALID_MAIL_MSG: &str ="your email isn`t valid";
 pub const INTERNAL_SERVER_ERROR_MSG: &str = "Internal server error";
 pub const SERVICE_UNAVAILABLE_MSG: &str = "Service unavailable";
 const NOT_FOUND_ERROR_MSG: &str = "Not found";

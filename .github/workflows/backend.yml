@@ -48,11 +48,11 @@ jobs:
             working-directory: ./database
             run: sqlx migrate run
             
-          - name: Build project
-            working-directory: ./backendок
+          - name: Backend build project
+            working-directory: ./backend
             run: cargo build
             
-          - name: Run cargo tests
+          - name: Backend run cargo tests
             env:
               DATABASE_URL: postgres://postgres:postgres@127.0.0.1/postgres
             working-directory: ./backend

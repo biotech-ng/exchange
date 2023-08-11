@@ -1,0 +1,47 @@
+on: [push, pull_request]
+
+name: Backend
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+    test:
+        name: Test postgres
+        runs-on: ubuntu-latest
+        services:
+          postgres:
+            image: postgres
+            env:
+              POSTGRES_PASSWORD: postgres
+              POSTGRES_USER: postgres
+            ports:
+              - 5432:5432
+            options: >-
+              --health-cmd pg_isready
+              --health-interval 10s
+              --health-timeout 5s
+              --health-retries 20
+
+        steps:
+          - name: Checkout sources
+            uses: actions/checkout@v2
+
+          - name: Install stable toolchain
+            uses: actions-rs/toolchain@v1
+            with:
+              profile: minimal
+              toolchain: stable
+              override: true
+
+          - name: Test postgres connection
+            run: psql postgres://postgres:postgres@localhost:5432/postgres -c 'SELECT 1;'
+
+          - name: Cargo test
+            uses: actions-rs/cargo@v1
+            with:
+              command: test
+              args: --verbose
+            env:
+              POSTGRES_USER: postgres
+              POSTGRES_PASSWORD: postgres

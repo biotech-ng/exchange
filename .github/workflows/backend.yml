@@ -7,48 +7,49 @@ env:
 
 jobs:
     test:
-        name: Test postgres
+        name: Backend Test postgres
         runs-on: ubuntu-latest
         services:
           postgres:
             image: postgres
             env:
-              POSTGRES_PASSWORD: postgres
               POSTGRES_USER: postgres
+              POSTGRES_PASSWORD: postgres
+              POSTGRES_DB: postgres
             ports:
               - 5432:5432
             options: >-
               --health-cmd pg_isready
-              --health-interval 20s
-              --health-timeout 15s
-              --health-retries 120
+              --health-interval 10s
+              --health-timeout 5s
+              --health-retries 5
 
         steps:
-          - name: Checkout sources
+          - name: Backend Checkout sources
             uses: actions/checkout@v2
 
-          - name: Install stable toolchain
+          - name: Backend Install stable toolchain
             uses: actions-rs/toolchain@v1
             with:
               profile: minimal
               toolchain: stable
               override: true
 
-          - name: Test postgres connection
+          - name: Backend test postgres connection
             run: psql postgres://postgres:postgres@localhost:5432/postgres -c 'SELECT 1;'
 
-          - name: Install dependencies and set up database
+          - name: Backend install dependencies and set up database
             run: |
               cargo install sqlx-cli
 
-          - name: Run migrations
+          - name: Backend run migrations
             env:
               DATABASE_URL: postgres://postgres:postgres@127.0.0.1/postgres
-            working-directory: ./backend
+            working-directory: ./database
             run: sqlx migrate run
             
           - name: Build project
-            working-directory: ./backend
+            working-directory: ./backendок
             run: cargo build
             
           - name: Run cargo tests

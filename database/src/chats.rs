@@ -120,7 +120,7 @@ pub async fn get_chat_member(pool: &PgPool, id: Uuid) -> Result<ChatMember, sqlx
 pub struct ChatMessage {
     pub id: Uuid,
     pub chat_id: Uuid,
-    pub sender: String,
+    pub sender_id: Uuid,
     pub message: String,
     pub parent_id: Option<Uuid>,
     pub created_at: PrimitiveDateTime,
@@ -131,19 +131,19 @@ pub struct ChatMessage {
 pub async fn insert_chat_message(
     pool: &PgPool,
     chat_id: Uuid,
-    sender: impl AsRef<str>,
+    sender_id: Uuid,
     message: impl AsRef<str>,
     parent_id: Option<Uuid>,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
             r#"
-                INSERT INTO chat_messages ( id, chat_id, sender, message, parent_id, created_at, updated_at )
+                INSERT INTO chat_messages ( id, chat_id, sender_id, message, parent_id, created_at, updated_at )
                 SELECT $1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
                 RETURNING id
             "#,
             Uuid::new_v4(),
             chat_id,
-            sender.as_ref(),
+            sender_id,
             message.as_ref(),
             parent_id,
         )
@@ -156,7 +156,7 @@ pub async fn get_chat_message(pool: &PgPool, id: Uuid) -> Result<ChatMessage, sq
     sqlx::query_as!(
             ChatMessage,
             r#"
-                SELECT id, chat_id, sender, message, parent_id, created_at, updated_at, deleted_at FROM chat_messages
+                SELECT id, chat_id, sender_id, message, parent_id, created_at, updated_at, deleted_at FROM chat_messages
                 WHERE id = $1
             "#,
             id
@@ -250,11 +250,11 @@ pub mod tests {
 
         let chat = create_chat(&pool).await;
 
-        let parent_sender = "vova";
+        let parent_user = create_user(&pool).await;
         let parent_message_text = "test message";
 
         let chat_parent_message_id =
-            insert_chat_message(&pool, chat.id, parent_sender, parent_message_text, None)
+            insert_chat_message(&pool, chat.id, parent_user.id, parent_message_text, None)
                 .await
                 .expect("parent message is created");
 
@@ -264,18 +264,18 @@ pub mod tests {
 
         assert_eq!(parent_message.id, chat_parent_message_id);
         assert_eq!(parent_message.message, parent_message_text);
-        assert_eq!(parent_message.sender, parent_sender);
+        assert_eq!(parent_message.sender_id, parent_user.id);
         assert_eq!(parent_message.chat_id, chat.id);
         assert_eq!(parent_message.parent_id, None);
         assert_eq!(parent_message.deleted_at, None);
 
-        let sender = "nikita";
+        let sender_user = create_user(&pool).await;
         let message_text = "test message 2";
 
         let chat_message_id = insert_chat_message(
             &pool,
             chat.id,
-            sender,
+            sender_user.id,
             message_text,
             Some(parent_message.id),
         )
@@ -288,7 +288,7 @@ pub mod tests {
 
         assert_eq!(message.id, chat_message_id);
         assert_eq!(message.message, message_text);
-        assert_eq!(message.sender, sender);
+        assert_eq!(message.sender_id, sender_user.id);
         assert_eq!(message.chat_id, chat.id);
         assert_eq!(message.parent_id, Some(chat_parent_message_id));
         assert_eq!(message.deleted_at, None);

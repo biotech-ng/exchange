@@ -1,0 +1,32 @@
+# Use an official Rust image as a parent image
+FROM rust:1.71.1
+
+ARG POSTGRES_USER
+ARG POSTGRES_PASSWORD
+ARG POSTGRES_DB
+
+ENV POSTGRES_USER $POSTGRES_USER
+ENV POSTGRES_PASSWORD $POSTGRES_PASSWORD
+
+# Install PostgreSQL client
+# Update, install, and configure
+RUN set -ex \
+    && apt update \
+    && apt-get install -y postgresql postgresql-contrib
+
+# Copy the local package contents into the container
+COPY . .
+
+# Install sqlx-cli
+RUN cargo install sqlx-cli
+
+# Connect to the PostgreSQL database running on the host machine
+# RUN psql postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@host.docker.internal:5432/$POSTGRES_DB -c 'SELECT 1;'
+
+# Run the migration
+# RUN cd ./backend && sqlx migrate run
+
+# Build the Rust project
+# RUN cargo build
+
+EXPOSE 5432

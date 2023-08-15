@@ -1,0 +1,20 @@
+# Backend Dockerfile
+# Initial image
+FROM rust:1.71.1 AS builder
+
+# Update, install, and configure
+RUN set -ex \
+    && cargo install sqlx-cli \
+    && rm -rf ${CARGO_HOME}/git/* \
+    && rm -rf ${CARGO_HOME}/registry/* \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir /app
+
+# Copy the exchange project 
+COPY . .
+
+# Backend run migrations
+RUN cd ./database && sqlx migrate run
+
+# Backend build project
+RUN cd ./backend && cargo build

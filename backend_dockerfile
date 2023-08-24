@@ -1,0 +1,15 @@
+# Use an official Rust image as a parent image
+FROM rust:1.71.1
+
+# Install sqlx-cli
+RUN cargo install sqlx-cli
+
+# Copy the local package contents into the container
+COPY . /app
+
+# Add a script to run migrations and start your application
+COPY start_backend.sh /app/start.sh
+
+# Command to run application backend
+CMD ["/app/start.sh"]
+

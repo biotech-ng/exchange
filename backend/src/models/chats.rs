@@ -20,7 +20,7 @@ pub trait ChatDb: Clone + Send + Sync + 'static {
 
     async fn insert_chat(
         &self,
-        r#type: &ChatType,
+        r#type: ChatType,
         title: impl AsRef<str> + std::fmt::Debug + Send,
         description: impl AsRef<str> + std::fmt::Debug + Send,
         avatar: impl AsRef<str> + std::fmt::Debug + Send,

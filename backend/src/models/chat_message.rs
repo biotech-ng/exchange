@@ -22,7 +22,7 @@ pub trait ChatMessageDb: Clone + Send + Sync + 'static {
         &self,
         chat_id: Uuid,
         sender_id: Uuid,
-        message: impl AsRef<str> + std::fmt::Debugs + Send,
+        message: impl AsRef<str> + std::fmt::Debug + Send,
         parent_id: Option<Uuid>,
     ) -> Result<Uuid, DbError>;
 }

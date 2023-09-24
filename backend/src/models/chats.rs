@@ -16,7 +16,7 @@ impl PgChatDb {
 
 #[async_trait::async_trait]
 pub trait ChatDb: Clone + Send + Sync + 'static {
-    async fn get_chat(&self, id: &Uuid) -> Result<Chat, DbError>;
+    async fn get_chat(&self, id: Uuid) -> Result<Chat, DbError>;
 
     async fn insert_chat(
         &self,

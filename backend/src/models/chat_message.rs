@@ -16,14 +16,14 @@ impl PgChatMessageDb {
 
 #[async_trait::async_trait]
 pub trait ChatMessageDb: Clone + Send + Sync + 'static {
-    async fn get_chat_message(&self, id: &Uuid) -> Result<ChatMessage, DbError>;
+    async fn get_chat_message(&self, id: Uuid) -> Result<ChatMessage, DbError>;
 
     async fn insert_chat_message(
         &self,
         chat_id: Uuid,
         sender_id: Uuid,
-        message: impl AsRef<str> + std::fmt::Debug + Send,
-        parent_id: Uuid,
+        message: impl AsRef<str> + std::fmt::Debugs + Send,
+        parent_id: Option<Uuid>,
     ) -> Result<Uuid, DbError>;
 }
 

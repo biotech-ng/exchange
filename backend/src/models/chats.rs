@@ -14,6 +14,12 @@ impl PgChatDb {
     }
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct CreateChat {
+    r#type: ChatType,
+    title: String,
+}
+
 #[async_trait::async_trait]
 pub trait ChatDb: Clone + Send + Sync + 'static {
     async fn get_chat(&self, id: Uuid) -> Result<Chat, DbError>;

@@ -11,11 +11,9 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use axum_auth::AuthBearer;
-use database::chats::{Chat,ChatType};
+use database::chats::{Chat,ChatType,CreateChat};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-
-
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CreateChatResponseBody {
@@ -43,7 +41,7 @@ impl IntoResponse for CreateChatErrorResponse {
     }
 }
 
-/// Creates a new project
+/// Creates a new Chat
 ///
 #[tracing::instrument(skip(web_service))]
 pub async fn post<UDB: UserDb, PDB: ChatDb>(
@@ -59,12 +57,16 @@ pub async fn post<UDB: UserDb, PDB: ChatDb>(
         .map_err(|x| x.to_string())
         .map_err(CreateChatErrorResponse::InvalidInputDataFormat)?;
 
+    let chat_input = CreateChat {
+        r#type: request.r#type.clone(),
+        title: request.title.clone(),
+        description: request.description.clone(),
+        avatar: request.avatar.clone(),
+    };
+
     let project_id = web_service
         .project_db
-        .insert_chat(
-            r#type: request.r#type.clone(),
-            title: request.description.clone()
-        )
+        .insert_chat(&chat_input)
         .await
         .map_err(CreateChatErrorResponse::DbError)?;
 
@@ -83,7 +85,7 @@ pub struct ProjectResponseData {
     updated_at: JsonDateTime,
 }
 
-impl From<Project> for ProjectResponseData {
+impl From<Chat> for  {
     fn from(value: Project) -> Self {
         ProjectResponseData {
             name: value.name,

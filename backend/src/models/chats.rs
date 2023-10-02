@@ -1,5 +1,5 @@
 use crate::models::errors::DbError;
-use database::chats::{Chat, ChatType};
+use database::chats::{Chat, ChatType,CreateChat};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -14,11 +14,6 @@ impl PgChatDb {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct CreateChat {
-    r#type: ChatType,
-    title: String,
-}
 
 #[async_trait::async_trait]
 pub trait ChatDb: Clone + Send + Sync + 'static {
@@ -26,10 +21,7 @@ pub trait ChatDb: Clone + Send + Sync + 'static {
 
     async fn insert_chat(
         &self,
-        r#type: ChatType,
-        title: impl AsRef<str> + std::fmt::Debug + Send,
-        description: impl AsRef<str> + std::fmt::Debug + Send,
-        avatar: impl AsRef<str> + std::fmt::Debug + Send,
+        chat: &CreateChat,
     ) -> Result<Uuid, DbError>;
 }
 
@@ -45,12 +37,9 @@ impl ChatDb for PgChatDb {
     #[tracing::instrument(skip(self))]
     async fn insert_chat(
         &self,
-        r#type: ChatType,
-        title: impl AsRef<str> + std::fmt::Debug + Send,
-        description: impl AsRef<str> + std::fmt::Debug + Send,
-        avatar: impl AsRef<str> + std::fmt::Debug + Send,
+        chat: &CreateChat,
     ) -> Result<Uuid, DbError> {
-        database::chats::insert_chat(&self.pool, r#type, title, description, avatar)
+        database::chats::insert_chat(&self.pool, chat)
             .await
             .map_err(Into::into)
     }

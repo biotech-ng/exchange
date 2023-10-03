@@ -27,13 +27,15 @@ pub struct ErrorResponseBody {
 pub struct WebService<UDB, PDB> {
     pub user_db: UDB,
     pub project_db: PDB,
+    pub chat_db: PDB,
 }
 
 impl<UDB: UserDb, PDB: ProjectDb> WebService<UDB, PDB> {
-    pub fn new(user_db: UDB, project_db: PDB) -> Self {
+    pub fn new(user_db: UDB, project_db: PDB, chat_db: PDB) -> Self {
         Self {
             user_db,
             project_db,
+            chat_db,
         }
     }
 
@@ -169,8 +171,8 @@ pub mod tests {
     pub async fn deserialize_response_body<T>(
         response: hyper::Response<UnsyncBoxBody<Bytes, axum::Error>>,
     ) -> T
-    where
-        T: DeserializeOwned,
+        where
+            T: DeserializeOwned,
     {
         let bytes = hyper::body::to_bytes(response.into_body())
             .await

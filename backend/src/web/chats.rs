@@ -1,3 +1,4 @@
+use std::fs::canonicalize;
 use crate::models::errors::DbError;
 use crate::models::chats::ChatDb;
 use crate::models::user::UserDb;
@@ -11,13 +12,13 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use axum_auth::AuthBearer;
-use database::chats::{Chat,ChatType,CreateChat};
+use database::chats::{Chat, ChatType, CreateChat};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CreateChatResponseBody {
-    project_id: Uuid,
+    chat_id: Uuid,
 }
 
 #[derive(Debug)]
@@ -64,33 +65,37 @@ pub async fn post<UDB: UserDb, PDB: ChatDb>(
         avatar: request.avatar.clone(),
     };
 
-    let project_id = web_service
-        .project_db
+    let chat_id = web_service
+        .chat_db
         .insert_chat(&chat_input)
         .await
         .map_err(CreateChatErrorResponse::DbError)?;
 
     Ok((
         StatusCode::CREATED,
-        Json(CreateChatResponseBody { project_id }),
+        Json(CreateChatResponseBody { chat_id }),
     ))
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct ProjectResponseData {
-    name: String,
-    description: String,
-    user_id: Uuid,
+pub struct ChatResponseData {
+    id: Uuid,
+    r#type: ChatType,
+    title: String,
+    description: Option<String>,
+    avatar: Option<String>,
     created_at: JsonDateTime,
     updated_at: JsonDateTime,
 }
 
-impl From<Chat> for  {
-    fn from(value: Project) -> Self {
-        ProjectResponseData {
-            name: value.name,
+impl From<Chat> for ChatResponseData {
+    fn from(value: Chat) -> Self {
+        ChatResponseData {
+            id: value.id,
+            r#type: value.r#type,
+            title: value.title,
             description: value.description,
-            user_id: value.user_id,
+            avatar: value.avatar,
             created_at: value.created_at.into(),
             updated_at: value.updated_at.into(),
         }
@@ -98,16 +103,16 @@ impl From<Chat> for  {
 }
 
 #[derive(Debug)]
-pub enum GetProjectErrorResponse {
+pub enum GetChatErrorResponse {
     DbError(DbError),
     InvalidInputDataFormat(String),
 }
 
-impl IntoResponse for GetProjectErrorResponse {
+impl IntoResponse for GetChatErrorResponse {
     fn into_response(self) -> Response {
         match self {
-            GetProjectErrorResponse::DbError(db_error) => db_error.into_response(),
-            GetProjectErrorResponse::InvalidInputDataFormat(error) => {
+            GetChatErrorResponse::DbError(db_error) => db_error.into_response(),
+            GetChatErrorResponse::InvalidInputDataFormat(error) => {
                 create_invalid_response(error).into_response()
             }
         }
@@ -117,17 +122,17 @@ impl IntoResponse for GetProjectErrorResponse {
 /// Creates a new doc
 ///
 #[tracing::instrument(skip(web_service))]
-pub async fn get<UDB: UserDb, PDB: ProjectDb>(
+pub async fn get<UDB: UserDb, PDB: ChatDb>(
     State(web_service): State<WebService<UDB, PDB>>,
-    project_id_or_error: Result<Path<Uuid>, PathRejection>,
-) -> Result<(StatusCode, Json<ProjectResponseData>), GetProjectErrorResponse> {
-    let project_id = project_id_or_error
+    chat_id_or_error: Result<Path<Uuid>, PathRejection>,
+) -> Result<(StatusCode, Json<ChatResponseData>), GetChatErrorResponse> {
+    let chat_id = chat_id_or_error
         .map_err(|x| x.to_string())
-        .map_err(GetProjectErrorResponse::InvalidInputDataFormat)?;
+        .map_err(GetChatErrorResponse::InvalidInputDataFormat)?;
 
     let project = web_service
-        .project_db
-        .get_project_by_id(&project_id)
+        .chat_db
+        .get_chat(&chat_id)
         .await
         .map_err(GetProjectErrorResponse::DbError)?;
 

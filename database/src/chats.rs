@@ -50,7 +50,7 @@ pub async fn insert_chat(
     .map(|x| x.id)
 }
 
-pub async fn get_chat(pool: &PgPool, id: Uuid) -> Result<Chat, sqlx::Error> {
+pub async fn get_chat(pool: &PgPool, id: &Uuid) -> Result<Chat, sqlx::Error> {
     sqlx::query_as!(
             Chat,
             r#"

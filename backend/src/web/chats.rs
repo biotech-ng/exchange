@@ -1,6 +1,5 @@
-use std::fs::canonicalize;
-use crate::models::errors::DbError;
 use crate::models::chats::ChatDb;
+use crate::models::errors::DbError;
 use crate::models::user::UserDb;
 use crate::utils::tokens::AccessToken;
 use crate::web::errors::{create_invalid_response, UNAUTHORIZED_ERROR_RESPONSE};
@@ -14,6 +13,7 @@ use axum::Json;
 use axum_auth::AuthBearer;
 use database::chats::{Chat, ChatType, CreateChat};
 use serde::{Deserialize, Serialize};
+use std::fs::canonicalize;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -130,13 +130,13 @@ pub async fn get<UDB: UserDb, PDB: ChatDb>(
         .map_err(|x| x.to_string())
         .map_err(GetChatErrorResponse::InvalidInputDataFormat)?;
 
-    let project = web_service
+    let chat_info = web_service
         .chat_db
         .get_chat(&chat_id)
         .await
-        .map_err(GetProjectErrorResponse::DbError)?;
+        .map_err(GetChatErrorResponse::DbError)?;
 
-    Ok((StatusCode::CREATED, Json(project.into())))
+    Ok((StatusCode::CREATED, Json(chat_info.into())))
 }
 
 #[cfg(test)]

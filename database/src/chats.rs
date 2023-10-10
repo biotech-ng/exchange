@@ -21,12 +21,17 @@ pub struct Chat {
     pub updated_at: PrimitiveDateTime,
 }
 
+#[derive(Debug)]
+pub struct CreateChat {
+    pub r#type: ChatType,
+    pub title: String,
+    pub description: Option<String>,
+    pub avatar: Option<String>,
+}
+
 pub async fn insert_chat(
     pool: &PgPool,
-    r#type: ChatType,
-    title: impl AsRef<str>,
-    description: impl AsRef<str>,
-    avatar: impl AsRef<str>,
+    chat: &CreateChat,
 ) -> Result<Uuid, sqlx::Error> {
     sqlx::query!(
         r#"
@@ -35,17 +40,17 @@ pub async fn insert_chat(
                 RETURNING id
             "#,
         Uuid::new_v4(),
-        r#type as ChatType,
-        title.as_ref(),
-        description.as_ref(),
-        avatar.as_ref(),
+        chat.r#type as ChatType,
+        chat.title.as_ref(),
+        chat.description.as_ref(),
+        chat.avatar.as_ref(),
     )
     .fetch_one(pool)
     .await
     .map(|x| x.id)
 }
 
-pub async fn get_chat(pool: &PgPool, id: Uuid) -> Result<Chat, sqlx::Error> {
+pub async fn get_chat(pool: &PgPool, id: &Uuid) -> Result<Chat, sqlx::Error> {
     sqlx::query_as!(
             Chat,
             r#"
